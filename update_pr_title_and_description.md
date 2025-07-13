@@ -31,3 +31,16 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 
 - 修正内容とコミットメッセージを把握した上でPull Requestの内容を決定する
 - チャットの会話内容も考慮してPull Requestの説明を作成する
+- **説明文にエスケープ文字列やコマンドに影響する特殊文字が含まれている場合**：
+  - `gh pr edit`コマンドが失敗することがある
+  - その場合は説明文を一時ファイルに保存してから`--body-file`オプションを使用する：
+    ```bash
+    # 説明文を一時ファイルに保存
+    echo "Pull Requestの説明文..." > /tmp/pr_body.md
+    
+    # ファイルから説明文を読み込んで更新
+    gh pr edit --body-file /tmp/pr_body.md
+    
+    # 一時ファイルを削除
+    rm /tmp/pr_body.md
+    ```
