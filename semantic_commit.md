@@ -34,7 +34,9 @@
 
 #### git-sequential-stageツール
 
-`git-sequential-stage`は、以下の複雑な処理を内部でカプセル化しています：
+`git-sequential-stage`は、hunk単位の部分的なステージングを自動化するためのGoで実装された専用ツールです（[GitHub: syou6162/git-sequential-stage](https://github.com/syou6162/git-sequential-stage)）。
+
+以下の複雑な処理を内部でカプセル化しています：
 - `git patch-id`によるhunkの一意識別
 - 逐次ステージングによる行番号ズレの回避
 - パッチIDベースの照合による確実なhunk特定
