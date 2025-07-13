@@ -37,15 +37,15 @@ echo ""
 ```bash
 echo "=== 未解決コメント一覧 ==="
 
-# PR全体へのコメント
+# PR全体へのコメント（issues/comments API使用）
 echo "### PR全体へのコメント"
-gh pr view "$PR_URL" --json comments | jq -r '.comments[]? | "ID: \(.id) | @\(.author.login) (\(.createdAt | split("T")[0]))", .body, "────────────────────────────────────────────────────────────────────────────────"'
+gh api "/repos/$OWNER/$REPO/issues/$PR_NUMBER/comments" | jq -r '.[] | "ID: \(.id) | @\(.user.login) (\(.created_at | split("T")[0]))", .body, "────────────────────────────────────────────────────────────────────────────────"'
 
 echo ""
 
-# コードレビューコメント
-echo "### コードレビューコメント"  
-gh pr view "$PR_URL" --json reviews | jq -r '.reviews[]?.comments[]? | "ID: \(.id) | ファイル: \(.path) L\(.line)", "@\(.author.login) (\(.createdAt | split("T")[0])):", .body, "────────────────────────────────────────────────────────────────────────────────"'
+# コードレビューコメント（pulls/comments API使用）
+echo "### コードレビューコメント"
+gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" | jq -r '.[] | "ID: \(.id) | ファイル: \(.path) L\(.line // .original_line)", "@\(.user.login) (\(.created_at | split("T")[0])):", .body, (if .diff_hunk then ("diff:\n" + .diff_hunk) else "" end), "────────────────────────────────────────────────────────────────────────────────"'
 
 echo ""
 ```
