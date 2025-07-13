@@ -54,34 +54,37 @@ echo ""
 ```bash
 echo "=== 変更内容の詳細分析 ==="
 
-# コミットIDとベースブランチを取得
-BASE_SHA=$(echo "$PR_INFO" | jq -r '.base.sha // .baseRefName')
-HEAD_SHA=$(echo "$PR_INFO" | jq -r '.head.sha // .headRefName')
+# PR詳細情報からコミット情報を取得
+PR_DETAIL=$(gh pr view "$PR_URL" --json baseRefName,headRefName,commits)
+BASE_BRANCH=$(echo "$PR_DETAIL" | jq -r '.baseRefName')
+HEAD_BRANCH=$(echo "$PR_DETAIL" | jq -r '.headRefName')
+COMMITS=$(echo "$PR_DETAIL" | jq -r '.commits')
 
-# より詳細な情報を取得するためにgh pr viewを使用
-PR_COMMITS_INFO=$(gh pr view "$PR_URL" --json commits)
-FIRST_COMMIT=$(echo "$PR_COMMITS_INFO" | jq -r '.commits[0].oid')
-LAST_COMMIT=$(echo "$PR_COMMITS_INFO" | jq -r '.commits[-1].oid')
+echo "ベースブランチ: $BASE_BRANCH"
+echo "ヘッドブランチ: $HEAD_BRANCH"
 
-echo "ベースブランチ: $BASE_SHA"
-echo "Pull Requestのコミット範囲: $FIRST_COMMIT..$LAST_COMMIT"
+# コミット情報の表示
 echo ""
+echo "### Pull Requestに含まれるコミット"
+echo "$COMMITS" | jq -r '.[] | "- " + .oid[0:8] + " " + .messageHeadline + " (@" + .author.login + ")"'
 
-# git diffで詳細な変更内容を取得
+echo ""
 echo "### 変更されたファイル一覧"
-git diff --name-status "$BASE_SHA..$LAST_COMMIT"
-echo ""
+# originを使ってremoteブランチと比較
+git diff --name-status "origin/$BASE_BRANCH...origin/$HEAD_BRANCH" 2>/dev/null || git diff --name-status "$BASE_BRANCH...$HEAD_BRANCH" 2>/dev/null || git diff --name-status main..HEAD
 
-echo "### 各ファイルの詳細な変更内容"
-git diff --stat "$BASE_SHA..$LAST_COMMIT"
 echo ""
+echo "### 各ファイルの詳細な変更内容統計"
+git diff --stat "origin/$BASE_BRANCH...origin/$HEAD_BRANCH" 2>/dev/null || git diff --stat "$BASE_BRANCH...$HEAD_BRANCH" 2>/dev/null || git diff --stat main..HEAD
 
-# 各ファイルの差分を個別に表示
-for file in $(git diff --name-only "$BASE_SHA..$LAST_COMMIT"); do
+echo ""
+echo "### 各ファイルの詳細な差分"
+# 変更されたファイルを個別に処理
+for file in $(git diff --name-only "origin/$BASE_BRANCH...origin/$HEAD_BRANCH" 2>/dev/null || git diff --name-only "$BASE_BRANCH...$HEAD_BRANCH" 2>/dev/null || git diff --name-only main..HEAD); do
     echo "============================================================"
     echo "ファイル: $file"
     echo "============================================================"
-    git diff "$BASE_SHA..$LAST_COMMIT" -- "$file"
+    git diff "origin/$BASE_BRANCH...origin/$HEAD_BRANCH" -- "$file" 2>/dev/null || git diff "$BASE_BRANCH...$HEAD_BRANCH" -- "$file" 2>/dev/null || git diff main..HEAD -- "$file"
     echo ""
 done
 ```
