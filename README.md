@@ -44,6 +44,18 @@ npx cccsc add syou6162/claude-code-commands/semantic_commit
 /user:semantic_commit     # グローバルインストール時
 ```
 
+### triage_pr_comments
+Pull Requestのコメントに対する対応要否をコードベース分析に基づいて判断します。
+
+```bash
+# インストール
+npx cccsc add syou6162/claude-code-commands/triage_pr_comments
+
+# 使用方法 (Claude Code内で)
+/project:triage_pr_comments https://github.com/owner/repo/pull/123  # ローカルインストール時
+/user:triage_pr_comments https://github.com/owner/repo/pull/123     # グローバルインストール時
+```
+
 ## Adding New Commands
 
 新しいカスタムコマンドを追加する手順：
