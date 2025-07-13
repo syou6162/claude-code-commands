@@ -77,7 +77,7 @@ cd "$REPO_ROOT"
 # .claude/tmpディレクトリは既に存在するため、直接ファイルを作成可能
 
 # 新規ファイル（untracked files）をintent-to-addで追加
-git ls-files --others --exclude-standard | xargs -r git add -N
+git ls-files --others --exclude-standard | xargs git add -N
 
 # コンテキスト付きの差分を取得（より安定した位置特定のため）
 # 新規ファイルも含めて取得される
