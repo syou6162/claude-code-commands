@@ -33,7 +33,7 @@ npx cccsc add syou6162/claude-code-commands/command-name --global
 ## Available Commands
 
 ### semantic_commit
-意味のある最小の単位でcommitする。大きな変更を論理的な単位に分割してコミットします。
+意味のある最小の単位でcommitする。大きな変更を論理的な単位に分割してコミットします。LLMがgit diffを分析して意味のある最小単位を提案し、`git-sequential-stage`ツールによる自動化された逐次ステージングでコミットします。
 
 ```bash
 # インストール
@@ -66,6 +66,30 @@ npx cccsc add syou6162/claude-code-commands/self_review_pr
 # 使用方法 (Claude Code内で)
 /project:self_review_pr https://github.com/owner/repo/pull/123  # ローカルインストール時
 /user:self_review_pr https://github.com/owner/repo/pull/123     # グローバルインストール時
+```
+
+### estimate_pr_size
+指定されたタスクに対してPull Requestのサイズを見積もり、必要に応じて分割の提案を行います。過去のPull Request履歴を分析し、作業量を予測して適切な実装順序を提案します。
+
+```bash
+# インストール
+npx cccsc add syou6162/claude-code-commands/estimate_pr_size
+
+# 使用方法 (Claude Code内で)
+/project:estimate_pr_size  # ローカルインストール時
+/user:estimate_pr_size     # グローバルインストール時
+```
+
+### update_pr_title_and_description
+Pull Requestのタイトルと説明文を修正内容とコミットメッセージに基づいて更新します。`.github/PULL_REQUEST_TEMPLATE.md`テンプレートに対応しています。
+
+```bash
+# インストール
+npx cccsc add syou6162/claude-code-commands/update_pr_title_and_description
+
+# 使用方法 (Claude Code内で)
+/project:update_pr_title_and_description  # ローカルインストール時
+/user:update_pr_title_and_description     # グローバルインストール時
 ```
 
 ## Adding New Commands
