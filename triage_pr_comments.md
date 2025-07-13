@@ -5,7 +5,7 @@ Pull RequestのURL: $ARGUMENTS
 
 ## 実行手順
 
-### 1. Pull Request基本情報の取得
+### 1. 情報取得と分析
 ```bash
 # Pull RequestのURLから情報を取得
 PR_URL="$ARGUMENTS"
@@ -14,79 +14,26 @@ echo "=== Pull Request基本情報 ==="
 # gh pr viewでPR情報を取得
 PR_INFO=$(gh pr view "$PR_URL" --json number,headRepositoryOwner,headRepository,title,author,state,headRefName,baseRefName,changedFiles,additions,deletions,createdAt)
 
-echo "$PR_INFO" | jq -r '
-"対象: " + .headRepositoryOwner.login + "/" + .headRepository.name + " PR#" + (.number | tostring),
-"タイトル: " + .title,
-"作成者: @" + .author.login,
-"状態: " + .state,
-"ブランチ: " + .headRefName + " → " + .baseRefName,
-"変更ファイル数: " + (.changedFiles | tostring),
-"追加: +" + (.additions | tostring) + " 削除: -" + (.deletions | tostring),
-"作成日: " + (.createdAt | split("T")[0])
-'
-
-# 変数の設定
+# 変数の設定（後のAPI呼び出しで使用）
 OWNER=$(echo "$PR_INFO" | jq -r '.headRepositoryOwner.login')
 REPO=$(echo "$PR_INFO" | jq -r '.headRepository.name')
 PR_NUMBER=$(echo "$PR_INFO" | jq -r '.number')
 
+echo "$PR_INFO"
 echo ""
-```
 
-### 2. 未解決コメントの詳細取得
-```bash
 echo "=== 未解決コメント一覧 ==="
-
-# PR全体へのコメント（issues/comments API使用）
-echo "### PR全体へのコメント"
-gh api "/repos/$OWNER/$REPO/issues/$PR_NUMBER/comments" | jq -r '.[] | "ID: \(.id) | @\(.user.login) (\(.created_at | split("T")[0]))", .body, "────────────────────────────────────────────────────────────────────────────────"'
-
+# 未解決コメント取得（GraphQL API）
+gh api graphql --field query="query { repository(owner: \"$OWNER\", name: \"$REPO\") { pullRequest(number: $PR_NUMBER) { reviewThreads(last: 100) { nodes { id isResolved comments(last: 10) { nodes { id body path line originalLine createdAt author { login } diffHunk } } } } } } }" | jq '.data.repository.pullRequest.reviewThreads.nodes | map(select(.isResolved == false)) | map(.comments.nodes) | flatten'
 echo ""
 
-# コードレビューコメント（pulls/comments API使用）
-echo "### コードレビューコメント"
-gh api "/repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" | jq -r '.[] | "ID: \(.id) | ファイル: \(.path) L\(.line // .original_line)", "@\(.user.login) (\(.created_at | split("T")[0])):", .body, (if .diff_hunk then ("diff:\n" + .diff_hunk) else "" end), "────────────────────────────────────────────────────────────────────────────────"'
-
-echo ""
-```
-
-### 3. Pull Request変更内容の詳細分析
-```bash
 echo "=== 変更内容の詳細分析 ==="
-
-# PR詳細情報からコミット情報を取得
-PR_DETAIL=$(gh pr view "$PR_URL" --json baseRefName,headRefName,commits)
-BASE_BRANCH=$(echo "$PR_DETAIL" | jq -r '.baseRefName')
-HEAD_BRANCH=$(echo "$PR_DETAIL" | jq -r '.headRefName')
-COMMITS=$(echo "$PR_DETAIL" | jq -r '.commits')
-
-echo "ベースブランチ: $BASE_BRANCH"
-echo "ヘッドブランチ: $HEAD_BRANCH"
-
-# コミット情報の表示
-echo ""
-echo "### Pull Requestに含まれるコミット"
-echo "$COMMITS" | jq -r '.[] | "- " + .oid[0:8] + " " + .messageHeadline + " (@" + .author.login + ")"'
-
-echo ""
 echo "### 変更されたファイル一覧"
-# originを使ってremoteブランチと比較
-git diff --name-status "origin/$BASE_BRANCH...origin/$HEAD_BRANCH" 2>/dev/null || git diff --name-status "$BASE_BRANCH...$HEAD_BRANCH" 2>/dev/null || git diff --name-status main..HEAD
-
-echo ""
-echo "### 各ファイルの詳細な変更内容統計"
-git diff --stat "origin/$BASE_BRANCH...origin/$HEAD_BRANCH" 2>/dev/null || git diff --stat "$BASE_BRANCH...$HEAD_BRANCH" 2>/dev/null || git diff --stat main..HEAD
+gh pr diff "$PR_URL" --name-only
 
 echo ""
 echo "### 各ファイルの詳細な差分"
-# 変更されたファイルを個別に処理
-for file in $(git diff --name-only "origin/$BASE_BRANCH...origin/$HEAD_BRANCH" 2>/dev/null || git diff --name-only "$BASE_BRANCH...$HEAD_BRANCH" 2>/dev/null || git diff --name-only main..HEAD); do
-    echo "============================================================"
-    echo "ファイル: $file"
-    echo "============================================================"
-    git diff "origin/$BASE_BRANCH...origin/$HEAD_BRANCH" -- "$file" 2>/dev/null || git diff "$BASE_BRANCH...$HEAD_BRANCH" -- "$file" 2>/dev/null || git diff main..HEAD -- "$file"
-    echo ""
-done
+gh pr diff "$PR_URL"
 ```
 
 ### 4. 分析指示
