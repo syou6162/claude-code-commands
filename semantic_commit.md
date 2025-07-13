@@ -158,7 +158,7 @@ which filterdiff           # patchutilsパッケージ（差分解析用）
 ```
 
 インストールが必要な場合：
-- `git-sequential-stage`: リポジトリのREADMEを参照
+- `git-sequential-stage`: [GitHub: syou6162/git-sequential-stage](https://github.com/syou6162/git-sequential-stage)のREADMEを参照
 - patchutils: `brew install patchutils` (macOS) / `apt-get install patchutils` (Ubuntu/Debian)
 
 ## 使用例
