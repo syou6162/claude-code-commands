@@ -220,6 +220,29 @@ git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/tes
 
 ## トラブルシューティング
 
+### 新規ファイルがgit diffで表示されない場合
+
+新規作成したファイルが`git diff`で表示されない場合、以下の設定が原因の可能性があります：
+
+```bash
+# .gitignoreファイルで除外されていないか確認
+git check-ignore -v path/to/new_file.ext
+
+# グローバルのgitignore設定を確認
+git config --get core.excludesfile
+
+# グローバル除外ファイルの内容を確認（存在する場合）
+cat "$(git config --get core.excludesfile)"
+
+# リポジトリの.git/info/excludeファイルを確認
+cat .git/info/exclude
+```
+
+対処法：
+1. `.gitignore`から該当パターンを削除または修正
+2. グローバル設定を確認・修正（`~/.config/git/ignore`など）
+3. `.git/info/exclude`の設定を確認・修正
+
 ### git-sequential-stageが失敗する場合
 
 ```bash
