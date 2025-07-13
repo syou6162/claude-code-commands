@@ -56,6 +56,18 @@ npx cccsc add syou6162/claude-code-commands/triage_pr_comments
 /user:triage_pr_comments https://github.com/owner/repo/pull/123     # グローバルインストール時
 ```
 
+### self_review_pr
+プルリクエストを提出する前に、自分の変更を客観的にレビューします。レビュアーに指摘されそうな問題点や改善案を提示します。
+
+```bash
+# インストール
+npx cccsc add syou6162/claude-code-commands/self_review_pr
+
+# 使用方法 (Claude Code内で)
+/project:self_review_pr https://github.com/owner/repo/pull/123  # ローカルインストール時
+/user:self_review_pr https://github.com/owner/repo/pull/123     # グローバルインストール時
+```
+
 ## Adding New Commands
 
 新しいカスタムコマンドを追加する手順：
