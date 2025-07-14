@@ -96,6 +96,9 @@ LLMが**hunk単位**で変更を分析し、最初のコミットに含めるhun
 ```bash
 # 全体のhunk数を確認
 grep -c "^@@" .claude/tmp/current_changes.patch
+
+# 各ファイルごとのhunk数を確認
+git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
 ```
 
 例：
