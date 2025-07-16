@@ -70,7 +70,16 @@ echo "リポジトリルート: $REPO_ROOT"
 cd "$REPO_ROOT"
 ```
 
-### Step 1: 差分を取得
+### Step 1: pre-commitの事前実行（該当する場合）
+
+```bash
+# pre-commitが設定されている場合は事前に実行
+[ -f .pre-commit-config.yaml ] && pre-commit run --all-files
+```
+
+※pre-commit環境での注意点は[トラブルシューティング](#pre-commitによるコミット間の自動修正への対応)を参照
+
+### Step 2: 差分を取得
 
 ```bash
 # .claude/tmpディレクトリは既に存在するため、直接ファイルを作成可能
@@ -271,9 +280,52 @@ filterdiff -i "path/to/file.go" .claude/tmp/current_changes.patch | grep -c '^@@
 2. `git reset HEAD~1`で取り消し
 3. より小さな変更単位で再実装
 
+### pre-commitによるコミット間の自動修正への対応
+
+pre-commitフックが設定されている環境では、コミット時に自動的にファイルが修正されることがあります。これにより、semantic_commitで複数コミットを作成する際に問題が発生する場合があります。
+
+**問題の症状**：
+- 1つ目のコミット後、pre-commitがファイルを自動修正
+- 2つ目以降のコミットで、パッチファイルのhunk番号がずれる
+- `git-sequential-stage`がhunkを正しく特定できなくなる
+
+**対処法**：
+
+#### 1. 事前にpre-commitを実行（推奨）
+
+```bash
+# pre-commitの有無を確認
+if [ -f .pre-commit-config.yaml ]; then
+  # pre-commitを実行してすべての自動修正を先に適用
+  pre-commit run --all-files
+  
+  # 注意: ここでは git add を使わない！
+  # pre-commitの修正は working directory に残る
+  # semantic_commitがこれらの変更も含めて処理する
+  
+  echo "pre-commitの修正を適用しました。semantic_commitを実行できます。"
+else
+  echo "pre-commitは設定されていません。そのまま実行できます。"
+fi
+```
+
+#### 2. エラー発生時の復旧
+
+```bash
+# パッチファイルが古くなった場合は再生成
+rm .claude/tmp/current_changes.patch
+git diff HEAD > .claude/tmp/current_changes.patch
+
+# hunk番号を再確認して続行
+git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
+```
+
+
 ## 注意事項
 
 - **使用しないコマンド**: `git add`、`git checkout`、`git restore`、`git reset`、`git stash`
+  - **重要**: `git add`は新規ファイルの intent-to-add (`git add -N`) のみ使用可能
+  - ステージングはすべて`git-sequential-stage`が自動的に行う
 - **対話的操作の回避**: `git add -p`などのインタラクティブなコマンドは使用しない
 - **hunk番号の確認**: 必ず最新の差分で各ファイルのhunk番号を確認してから指定
 
