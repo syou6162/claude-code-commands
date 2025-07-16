@@ -23,12 +23,11 @@
 
 ### 基本フロー
 
-1. **リポジトリルートに移動**: `git rev-parse --show-toplevel`で確認後、移動
-2. **差分取得**: `git diff HEAD`でコンテキスト付きのhunkリストを取得
-3. **LLM分析**: hunk単位で意味的グループを決定
-4. **自動ステージング**: `git-sequential-stage`が選択したhunkを安全にステージング
-5. **コミット実行**: ステージング完了後、`git commit`を実行
-6. **繰り返し**: 残りの変更で継続
+1. **環境準備**: 作業ディレクトリの正規化とpre-commit等の自動修正の事前適用
+2. **変更の取得**: すべての変更をhunk単位で取得（新規ファイルも含む）
+3. **意味的分析**: LLMが各hunkの内容を理解し、論理的なグループに分類
+4. **段階的コミット**: `git-sequential-stage`により選択したhunkのみを安全にステージング
+5. **反復処理**: 残りの変更に対して同じプロセスを繰り返し、意味のある単位でコミット
 
 ### 技術的詳細
 
@@ -71,7 +70,16 @@ echo "リポジトリルート: $REPO_ROOT"
 cd "$REPO_ROOT"
 ```
 
-### Step 1: 差分を取得
+### Step 1: pre-commitの事前実行（該当する場合）
+
+```bash
+# pre-commitが設定されている場合は事前に実行
+[ -f .pre-commit-config.yaml ] && pre-commit run --all-files
+```
+
+※pre-commit環境での注意点は[トラブルシューティング](#pre-commitによるコミット間の自動修正への対応)を参照
+
+### Step 2: 差分を取得
 
 ```bash
 # .claude/tmpディレクトリは既に存在するため、直接ファイルを作成可能
@@ -84,7 +92,7 @@ git ls-files --others --exclude-standard | xargs git add -N
 git diff HEAD > .claude/tmp/current_changes.patch
 ```
 
-### Step 2: LLM分析
+### Step 3: LLM分析
 
 LLMが**hunk単位**で変更を分析し、最初のコミットに含めるhunkを決定：
 
@@ -116,7 +124,7 @@ COMMIT_MSG="fix: ゼロ除算エラーを修正
 計算処理で分母が0の場合の適切なエラーハンドリングを追加"
 ```
 
-### Step 3: 自動ステージング
+### Step 4: 自動ステージング
 
 選択したhunkを`git-sequential-stage`で自動的にステージング：
 
@@ -134,7 +142,7 @@ git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
 git commit -m "$COMMIT_MSG"
 ```
 
-### Step 4: 繰り返し
+### Step 5: 繰り返し
 
 残りの変更に対して同じプロセスを繰り返し：
 
@@ -142,11 +150,11 @@ git commit -m "$COMMIT_MSG"
 # 残りの差分を確認
 if [ $(git diff HEAD | wc -l) -gt 0 ]; then
   echo "残りの変更を処理します..."
-  # Step 1に戻る
+  # Step 2に戻る
 fi
 ```
 
-### Step 5: 最終確認
+### Step 6: 最終確認
 
 ```bash
 # すべての変更がコミットされたか確認
@@ -272,9 +280,52 @@ filterdiff -i "path/to/file.go" .claude/tmp/current_changes.patch | grep -c '^@@
 2. `git reset HEAD~1`で取り消し
 3. より小さな変更単位で再実装
 
+### pre-commitによるコミット間の自動修正への対応
+
+pre-commitフックが設定されている環境では、コミット時に自動的にファイルが修正されることがあります。これにより、semantic_commitで複数コミットを作成する際に問題が発生する場合があります。
+
+**問題の症状**：
+- 1つ目のコミット後、pre-commitがファイルを自動修正
+- 2つ目以降のコミットで、パッチファイルのhunk番号がずれる
+- `git-sequential-stage`がhunkを正しく特定できなくなる
+
+**対処法**：
+
+#### 1. 事前にpre-commitを実行（推奨）
+
+```bash
+# pre-commitの有無を確認
+if [ -f .pre-commit-config.yaml ]; then
+  # pre-commitを実行してすべての自動修正を先に適用
+  pre-commit run --all-files
+  
+  # 注意: ここでは git add を使わない！
+  # pre-commitの修正は working directory に残る
+  # semantic_commitがこれらの変更も含めて処理する
+  
+  echo "pre-commitの修正を適用しました。semantic_commitを実行できます。"
+else
+  echo "pre-commitは設定されていません。そのまま実行できます。"
+fi
+```
+
+#### 2. エラー発生時の復旧
+
+```bash
+# パッチファイルが古くなった場合は再生成
+rm .claude/tmp/current_changes.patch
+git diff HEAD > .claude/tmp/current_changes.patch
+
+# hunk番号を再確認して続行
+git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
+```
+
+
 ## 注意事項
 
 - **使用しないコマンド**: `git add`、`git checkout`、`git restore`、`git reset`、`git stash`
+  - **重要**: `git add`は新規ファイルの intent-to-add (`git add -N`) のみ使用可能
+  - ステージングはすべて`git-sequential-stage`が自動的に行う
 - **対話的操作の回避**: `git add -p`などのインタラクティブなコマンドは使用しない
 - **hunk番号の確認**: 必ず最新の差分で各ファイルのhunk番号を確認してから指定
 
