@@ -92,7 +92,7 @@ git ls-files --others --exclude-standard | xargs git add -N
 git diff HEAD > .claude/tmp/current_changes.patch
 ```
 
-### Step 2: LLM分析
+### Step 3: LLM分析
 
 LLMが**hunk単位**で変更を分析し、最初のコミットに含めるhunkを決定：
 
@@ -124,7 +124,7 @@ COMMIT_MSG="fix: ゼロ除算エラーを修正
 計算処理で分母が0の場合の適切なエラーハンドリングを追加"
 ```
 
-### Step 3: 自動ステージング
+### Step 4: 自動ステージング
 
 選択したhunkを`git-sequential-stage`で自動的にステージング：
 
@@ -142,7 +142,7 @@ git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
 git commit -m "$COMMIT_MSG"
 ```
 
-### Step 4: 繰り返し
+### Step 5: 繰り返し
 
 残りの変更に対して同じプロセスを繰り返し：
 
@@ -150,11 +150,11 @@ git commit -m "$COMMIT_MSG"
 # 残りの差分を確認
 if [ $(git diff HEAD | wc -l) -gt 0 ]; then
   echo "残りの変更を処理します..."
-  # Step 1に戻る
+  # Step 2に戻る
 fi
 ```
 
-### Step 5: 最終確認
+### Step 6: 最終確認
 
 ```bash
 # すべての変更がコミットされたか確認
