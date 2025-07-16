@@ -105,7 +105,7 @@ LLMが**hunk単位**で変更を分析し、最初のコミットに含めるhun
 # 全体のhunk数を確認
 grep -c "^@@" .claude/tmp/current_changes.patch
 
-# 各ファイルごとのhunk数を確認
+# 各ファイルのhunk数を確認
 git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
 ```
 
@@ -150,7 +150,7 @@ git commit -m "$COMMIT_MSG"
 # 残りの差分を確認
 if [ $(git diff HEAD | wc -l) -gt 0 ]; then
   echo "残りの変更を処理します..."
-  # Step 2に戻る
+  # Step 2（差分取得）から再開
 fi
 ```
 
@@ -176,7 +176,7 @@ which filterdiff           # patchutilsパッケージ（差分解析用）
 
 インストールが必要な場合：
 - `git-sequential-stage`: [GitHub: syou6162/git-sequential-stage](https://github.com/syou6162/git-sequential-stage)のREADMEを参照
-- patchutils: `brew install patchutils` (macOS) / `apt-get install patchutils` (Ubuntu/Debian)
+- patchutils: `brew install patchutils`
 
 ## 使用例
 
