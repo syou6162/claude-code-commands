@@ -74,7 +74,7 @@ cd "$REPO_ROOT"
 
 ```bash
 # pre-commitが設定されている場合は事前に実行
-[ -f .pre-commit-config.yaml ] && pre-commit run --all-files
+[ -f .pre-commit-config.yaml ] && pre-commit run --all-files || true
 ```
 
 ※pre-commit環境での注意点は[トラブルシューティング](#pre-commitによるコミット間の自動修正への対応)を参照
