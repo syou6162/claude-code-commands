@@ -23,7 +23,7 @@
 
 ### 基本フロー
 
-1. **環境準備**: 作業ディレクトリの正規化とpre-commit等の自動修正の事前適用
+1. **環境準備**: リポジトリルートへの移動とpre-commitの事前実行
 2. **変更の取得**: すべての変更をhunk単位で取得（新規ファイルも含む）
 3. **意味的分析**: LLMが各hunkの内容を理解し、論理的なグループに分類
 4. **段階的コミット**: `git-sequential-stage`により選択したhunkのみを安全にステージング
@@ -35,26 +35,15 @@
 
 `git-sequential-stage`は、hunk単位の部分的なステージングを自動化するためのGoで実装された専用ツールです（[GitHub: syou6162/git-sequential-stage](https://github.com/syou6162/git-sequential-stage)）。
 
-以下の複雑な処理を内部でカプセル化しています：
-- `git patch-id`によるhunkの一意識別
-- 逐次ステージングによる行番号ズレの回避
-- パッチIDベースの照合による確実なhunk特定
-- `filterdiff`を使った複数ファイルパッチからの正確なhunk抽出
-
 使用方法：
 ```bash
 # 基本的な使い方
 git-sequential-stage -patch="path/to/changes.patch" -hunk="src/main.go:1,3,5"
 
-# 複数ファイルの場合（複数の-hunkフラグを指定）
+# 複数ファイルの場合
 git-sequential-stage -patch="path/to/changes.patch" \
   -hunk="src/main.go:1,3" \
   -hunk="src/utils.go:2,4"
-
-# 引数の説明：
-# -patch: パッチファイルのパス
-# -hunk: file:numbers形式で指定（例：src/main.go:1,3）
-#        ファイル名とカンマ区切りのhunk番号をコロンで連結
 ```
 
 ## 実行手順
@@ -73,11 +62,8 @@ cd "$REPO_ROOT"
 ### Step 1: pre-commitの事前実行（該当する場合）
 
 ```bash
-# pre-commitが設定されている場合は事前に実行
 [ -f .pre-commit-config.yaml ] && pre-commit run --all-files || true
 ```
-
-※pre-commit環境での注意点は[トラブルシューティング](#pre-commitによるコミット間の自動修正への対応)を参照
 
 ### Step 2: 差分を取得
 
@@ -100,12 +86,12 @@ LLMが**hunk単位**で変更を分析し、最初のコミットに含めるhun
 - **意味的グループ化**: 同じ目的の変更（バグ修正、リファクタリング等）をグループ化
 - **コミット計画**: どのhunkをどのコミットに含めるか決定
 
-必要に応じて、総hunk数を確認：
+必要に応じて、hunk数を確認：
 ```bash
-# 全体のhunk数を確認
+# 全体のhunk数
 grep -c "^@@" .claude/tmp/current_changes.patch
 
-# 各ファイルのhunk数を確認
+# 各ファイルのhunk数
 git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
 ```
 
@@ -294,15 +280,9 @@ pre-commitフックが設定されている環境では、コミット時に自�
 #### 1. 事前にpre-commitを実行（推奨）
 
 ```bash
-# pre-commitの有無を確認
+# pre-commitの有無を確認し、設定されている場合は実行
 if [ -f .pre-commit-config.yaml ]; then
-  # pre-commitを実行してすべての自動修正を先に適用
   pre-commit run --all-files
-  
-  # 注意: ここでは git add を使わない！
-  # pre-commitの修正は working directory に残る
-  # semantic_commitがこれらの変更も含めて処理する
-  
   echo "pre-commitの修正を適用しました。semantic_commitを実行できます。"
 else
   echo "pre-commitは設定されていません。そのまま実行できます。"
@@ -331,13 +311,4 @@ git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD
 
 ## 背景と設計思想
 
-[Claude Code](https://docs.anthropic.com/ja/docs/claude-code/overview)などのLLM Agentは、複数の論理的な変更を1つのコミットにまとめてしまう傾向があります。
-
-`git-sequential-stage`ツールは、以下の複雑な処理を内部で自動化します：
-
-1. **パッチIDによる一意識別**: `git patch-id`を使用したhunkの確実な特定
-2. **逐次ステージング**: 各hunk適用時の行番号変化に対応
-3. **複数ファイルのサポート**: `filterdiff`を使った特定ファイルのhunk抽出
-4. **エラーハンドリング**: 様々なエッジケースに対する堅牢な処理
-
-これにより、人間が`git add -p`で行う作業を、LLM Agentが**シンプルなコマンド実行だけで**実現できるようになりました。
+LLM Agentは複数の論理的な変更を1つのコミットにまとめてしまう傾向があります。`git-sequential-stage`ツールは、人間が`git add -p`で行う作業を、**シンプルなコマンド実行だけで**実現できるようにします。
