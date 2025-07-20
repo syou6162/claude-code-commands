@@ -23,12 +23,11 @@
 
 ### 基本フロー
 
-1. **リポジトリルートに移動**: `git rev-parse --show-toplevel`で確認後、移動
-2. **差分取得**: `git diff HEAD`でコンテキスト付きのhunkリストを取得
-3. **LLM分析**: hunk単位で意味的グループを決定
-4. **自動ステージング**: `git-sequential-stage`が選択したhunkを安全にステージング
-5. **コミット実行**: ステージング完了後、`git commit`を実行
-6. **繰り返し**: 残りの変更で継続
+1. **環境準備**: リポジトリルートへの移動とpre-commitの事前実行
+2. **変更の取得**: すべての変更をhunk単位で取得（新規ファイルも含む）
+3. **意味的分析**: LLMが各hunkの内容を理解し、論理的なグループに分類
+4. **段階的コミット**: `git-sequential-stage`により選択したhunkのみを安全にステージング
+5. **反復処理**: 残りの変更に対して同じプロセスを繰り返し、意味のある単位でコミット
 
 ### 技術的詳細
 
@@ -36,26 +35,15 @@
 
 `git-sequential-stage`は、hunk単位の部分的なステージングを自動化するためのGoで実装された専用ツールです（[GitHub: syou6162/git-sequential-stage](https://github.com/syou6162/git-sequential-stage)）。
 
-以下の複雑な処理を内部でカプセル化しています：
-- `git patch-id`によるhunkの一意識別
-- 逐次ステージングによる行番号ズレの回避
-- パッチIDベースの照合による確実なhunk特定
-- `filterdiff`を使った複数ファイルパッチからの正確なhunk抽出
-
 使用方法：
 ```bash
 # 基本的な使い方
 git-sequential-stage -patch="path/to/changes.patch" -hunk="src/main.go:1,3,5"
 
-# 複数ファイルの場合（複数の-hunkフラグを指定）
+# 複数ファイルの場合
 git-sequential-stage -patch="path/to/changes.patch" \
   -hunk="src/main.go:1,3" \
   -hunk="src/utils.go:2,4"
-
-# 引数の説明：
-# -patch: パッチファイルのパス
-# -hunk: file:numbers形式で指定（例：src/main.go:1,3）
-#        ファイル名とカンマ区切りのhunk番号をコロンで連結
 ```
 
 ## 実行手順
@@ -71,7 +59,13 @@ echo "リポジトリルート: $REPO_ROOT"
 cd "$REPO_ROOT"
 ```
 
-### Step 1: 差分を取得
+### Step 1: pre-commitの事前実行（該当する場合）
+
+```bash
+[ -f .pre-commit-config.yaml ] && pre-commit run --all-files || true
+```
+
+### Step 2: 差分を取得
 
 ```bash
 # .claude/tmpディレクトリは既に存在するため、直接ファイルを作成可能
@@ -84,7 +78,7 @@ git ls-files --others --exclude-standard | xargs git add -N
 git diff HEAD > .claude/tmp/current_changes.patch
 ```
 
-### Step 2: LLM分析
+### Step 3: LLM分析
 
 LLMが**hunk単位**で変更を分析し、最初のコミットに含めるhunkを決定：
 
@@ -92,12 +86,12 @@ LLMが**hunk単位**で変更を分析し、最初のコミットに含めるhun
 - **意味的グループ化**: 同じ目的の変更（バグ修正、リファクタリング等）をグループ化
 - **コミット計画**: どのhunkをどのコミットに含めるか決定
 
-必要に応じて、総hunk数を確認：
+必要に応じて、hunk数を確認：
 ```bash
-# 全体のhunk数を確認
+# 全体のhunk数
 grep -c "^@@" .claude/tmp/current_changes.patch
 
-# 各ファイルごとのhunk数を確認
+# 各ファイルのhunk数
 git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
 ```
 
@@ -116,7 +110,7 @@ COMMIT_MSG="fix: ゼロ除算エラーを修正
 計算処理で分母が0の場合の適切なエラーハンドリングを追加"
 ```
 
-### Step 3: 自動ステージング
+### Step 4: 自動ステージング
 
 選択したhunkを`git-sequential-stage`で自動的にステージング：
 
@@ -134,7 +128,7 @@ git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
 git commit -m "$COMMIT_MSG"
 ```
 
-### Step 4: 繰り返し
+### Step 5: 繰り返し
 
 残りの変更に対して同じプロセスを繰り返し：
 
@@ -142,11 +136,11 @@ git commit -m "$COMMIT_MSG"
 # 残りの差分を確認
 if [ $(git diff HEAD | wc -l) -gt 0 ]; then
   echo "残りの変更を処理します..."
-  # Step 1に戻る
+  # Step 2（差分取得）から再開
 fi
 ```
 
-### Step 5: 最終確認
+### Step 6: 最終確認
 
 ```bash
 # すべての変更がコミットされたか確認
@@ -163,12 +157,10 @@ fi
 ```bash
 # 必要なツールの確認
 which git-sequential-stage  # 専用ツール
-which filterdiff           # patchutilsパッケージ（差分解析用）
 ```
 
 インストールが必要な場合：
 - `git-sequential-stage`: [GitHub: syou6162/git-sequential-stage](https://github.com/syou6162/git-sequential-stage)のREADMEを参照
-- patchutils: `brew install patchutils` (macOS) / `apt-get install patchutils` (Ubuntu/Debian)
 
 ## 使用例
 
@@ -262,7 +254,7 @@ git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="file.go:1
 cat .claude/tmp/current_changes.patch | head -50
 
 # 特定ファイルのhunk数を確認
-filterdiff -i "path/to/file.go" .claude/tmp/current_changes.patch | grep -c '^@@'
+git diff HEAD "path/to/file.go" | grep -c '^@@'
 ```
 
 ### 大きすぎるhunkの扱い
@@ -272,21 +264,49 @@ filterdiff -i "path/to/file.go" .claude/tmp/current_changes.patch | grep -c '^@@
 2. `git reset HEAD~1`で取り消し
 3. より小さな変更単位で再実装
 
+### pre-commitによるコミット間の自動修正への対応
+
+pre-commitフックが設定されている環境では、コミット時に自動的にファイルが修正されることがあります。これにより、semantic_commitで複数コミットを作成する際に問題が発生する場合があります。
+
+**問題の症状**：
+- 1つ目のコミット後、pre-commitがファイルを自動修正
+- 2つ目以降のコミットで、パッチファイルのhunk番号がずれる
+- `git-sequential-stage`がhunkを正しく特定できなくなる
+
+**対処法**：
+
+#### 1. 事前にpre-commitを実行（推奨）
+
+```bash
+# pre-commitの有無を確認し、設定されている場合は実行
+if [ -f .pre-commit-config.yaml ]; then
+  pre-commit run --all-files
+  echo "pre-commitの修正を適用しました。semantic_commitを実行できます。"
+else
+  echo "pre-commitは設定されていません。そのまま実行できます。"
+fi
+```
+
+#### 2. エラー発生時の復旧
+
+```bash
+# パッチファイルが古くなった場合は再生成
+rm .claude/tmp/current_changes.patch
+git diff HEAD > .claude/tmp/current_changes.patch
+
+# hunk番号を再確認して続行
+git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
+```
+
+
 ## 注意事項
 
 - **使用しないコマンド**: `git add`、`git checkout`、`git restore`、`git reset`、`git stash`
+  - **重要**: `git add`は新規ファイルの intent-to-add (`git add -N`) のみ使用可能
+  - ステージングはすべて`git-sequential-stage`が自動的に行う
 - **対話的操作の回避**: `git add -p`などのインタラクティブなコマンドは使用しない
 - **hunk番号の確認**: 必ず最新の差分で各ファイルのhunk番号を確認してから指定
 
 ## 背景と設計思想
 
-[Claude Code](https://docs.anthropic.com/ja/docs/claude-code/overview)などのLLM Agentは、複数の論理的な変更を1つのコミットにまとめてしまう傾向があります。
-
-`git-sequential-stage`ツールは、以下の複雑な処理を内部で自動化します：
-
-1. **パッチIDによる一意識別**: `git patch-id`を使用したhunkの確実な特定
-2. **逐次ステージング**: 各hunk適用時の行番号変化に対応
-3. **複数ファイルのサポート**: `filterdiff`を使った特定ファイルのhunk抽出
-4. **エラーハンドリング**: 様々なエッジケースに対する堅牢な処理
-
-これにより、人間が`git add -p`で行う作業を、LLM Agentが**シンプルなコマンド実行だけで**実現できるようになりました。
+LLM Agentは複数の論理的な変更を1つのコミットにまとめてしまう傾向があります。`git-sequential-stage`ツールは、人間が`git add -p`で行う作業を、**シンプルなコマンド実行だけで**実現できるようにします。
