@@ -157,12 +157,10 @@ fi
 ```bash
 # 必要なツールの確認
 which git-sequential-stage  # 専用ツール
-which filterdiff           # patchutilsパッケージ（差分解析用）
 ```
 
 インストールが必要な場合：
 - `git-sequential-stage`: [GitHub: syou6162/git-sequential-stage](https://github.com/syou6162/git-sequential-stage)のREADMEを参照
-- patchutils: `brew install patchutils`
 
 ## 使用例
 
@@ -256,7 +254,7 @@ git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="file.go:1
 cat .claude/tmp/current_changes.patch | head -50
 
 # 特定ファイルのhunk数を確認
-filterdiff -i "path/to/file.go" .claude/tmp/current_changes.patch | grep -c '^@@'
+git diff HEAD "path/to/file.go" | grep -c '^@@'
 ```
 
 ### 大きすぎるhunkの扱い
