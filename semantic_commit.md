@@ -23,7 +23,7 @@
 
 ### 基本フロー
 
-1. **環境準備**: リポジトリルートへの移動とpre-commitの事前実行
+1. **環境準備**: リポジトリルートへの移動
 2. **変更の取得**: すべての変更をhunk単位で取得（新規ファイルも含む）
 3. **意味的分析**: LLMが各hunkの内容を理解し、論理的なグループに分類
 4. **段階的コミット**: `git-sequential-stage`により選択したhunkのみを安全にステージング
@@ -59,13 +59,7 @@ echo "リポジトリルート: $REPO_ROOT"
 cd "$REPO_ROOT"
 ```
 
-### Step 1: pre-commitの事前実行（該当する場合）
-
-```bash
-[ -f .pre-commit-config.yaml ] && pre-commit run --all-files || true
-```
-
-### Step 2: 差分を取得
+### Step 1: 差分を取得
 
 ```bash
 # .claude/tmpディレクトリは既に存在するため、直接ファイルを作成可能
@@ -78,7 +72,7 @@ git ls-files --others --exclude-standard | xargs git add -N
 git diff HEAD > .claude/tmp/current_changes.patch
 ```
 
-### Step 3: LLM分析
+### Step 2: LLM分析
 
 LLMが**hunk単位**で変更を分析し、最初のコミットに含めるhunkを決定：
 
@@ -110,7 +104,7 @@ COMMIT_MSG="fix: ゼロ除算エラーを修正
 計算処理で分母が0の場合の適切なエラーハンドリングを追加"
 ```
 
-### Step 4: 自動ステージング
+### Step 3: 自動ステージング
 
 選択したhunkを`git-sequential-stage`で自動的にステージング：
 
@@ -128,7 +122,7 @@ git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
 git commit -m "$COMMIT_MSG"
 ```
 
-### Step 5: 繰り返し
+### Step 4: 繰り返し
 
 残りの変更に対して同じプロセスを繰り返し：
 
@@ -136,11 +130,11 @@ git commit -m "$COMMIT_MSG"
 # 残りの差分を確認
 if [ $(git diff HEAD | wc -l) -gt 0 ]; then
   echo "残りの変更を処理します..."
-  # Step 2（差分取得）から再開
+  # Step 1（差分取得）から再開
 fi
 ```
 
-### Step 6: 最終確認
+### Step 5: 最終確認
 
 ```bash
 # すべての変更がコミットされたか確認
