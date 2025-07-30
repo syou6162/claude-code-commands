@@ -44,6 +44,16 @@ Claude Codeのコマンドとして実行され、引数として渡されたPul
 # Claude Codeのコマンド引数からPull Request URLを取得
 PR_URL="$ARGUMENTS"
 
+# $ARGUMENTSが空の場合、現在のブランチのPRを取得
+if [ -z "$PR_URL" ]; then
+  PR_URL=$(gh pr view --json url --jq '.url' 2>/dev/null || echo "")
+  if [ -z "$PR_URL" ]; then
+    echo "エラー: Pull RequestのURLが指定されていません。また、現在のブランチに紐づくPRも見つかりませんでした。"
+    exit 1
+  fi
+  echo "現在のブランチのPull Request URLを使用します: $PR_URL"
+fi
+
 # gh pr viewでPR情報を取得
 PR_INFO=$(gh pr view "$PR_URL" --json number,headRepositoryOwner,headRepository,title,body,author,state,headRefName,baseRefName,changedFiles,additions,deletions,createdAt,commits,statusCheckRollup,mergeable)
 
