@@ -323,15 +323,6 @@ git diff HEAD > .claude/tmp/current_changes.patch
 git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
 ```
 
-
-## 注意事項
-
-- **使用しないコマンド**: `git add`、`git checkout`、`git restore`、`git reset`、`git stash`
-  - **重要**: `git add`は新規ファイルの intent-to-add (`git add -N`) のみ使用可能
-  - ステージングはすべて`git-sequential-stage`が自動的に行う
-- **対話的操作の回避**: `git add -p`などのインタラクティブなコマンドは使用しない
-- **hunk番号の確認**: 必ず最新の差分で各ファイルのhunk番号を確認してから指定
-
 ## 背景と設計思想
 
 LLM Agentは複数の論理的な変更を1つのコミットにまとめてしまう傾向があります。`git-sequential-stage`ツールは、人間が`git add -p`で行う作業を、**シンプルなコマンド実行だけで**実現できるようにします。
