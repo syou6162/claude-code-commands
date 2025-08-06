@@ -37,14 +37,34 @@
 
 使用方法：
 ```bash
-# 基本的な使い方
+# hunk番号を指定して部分的にステージング
 git-sequential-stage -patch="path/to/changes.patch" -hunk="src/main.go:1,3,5"
 
-# 複数ファイルの場合
+# ファイル全体をステージング（ワイルドカード使用）
+git-sequential-stage -patch="path/to/changes.patch" -hunk="src/logger.go:*"
+
+# 複数ファイルの場合（ワイルドカードと番号指定の混在も可能）
 git-sequential-stage -patch="path/to/changes.patch" \
   -hunk="src/main.go:1,3" \
-  -hunk="src/utils.go:2,4"
+  -hunk="src/utils.go:*" \
+  -hunk="docs/README.md:*"
 ```
+
+#### ワイルドカード使用の判断基準
+
+**ワイルドカード（`*`）を使用すべきケース：**
+- ファイル内のすべての変更が**意味的に一体**である場合
+- 新規ファイルの追加
+- ファイル全体のリファクタリング（すべての変更が同じ目的）
+- ドキュメントファイルの更新
+
+**hunk番号で分割すべきケース：**
+- 異なる目的の変更が混在している場合
+- バグ修正とリファクタリングが同じファイルに混在
+- 機能追加と既存コードの改善が混在
+
+**⚠️ 重要な警告：**
+「hunkを数えるのが面倒」という理由でワイルドカードを使用することは厳禁。意味のある最小単位でのコミットという本来の目的を必ず守ること。
 
 ## 実行手順
 
@@ -110,13 +130,17 @@ COMMIT_MSG="fix: ゼロ除算エラーを修正
 
 ```bash
 # git-sequential-stageを実行（内部で逐次ステージングを安全に処理）
-# 単一ファイルの場合
+# 部分的な変更をステージング（hunk番号指定）
 git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5"
 
-# 複数ファイルの場合
+# ファイル全体をステージング（意味的に一体の変更の場合）
+git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_calculator.py:*"
+
+# 複数ファイルの場合（混在使用）
 git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
   -hunk="src/calculator.py:1,3,5" \
-  -hunk="src/utils.py:2"
+  -hunk="src/utils.py:2" \
+  -hunk="docs/CHANGELOG.md:*"
 
 # コミット実行
 git commit -m "$COMMIT_MSG"
@@ -171,9 +195,11 @@ which git-sequential-stage  # 専用ツール
 ↓ 分割結果
 
 コミット1: fix: ゼロ除算エラーを修正
+# バグ修正のhunkのみを選択（他の変更と混在しているため番号指定）
 git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5"
 
 コミット2: refactor: 計算ロジックの最適化
+# リファクタリングのhunkのみを選択
 git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:2,4"
 ```
 
@@ -188,21 +214,26 @@ git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calcu
 ↓ 分割結果
 
 コミット1: fix: 既存認証のセキュリティ脆弱性修正
+# セキュリティ修正のhunkのみを選択（他の変更と混在）
 git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/auth.py:1,3,5"
 
 コミット2: feat: JWT認証機能の実装
+# 新機能実装に関連する変更を選択
 git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
   -hunk="src/auth.py:2,4" \
-  -hunk="src/models.py:1,2"
+  -hunk="src/models.py:*"  # モデルの変更はすべてJWT関連のため*を使用
 
 コミット3: test: 認証機能のテスト追加
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_auth.py:1,2,3"
+# 新規テストファイルは意味的に一体のため*を使用
+git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_auth.py:*"
 ```
 
 ## ベストプラクティス
 
 1. **事前確認**: `git status`で現在の状態を確認
-2. **hunk番号の正確な指定**: ファイル名:hunk番号の形式で指定（例: "file.go:1,3,5"）
+2. **適切な指定方法の選択**:
+   - 部分的な変更: `file.go:1,3,5` （hunk番号を指定）
+   - ファイル全体: `file.go:*` （意味的に一体の場合のみ）
 3. **意味的一貫性**: 同じ目的の変更は同じコミットに
 4. **Conventional Commits**: 適切なプレフィックスを使用
    - `feat:` 新機能
