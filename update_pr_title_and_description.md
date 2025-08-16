@@ -4,16 +4,11 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 
 ## 実行手順
 
-1. **PR番号の取得と作業ディレクトリの準備**
+1. **PR番号の取得**
    
    PR番号を取得（現在のブランチから）：
    ```bash
    PR_NUMBER=$(gh pr view --json number --jq '.number')
-   ```
-   
-   作業ディレクトリの作成：
-   ```bash
-   mkdir -p .claude/tmp
    ```
 
 2. **修正内容の確認**
