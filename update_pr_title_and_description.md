@@ -5,11 +5,14 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 ## 実行手順
 
 1. **PR番号の取得と作業ディレクトリの準備**
-   ```bash
-   # PR番号を取得（現在のブランチから）
-   PR_NUMBER=$(gh pr view --json number --jq '.number')
    
-   # 作業ディレクトリの作成
+   PR番号を取得（現在のブランチから）：
+   ```bash
+   PR_NUMBER=$(gh pr view --json number --jq '.number')
+   ```
+   
+   作業ディレクトリの作成：
+   ```bash
    mkdir -p .claude/tmp
    ```
 
@@ -24,14 +27,16 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
    ```
 
 4. **説明文ファイルの準備**
-   - `.github/PULL_REQUEST_TEMPLATE.md`が存在する場合：
-     ```bash
-     cp .github/PULL_REQUEST_TEMPLATE.md .claude/tmp/pr_body_${PR_NUMBER}.md
-     ```
-   - 存在しない場合：
-     ```bash
-     touch .claude/tmp/pr_body_${PR_NUMBER}.md
-     ```
+   
+   `.github/PULL_REQUEST_TEMPLATE.md`が存在する場合はコピー：
+   ```bash
+   cp .github/PULL_REQUEST_TEMPLATE.md .claude/tmp/pr_body_${PR_NUMBER}.md
+   ```
+   
+   存在しない場合は新規ファイル作成：
+   ```bash
+   touch .claude/tmp/pr_body_${PR_NUMBER}.md
+   ```
 
 5. **Pull Requestの説明文を作成**
    - 作業ファイル（`.claude/tmp/pr_body_${PR_NUMBER}.md`）を編集
