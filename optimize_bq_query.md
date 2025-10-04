@@ -34,7 +34,7 @@ if [[ "$INPUT" =~ \.sql$ ]]; then
     fi
     # ファイルから直接クエリを実行（改行を含むクエリに対応）
     echo "クエリを実行中..."
-    JOB_ID=$(cat "$INPUT" | bq query --nosync --use_legacy_sql=false --format=json | jq -r '.jobReference.jobId')
+    JOB_ID=$(cat "$INPUT" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId')
 
     echo "ジョブID: $JOB_ID"
     # ジョブの完了を待つ（--nosyncのため待機が必要）
@@ -48,7 +48,7 @@ elif [[ "$INPUT" =~ ^(bquxjob_|job_|bq-) ]]; then
 else
     echo "SQLクエリを実行中..."
     # クエリをパイプで渡して実行（改行を含むクエリに対応）
-    JOB_ID=$(echo "$INPUT" | bq query --nosync --use_legacy_sql=false --format=json | jq -r '.jobReference.jobId')
+    JOB_ID=$(echo "$INPUT" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId')
 
     echo "ジョブID: $JOB_ID"
     # ジョブの完了を待つ
@@ -76,7 +76,7 @@ bq query --use_legacy_sql=false --format=json \
 jq -r '.[0].query' /tmp/job_info.json > /tmp/original_query.sql
 
 # 元の行数を記録
-bq query --use_legacy_sql=false --format=json "
+bq query --use_legacy_sql=false --use_cache=false --format=json "
   SELECT COUNT(*) as row_count
   FROM ($(cat /tmp/original_query.sql)) AS t" > /tmp/original_count.json
 
@@ -199,7 +199,7 @@ jq -r '.[] | select(.shuffle_bytes >= 104857600) | "\(.stage_name): \(.shuffle_b
 #### 結果同一性の完全検証（行数＋列数）
 ```bash
 # 最適化後の行数確認
-bq query --use_legacy_sql=false --format=json "
+bq query --use_legacy_sql=false --use_cache=false --format=json "
   SELECT COUNT(*) as row_count
   FROM ($(cat /tmp/optimized_query.sql)) AS t" > /tmp/optimized_count.json
 
@@ -236,7 +236,7 @@ diff /tmp/original_column_names.txt /tmp/optimized_column_names.txt
 #### 最適化クエリの実行と新メトリクス取得
 ```bash
 # 最適化クエリを実行（両形式のジョブIDに対応）
-NEW_JOB_OUTPUT=$(bq query --use_legacy_sql=false --format=none \
+NEW_JOB_OUTPUT=$(bq query --use_legacy_sql=false --use_cache=false --format=none \
   "$(cat /tmp/optimized_query.sql)")
 NEW_JOB_ID=$(echo "$NEW_JOB_OUTPUT" | \
   grep -oE '(bquxjob_[a-z0-9_]+|job_[a-zA-Z0-9_-]+)' | head -1)
@@ -467,7 +467,7 @@ bq ls -j -n 20 | grep "QUERY" | sort -k4 -r
 ```bash
 # テスト用の簡単なクエリを実行
 TEST_QUERY="SELECT 1 as test"
-bq query --use_legacy_sql=false "$TEST_QUERY"
+bq query --use_legacy_sql=false --use_cache=false "$TEST_QUERY"
 # 生成されたジョブIDで最適化を実行
 /optimize_bq_query <job_id>
 ```
