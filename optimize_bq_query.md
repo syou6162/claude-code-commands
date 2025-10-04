@@ -27,15 +27,14 @@ INPUT="$ARGUMENTS"
 # ファイルパスの場合
 if [[ "$INPUT" =~ \.sql$ ]]; then
     if [ -f "$INPUT" ]; then
-        QUERY=$(cat "$INPUT")
         echo "SQLファイルを読み込みました: $INPUT"
     else
         echo "Error: ファイルが見つかりません: $INPUT"
         exit 1
     fi
-    # クエリを実行してジョブIDを取得（--nosyncで即座に戻る）
+    # ファイルから直接クエリを実行（改行を含むクエリに対応）
     echo "クエリを実行中..."
-    JOB_ID=$(bq query --nosync --use_legacy_sql=false --format=json "$QUERY" | jq -r '.jobReference.jobId')
+    JOB_ID=$(cat "$INPUT" | bq query --nosync --use_legacy_sql=false --format=json | jq -r '.jobReference.jobId')
 
     echo "ジョブID: $JOB_ID"
     # ジョブの完了を待つ（--nosyncのため待機が必要）
@@ -48,8 +47,8 @@ elif [[ "$INPUT" =~ ^(bquxjob_|job_|bq-) ]]; then
 # SQLクエリの場合
 else
     echo "SQLクエリを実行中..."
-    # クエリを実行してジョブIDを取得（--nosyncで即座に戻る）
-    JOB_ID=$(bq query --nosync --use_legacy_sql=false --format=json "$INPUT" | jq -r '.jobReference.jobId')
+    # クエリをパイプで渡して実行（改行を含むクエリに対応）
+    JOB_ID=$(echo "$INPUT" | bq query --nosync --use_legacy_sql=false --format=json | jq -r '.jobReference.jobId')
 
     echo "ジョブID: $JOB_ID"
     # ジョブの完了を待つ
