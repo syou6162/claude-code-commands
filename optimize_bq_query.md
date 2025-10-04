@@ -91,76 +91,114 @@ bq query --use_legacy_sql=false --format=json --dry_run \
   jq -r '.statistics.query.schema.fields[].name' > /tmp/original_column_names.txt
 ```
 
-#### Execution Graph分析（INFORMATION_SCHEMAから直接取得）
+#### Execution Graph概要
 ```bash
-# 全ステージのパフォーマンスデータを取得（パラメータを使用）
-bq query --use_legacy_sql=false --format=json \
+# 全ステージの概要を表示（上位10ステージ）
+echo "=== Execution Graph概要 ==="
+bq query --use_legacy_sql=false --format=pretty \
   --parameter="job_id:STRING:${JOB_ID}" "
   SELECT
     stage.name as stage_name,
-    CAST(stage.compute_ms_avg AS INT64) as compute_ms_avg,
-    CAST(stage.compute_ms_max AS INT64) as compute_ms_max,
-    CAST(stage.wait_ms_avg AS INT64) as wait_ms_avg,
-    CAST(stage.wait_ms_max AS INT64) as wait_ms_max,
-    CAST(stage.shuffle_output_bytes AS INT64) as shuffle_bytes,
-    CAST(stage.shuffle_output_bytes_spilled AS INT64) as shuffle_spilled,
-    CAST(stage.records_read AS INT64) as records_read,
-    CAST(stage.records_written AS INT64) as records_written,
     CAST(stage.slot_ms AS INT64) as slot_ms,
-    -- データスキュー率の計算
-    SAFE_DIVIDE(CAST(stage.compute_ms_max AS FLOAT64),
-                CAST(stage.compute_ms_avg AS FLOAT64)) as skew_ratio
+    CAST(stage.compute_ms_max AS INT64) as compute_ms,
+    ROUND(CAST(stage.shuffle_output_bytes AS INT64) / 1048576, 1) as shuffle_mb,
+    ROUND(SAFE_DIVIDE(
+      CAST(stage.compute_ms_max AS FLOAT64),
+      CAST(stage.compute_ms_avg AS FLOAT64)
+    ), 2) as skew_ratio
   FROM
     \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
     UNNEST(job_stages) AS stage
   WHERE
     job_id = @job_id
   ORDER BY
-    stage.slot_ms DESC" > /tmp/execution_graph.json
+    stage.slot_ms DESC
+  LIMIT 10"
 ```
 
 **注目メトリクス:**
-- `compute_ms_max`: 最大計算時間
-- `shuffle_bytes`: シャッフルデータ量
+- `slot_ms`: スロット時間（全体的なコスト）
+- `compute_ms`: 最大計算時間
+- `shuffle_mb`: シャッフルデータ量（MB）
 - `skew_ratio`: データスキュー率（2.0以上で問題）
 - `stage_name`: "S00: Input", "S06: Sort+", "S0E: Join+"など
 
 #### 時系列スロット使用データ
 ```bash
-bq query --use_legacy_sql=false --format=json \
+echo -e "\n=== スロット使用状況の推移 ==="
+bq query --use_legacy_sql=false --format=pretty \
   --parameter="job_id:STRING:${JOB_ID}" "
   SELECT
-    period_start,
-    period_slot_ms,
+    FORMAT_TIMESTAMP('%H:%M:%S', period_start) as time,
+    period_slot_ms as slot_ms,
     state,
-    period_shuffle_ram_usage_ratio
+    ROUND(period_shuffle_ram_usage_ratio, 2) as shuffle_ram_ratio
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_TIMELINE_BY_PROJECT
   WHERE job_id = @job_id
-  ORDER BY period_start"
+  ORDER BY period_start
+  LIMIT 20"
 ```
 
-### 3. ボトルネック診断（ステージとSQL対応付け）
+### 3. ボトルネック診断（テーブル形式で直接表示）
 
-収集したメトリクスから問題を特定し、**元のSQLのどの部分が原因か説明してください**：
+パフォーマンス問題を分析して、結果をテーブル形式で表示します：
 
 ```bash
-# execution_graph.jsonから問題のあるステージを分析
-echo "=== パフォーマンス分析 ==="
+# 最も遅いステージTOP5
+echo "=== 最も時間のかかるステージ TOP5 ==="
+bq query --use_legacy_sql=false --format=pretty \
+  --parameter="job_id:STRING:${JOB_ID}" "
+SELECT
+  stage.name as stage_name,
+  CAST(stage.slot_ms AS INT64) as slot_ms,
+  CAST(stage.compute_ms_max AS INT64) as compute_ms_max,
+  CAST(stage.wait_ms_max AS INT64) as wait_ms_max
+FROM
+  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+  UNNEST(job_stages) AS stage
+WHERE
+  job_id = @job_id
+ORDER BY
+  stage.slot_ms DESC
+LIMIT 5"
 
-# 1. 最も遅いステージTOP5を表示
-echo "最も時間のかかるステージ:"
-jq -r '.[] | "\(.stage_name): \(.slot_ms)ms (compute: \(.compute_ms_max)ms, wait: \(.wait_ms_max)ms)"' \
-  /tmp/execution_graph.json | head -5
+# データスキューの検出（スキュー率2.0以上）
+echo -e "\n=== データスキュー検出（スキュー率 >= 2.0）==="
+bq query --use_legacy_sql=false --format=pretty \
+  --parameter="job_id:STRING:${JOB_ID}" "
+SELECT
+  stage.name as stage_name,
+  ROUND(SAFE_DIVIDE(
+    CAST(stage.compute_ms_max AS FLOAT64),
+    CAST(stage.compute_ms_avg AS FLOAT64)
+  ), 2) as skew_ratio
+FROM
+  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+  UNNEST(job_stages) AS stage
+WHERE
+  job_id = @job_id
+  AND SAFE_DIVIDE(
+    CAST(stage.compute_ms_max AS FLOAT64),
+    CAST(stage.compute_ms_avg AS FLOAT64)
+  ) >= 2.0
+ORDER BY
+  skew_ratio DESC"
 
-# 2. データスキューの検出（スキュー率2.0以上）
-echo -e "\nデータスキュー検出:"
-jq -r '.[] | select(.skew_ratio >= 2.0) | "\(.stage_name): スキュー率 \(.skew_ratio)"' \
-  /tmp/execution_graph.json
-
-# 3. 大量シャッフルステージ（100MB以上）
-echo -e "\n大量データシャッフル:"
-jq -r '.[] | select(.shuffle_bytes >= 104857600) | "\(.stage_name): \(.shuffle_bytes / 1048576 | floor)MB"' \
-  /tmp/execution_graph.json
+# 大量データシャッフル（100MB以上）
+echo -e "\n=== 大量データシャッフル（>= 100MB）==="
+bq query --use_legacy_sql=false --format=pretty \
+  --parameter="job_id:STRING:${JOB_ID}" "
+SELECT
+  stage.name as stage_name,
+  ROUND(CAST(stage.shuffle_output_bytes AS INT64) / 1048576, 1) as shuffle_mb
+FROM
+  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+  UNNEST(job_stages) AS stage
+WHERE
+  job_id = @job_id
+  AND CAST(stage.shuffle_output_bytes AS INT64) >= 104857600
+ORDER BY
+  shuffle_mb DESC"
 ```
 
 **分析結果の解釈:**
