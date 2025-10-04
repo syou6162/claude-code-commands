@@ -81,15 +81,15 @@ bq query --use_legacy_sql=false --format=json "
   SELECT COUNT(*) as row_count
   FROM ($(cat /tmp/original_query.sql)) AS t" > /tmp/original_count.json
 
-# 元のスキーマ（列数とカラム名）を記録
-bq query --use_legacy_sql=false --format=json --max_results=0 \
-  "$(cat /tmp/original_query.sql)" 2>&1 | \
-  jq '.schema.fields | length' > /tmp/original_columns.txt
+# 元のスキーマ（列数とカラム名）を記録（--dry_runで取得）
+bq query --use_legacy_sql=false --format=json --dry_run \
+  "$(cat /tmp/original_query.sql)" | \
+  jq '.statistics.query.schema.fields | length' > /tmp/original_columns.txt
 
 # カラム名リストも保存（詳細検証用）
-bq query --use_legacy_sql=false --format=json --max_results=0 \
-  "$(cat /tmp/original_query.sql)" 2>&1 | \
-  jq -r '.schema.fields[].name' > /tmp/original_column_names.txt
+bq query --use_legacy_sql=false --format=json --dry_run \
+  "$(cat /tmp/original_query.sql)" | \
+  jq -r '.statistics.query.schema.fields[].name' > /tmp/original_column_names.txt
 ```
 
 #### Execution Graph分析（INFORMATION_SCHEMAから直接取得）
@@ -204,15 +204,15 @@ bq query --use_legacy_sql=false --format=json "
   SELECT COUNT(*) as row_count
   FROM ($(cat /tmp/optimized_query.sql)) AS t" > /tmp/optimized_count.json
 
-# 最適化後の列数確認
-bq query --use_legacy_sql=false --format=json --max_results=0 \
-  "$(cat /tmp/optimized_query.sql)" 2>&1 | \
-  jq '.schema.fields | length' > /tmp/optimized_columns.txt
+# 最適化後の列数確認（--dry_runで取得）
+bq query --use_legacy_sql=false --format=json --dry_run \
+  "$(cat /tmp/optimized_query.sql)" | \
+  jq '.statistics.query.schema.fields | length' > /tmp/optimized_columns.txt
 
 # 最適化後のカラム名リスト
-bq query --use_legacy_sql=false --format=json --max_results=0 \
-  "$(cat /tmp/optimized_query.sql)" 2>&1 | \
-  jq -r '.schema.fields[].name' > /tmp/optimized_column_names.txt
+bq query --use_legacy_sql=false --format=json --dry_run \
+  "$(cat /tmp/optimized_query.sql)" | \
+  jq -r '.statistics.query.schema.fields[].name' > /tmp/optimized_column_names.txt
 
 # 行数と列数の比較
 ORIGINAL_ROWS=$(jq -r '.[0].row_count' /tmp/original_count.json)
@@ -238,7 +238,7 @@ diff /tmp/original_column_names.txt /tmp/optimized_column_names.txt
 ```bash
 # 最適化クエリを実行（両形式のジョブIDに対応）
 NEW_JOB_OUTPUT=$(bq query --use_legacy_sql=false --format=none \
-  "$(cat /tmp/optimized_query.sql)" 2>&1)
+  "$(cat /tmp/optimized_query.sql)")
 NEW_JOB_ID=$(echo "$NEW_JOB_OUTPUT" | \
   grep -oE '(bquxjob_[a-z0-9_]+|job_[a-zA-Z0-9_-]+)' | head -1)
 
@@ -277,7 +277,7 @@ echo "Iteration 1: ${IMPROVEMENT_RATIO}x improvement" >> /tmp/optimization_histo
 
 ## 実行概要
 - 元のジョブID: [ID]
-- プロジェクト: [PROJECT_ID]
+- プロジェクト: デフォルトプロジェクト
 - リージョン: [LOCATION]
 - 処理データ: [X GB]
 - スロット時間: [Y ms]
@@ -322,7 +322,7 @@ if ! bq show -j --format=json "$JOB_ID" > /tmp/job_details.json 2>&1; then
     echo "Error: ジョブID '$JOB_ID' が見つかりません"
     echo "対処法:"
     echo "  1. ジョブIDが正しいか確認してください"
-    echo "  2. プロジェクトIDを明示的に指定: bq show -j --project_id=PROJECT_ID"
+    echo "  2. デフォルトプロジェクトを確認: gcloud config get-value project"
     echo "  3. 最近のジョブ一覧を確認: bq ls -j -n 10"
     exit 1
 fi
