@@ -62,7 +62,7 @@ fi
 #### 元のクエリと基本メトリクスの取得
 ```bash
 # ジョブの基本情報とクエリを取得（パラメータを使用）
-bq query --format=json \
+bq query --use_legacy_sql=false --format=json \
   --parameter="job_id:STRING:${JOB_ID}" "
   SELECT
     job_id,
@@ -77,17 +77,17 @@ bq query --format=json \
 jq -r '.[0].query' /tmp/job_info.json > /tmp/original_query.sql
 
 # 元の行数を記録
-bq query --format=json "
+bq query --use_legacy_sql=false --format=json "
   SELECT COUNT(*) as row_count
   FROM ($(cat /tmp/original_query.sql)) AS t" > /tmp/original_count.json
 
 # 元のスキーマ（列数とカラム名）を記録
-bq query --format=json --max_results=0 \
+bq query --use_legacy_sql=false --format=json --max_results=0 \
   "$(cat /tmp/original_query.sql)" 2>&1 | \
   jq '.schema.fields | length' > /tmp/original_columns.txt
 
 # カラム名リストも保存（詳細検証用）
-bq query --format=json --max_results=0 \
+bq query --use_legacy_sql=false --format=json --max_results=0 \
   "$(cat /tmp/original_query.sql)" 2>&1 | \
   jq -r '.schema.fields[].name' > /tmp/original_column_names.txt
 ```
@@ -95,7 +95,7 @@ bq query --format=json --max_results=0 \
 #### Execution Graph分析（INFORMATION_SCHEMAから直接取得）
 ```bash
 # 全ステージのパフォーマンスデータを取得（パラメータを使用）
-bq query --format=json \
+bq query --use_legacy_sql=false --format=json \
   --parameter="job_id:STRING:${JOB_ID}" "
   SELECT
     stage.name as stage_name,
@@ -128,7 +128,7 @@ bq query --format=json \
 
 #### 時系列スロット使用データ
 ```bash
-bq query --format=json \
+bq query --use_legacy_sql=false --format=json \
   --parameter="job_id:STRING:${JOB_ID}" "
   SELECT
     period_start,
@@ -200,17 +200,17 @@ jq -r '.[] | select(.shuffle_bytes >= 104857600) | "\(.stage_name): \(.shuffle_b
 #### 結果同一性の完全検証（行数＋列数）
 ```bash
 # 最適化後の行数確認
-bq query --format=json "
+bq query --use_legacy_sql=false --format=json "
   SELECT COUNT(*) as row_count
   FROM ($(cat /tmp/optimized_query.sql)) AS t" > /tmp/optimized_count.json
 
 # 最適化後の列数確認
-bq query --format=json --max_results=0 \
+bq query --use_legacy_sql=false --format=json --max_results=0 \
   "$(cat /tmp/optimized_query.sql)" 2>&1 | \
   jq '.schema.fields | length' > /tmp/optimized_columns.txt
 
 # 最適化後のカラム名リスト
-bq query --format=json --max_results=0 \
+bq query --use_legacy_sql=false --format=json --max_results=0 \
   "$(cat /tmp/optimized_query.sql)" 2>&1 | \
   jq -r '.schema.fields[].name' > /tmp/optimized_column_names.txt
 
@@ -237,13 +237,13 @@ diff /tmp/original_column_names.txt /tmp/optimized_column_names.txt
 #### 最適化クエリの実行と新メトリクス取得
 ```bash
 # 最適化クエリを実行（両形式のジョブIDに対応）
-NEW_JOB_OUTPUT=$(bq query --project_id="$PROJECT_ID" --format=none \
+NEW_JOB_OUTPUT=$(bq query --use_legacy_sql=false --format=none \
   "$(cat /tmp/optimized_query.sql)" 2>&1)
 NEW_JOB_ID=$(echo "$NEW_JOB_OUTPUT" | \
   grep -oE '(bquxjob_[a-z0-9_]+|job_[a-zA-Z0-9_-]+)' | head -1)
 
 # 新しいジョブのメトリクスを取得
-NEW_JOB_INFO=$(bq query --format=json \
+NEW_JOB_INFO=$(bq query --use_legacy_sql=false --format=json \
   --parameter="job_id:STRING:${NEW_JOB_ID}" "
   SELECT
     total_slot_ms,
@@ -468,7 +468,7 @@ bq ls -j -n 20 | grep "QUERY" | sort -k4 -r
 ```bash
 # テスト用の簡単なクエリを実行
 TEST_QUERY="SELECT 1 as test"
-bq query "$TEST_QUERY"
+bq query --use_legacy_sql=false "$TEST_QUERY"
 # 生成されたジョブIDで最適化を実行
 /optimize_bq_query <job_id>
 ```
