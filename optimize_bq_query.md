@@ -60,8 +60,9 @@ fi
 
 #### 元のクエリと基本メトリクスの取得
 ```bash
-# ジョブの基本情報とクエリを取得（パラメータを使用）
-bq query --use_legacy_sql=false --format=json \
+# ジョブの基本情報とクエリを取得して保存
+echo "ジョブ情報を取得中..."
+JOB_INFO=$(bq query --use_legacy_sql=false --format=json \
   --parameter="job_id:STRING:${JOB_ID}" "
   SELECT
     job_id,
@@ -70,25 +71,23 @@ bq query --use_legacy_sql=false --format=json \
     total_bytes_processed,
     TIMESTAMP_DIFF(end_time, start_time, MILLISECOND) as elapsed_ms
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-  WHERE job_id = @job_id" > /tmp/job_info.json
+  WHERE job_id = @job_id")
 
-# 元のクエリを保存
-jq -r '.[0].query' /tmp/job_info.json > /tmp/original_query.sql
+# クエリを保存
+echo "$JOB_INFO" | jq -r '.[0].query' > /tmp/original_query.sql
+ORIGINAL_SLOT_MS=$(echo "$JOB_INFO" | jq -r '.[0].total_slot_ms')
+echo "元のクエリを保存しました"
 
-# 元の行数を記録
-bq query --use_legacy_sql=false --use_cache=false --format=json "
-  SELECT COUNT(*) as row_count
-  FROM ($(cat /tmp/original_query.sql)) AS t" > /tmp/original_count.json
+# 元のクエリの実際の結果を取得して行数を記録（結果は検証時に使うので保存）
+echo "元のクエリ結果を取得中..."
+cat /tmp/original_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json > /tmp/original_results.json
+echo "元の行数: $(jq '. | length' /tmp/original_results.json)"
 
-# 元のスキーマ（列数とカラム名）を記録（--dry_runで取得）
-bq query --use_legacy_sql=false --format=json --dry_run \
-  "$(cat /tmp/original_query.sql)" | \
-  jq '.statistics.query.schema.fields | length' > /tmp/original_columns.txt
-
-# カラム名リストも保存（詳細検証用）
-bq query --use_legacy_sql=false --format=json --dry_run \
-  "$(cat /tmp/original_query.sql)" | \
-  jq -r '.statistics.query.schema.fields[].name' > /tmp/original_column_names.txt
+# 元のスキーマ情報を取得して変数に保存
+echo "スキーマ情報を取得中..."
+ORIGINAL_SCHEMA=$(cat /tmp/original_query.sql | bq query --use_legacy_sql=false --format=json --dry_run)
+ORIGINAL_COLS=$(echo "$ORIGINAL_SCHEMA" | jq '.statistics.query.schema.fields | length')
+ORIGINAL_COL_NAMES=$(echo "$ORIGINAL_SCHEMA" | jq -r '.statistics.query.schema.fields[].name')
 ```
 
 #### Execution Graph概要
@@ -234,39 +233,44 @@ ORDER BY
 -- 最適化後のクエリを/tmp/optimized_query.sqlに保存
 ```
 
-#### 結果同一性の完全検証（行数＋列数）
+#### 結果同一性の完全検証（行数＋スキーマ）
 ```bash
-# 最適化後の行数確認
-bq query --use_legacy_sql=false --use_cache=false --format=json "
-  SELECT COUNT(*) as row_count
-  FROM ($(cat /tmp/optimized_query.sql)) AS t" > /tmp/optimized_count.json
+# 最適化後のクエリ結果を取得して行数を記録
+echo "最適化後のクエリ結果を取得中..."
+OPTIMIZED_ROWS=$(cat /tmp/optimized_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json | jq '. | length')
+echo "最適化後の行数: $OPTIMIZED_ROWS"
 
-# 最適化後の列数確認（--dry_runで取得）
-bq query --use_legacy_sql=false --format=json --dry_run \
-  "$(cat /tmp/optimized_query.sql)" | \
-  jq '.statistics.query.schema.fields | length' > /tmp/optimized_columns.txt
+# 最適化後のスキーマ確認
+echo "スキーマを確認中..."
+OPTIMIZED_SCHEMA=$(cat /tmp/optimized_query.sql | bq query --use_legacy_sql=false --format=json --dry_run)
+OPTIMIZED_COLS=$(echo "$OPTIMIZED_SCHEMA" | jq '.statistics.query.schema.fields | length')
+OPTIMIZED_COL_NAMES=$(echo "$OPTIMIZED_SCHEMA" | jq -r '.statistics.query.schema.fields[].name')
 
-# 最適化後のカラム名リスト
-bq query --use_legacy_sql=false --format=json --dry_run \
-  "$(cat /tmp/optimized_query.sql)" | \
-  jq -r '.statistics.query.schema.fields[].name' > /tmp/optimized_column_names.txt
+# 元の行数を取得（保存済みの結果から）
+ORIGINAL_ROWS=$(jq '. | length' /tmp/original_results.json)
 
-# 行数と列数の比較
-ORIGINAL_ROWS=$(jq -r '.[0].row_count' /tmp/original_count.json)
-OPTIMIZED_ROWS=$(jq -r '.[0].row_count' /tmp/optimized_count.json)
-ORIGINAL_COLS=$(cat /tmp/original_columns.txt)
-OPTIMIZED_COLS=$(cat /tmp/optimized_columns.txt)
-
+# 行数の比較（リファクタリングでは必須）
 if [ "$ORIGINAL_ROWS" != "$OPTIMIZED_ROWS" ]; then
-  echo "警告: 行数が一致しません（元: $ORIGINAL_ROWS, 最適化後: $OPTIMIZED_ROWS）"
+  echo "❌ エラー: 行数が一致しません（元: $ORIGINAL_ROWS, 最適化後: $OPTIMIZED_ROWS）"
+  echo "これは真のリファクタリングではありません。結果が変わっています。"
+  exit 1
+else
+  echo "✓ 行数が一致しました: $ORIGINAL_ROWS 行"
 fi
 
+# スキーマの比較
 if [ "$ORIGINAL_COLS" != "$OPTIMIZED_COLS" ]; then
-  echo "警告: 列数が一致しません（元: $ORIGINAL_COLS, 最適化後: $OPTIMIZED_COLS）"
+  echo "❌ エラー: 列数が一致しません（元: $ORIGINAL_COLS, 最適化後: $OPTIMIZED_COLS）"
+  exit 1
+else
+  echo "✓ スキーマが一致しました（列数: $ORIGINAL_COLS）"
 fi
 
-# カラム名の差分確認（オプション）
-diff /tmp/original_column_names.txt /tmp/optimized_column_names.txt
+# カラム名の差分確認
+if [ "$ORIGINAL_COL_NAMES" != "$OPTIMIZED_COL_NAMES" ]; then
+  echo "警告: カラム名に差分があります"
+  diff <(echo "$ORIGINAL_COL_NAMES") <(echo "$OPTIMIZED_COL_NAMES")
+fi
 ```
 
 ### 6. 改善効果の測定と反復改善
@@ -289,8 +293,7 @@ NEW_JOB_INFO=$(bq query --use_legacy_sql=false --format=json \
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   WHERE job_id = @job_id")
 
-# 改善度を計算
-ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
+# 改善度を計算（ORIGINAL_SLOT_MSは既に取得済み）
 NEW_SLOT_MS=$(echo "$NEW_JOB_INFO" | jq -r '.[0].total_slot_ms')
 IMPROVEMENT_RATIO=$(echo "scale=2; $ORIGINAL_SLOT_MS / $NEW_SLOT_MS" | bc)
 ```
