@@ -6,6 +6,7 @@ BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改�
 - **リージョン**: US（region-us）固定
 - **プロジェクト**: デフォルトプロジェクト（`gcloud config get-value project`で設定済み）
 - **権限**: INFORMATION_SCHEMAへのアクセス権限あり
+- **スキャン量削減**: INFORMATION_SCHEMAは直近7日間のみ検索（creation_timeで絞り込み）
 
 ## 分析対象
 入力: $ARGUMENTS（ジョブID、SQLクエリ、またはSQLファイルパス）
@@ -70,7 +71,8 @@ bq query --use_legacy_sql=false --format=json \
     total_bytes_processed,
     TIMESTAMP_DIFF(end_time, start_time, MILLISECOND) as elapsed_ms
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-  WHERE job_id = @job_id" > /tmp/job_info.json
+  WHERE job_id = @job_id
+    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)" > /tmp/job_info.json
 
 # メトリクスを変数に、クエリをファイルに保存
 jq -r '.[0].query' /tmp/job_info.json > /tmp/original_query.sql
@@ -107,6 +109,8 @@ bq query --use_legacy_sql=false --format=pretty \
     UNNEST(job_stages) AS stage
   WHERE
     job_id = @job_id
+    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
   ORDER BY
     stage.id"
 
@@ -128,6 +132,7 @@ bq query --use_legacy_sql=false --format=pretty \
     UNNEST(job_stages) AS stage
   WHERE
     job_id = @job_id
+    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
   ORDER BY
     stage.slot_ms DESC
   LIMIT 10"
@@ -175,6 +180,7 @@ bq query --use_legacy_sql=false --format=pretty \
     ROUND(period_shuffle_ram_usage_ratio, 2) as shuffle_ram_ratio
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_TIMELINE_BY_PROJECT
   WHERE job_id = @job_id
+    AND period_start >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
   ORDER BY period_start
   LIMIT 20"
 ```
@@ -211,6 +217,7 @@ bq query --use_legacy_sql=false --format=pretty \
     UNNEST(job_stages) AS stage
   WHERE
     job_id = @job_id
+    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
   ORDER BY
     stage.slot_ms DESC
   LIMIT 10"
@@ -257,6 +264,7 @@ bq query --use_legacy_sql=false --format=pretty \
     UNNEST(job_stages) AS stage
   WHERE
     job_id = @job_id
+    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
     AND stage.slot_ms > 1000  -- 1秒以上のステージのみ
   ORDER BY
     stage.slot_ms DESC"
@@ -270,7 +278,8 @@ bq query --use_legacy_sql=false --format=json \
   --parameter="job_id:STRING:${JOB_ID}" "
 SELECT query
 FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-WHERE job_id = @job_id" | jq -r '.[0].query'
+WHERE job_id = @job_id
+  AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)" | jq -r '.[0].query'
 
 # ステージとSQL操作の詳細な対応関係を分析
 echo -e "\n=== ステージとSQL操作の対応付け ==="
