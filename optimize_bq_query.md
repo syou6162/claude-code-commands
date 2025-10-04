@@ -2,6 +2,11 @@
 
 BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改善を目標とした最適化を提案します。
 
+## 前提条件
+- **リージョン**: US（region-us）固定
+- **プロジェクト**: デフォルトプロジェクト（`gcloud config get-value project`で設定済み）
+- **権限**: INFORMATION_SCHEMAへのアクセス権限あり
+
 ## 分析対象
 入力: $ARGUMENTS（ジョブID、SQLクエリ、またはSQLファイルパス）
 
@@ -32,8 +37,6 @@ if [[ "$INPUT" =~ \.sql$ ]]; then
     echo "クエリを実行中..."
     JOB_INFO=$(bq query --nosync --use_legacy_sql=false --format=json "$QUERY" 2>/dev/null)
     JOB_ID=$(echo "$JOB_INFO" | jq -r '.jobReference.jobId')
-    LOCATION=$(echo "$JOB_INFO" | jq -r '.jobReference.location')
-    PROJECT_ID=$(echo "$JOB_INFO" | jq -r '.jobReference.projectId')
 
     echo "ジョブID: $JOB_ID"
     # ジョブの完了を待つ（--nosyncを使った場合は待機が必要）
@@ -49,8 +52,6 @@ else
     # クエリを実行してジョブ情報を取得（--nosyncで即座にジョブ情報を返す）
     JOB_INFO=$(bq query --nosync --use_legacy_sql=false --format=json "$INPUT" 2>/dev/null)
     JOB_ID=$(echo "$JOB_INFO" | jq -r '.jobReference.jobId')
-    LOCATION=$(echo "$JOB_INFO" | jq -r '.jobReference.location')
-    PROJECT_ID=$(echo "$JOB_INFO" | jq -r '.jobReference.projectId')
 
     echo "ジョブID: $JOB_ID"
     # ジョブの完了を待つ
@@ -58,98 +59,119 @@ else
 fi
 ```
 
-**ジョブ詳細の取得（リージョン情報も含む）:**
+### 2. パフォーマンスメトリクスの収集（SQLのみで完結）
 
-1. **bq show コマンド**
+#### 元のクエリと基本メトリクスの取得
 ```bash
-bq show -j --format=json "$JOB_ID" > /tmp/job_details.json
+# ジョブの基本情報とクエリを取得（パラメータを使用）
+bq query --format=json \
+  --parameter="job_id:STRING:${JOB_ID}" "
+  SELECT
+    job_id,
+    query,
+    total_slot_ms,
+    total_bytes_processed,
+    TIMESTAMP_DIFF(end_time, start_time, MILLISECOND) as elapsed_ms
+  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  WHERE job_id = @job_id" > /tmp/job_info.json
 
-# リージョン情報を取得
-LOCATION=$(jq -r '.jobReference.location // "US"' /tmp/job_details.json)
-PROJECT_ID=$(jq -r '.jobReference.projectId' /tmp/job_details.json)
-```
-
-2. **INFORMATION_SCHEMA（bq showが失敗した場合）**
-```bash
-# リージョンに応じてINFORMATION_SCHEMAのプレフィックスを設定
-if [ "$LOCATION" = "US" ]; then
-    REGION_PREFIX="region-us"
-elif [ "$LOCATION" = "EU" ]; then
-    REGION_PREFIX="region-eu"
-elif [ "$LOCATION" = "asia-northeast1" ] || [ "$LOCATION" = "tokyo" ]; then
-    REGION_PREFIX="region-asia-northeast1"
-else
-    REGION_PREFIX="region-${LOCATION,,}"  # 小文字変換
-fi
-
-bq query --project_id="$PROJECT_ID" --format=json "
-  SELECT job_id, query, total_slot_ms, total_bytes_processed,
-         creation_time, start_time, end_time
-  FROM \`${REGION_PREFIX}\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-  WHERE job_id = '$JOB_ID'"
-```
-
-### 2. パフォーマンスメトリクスの収集と元クエリ保存
-
-#### 元のクエリと結果の完全記録
-```bash
 # 元のクエリを保存
-jq -r '.configuration.query.query' /tmp/job_details.json > /tmp/original_query.sql
+jq -r '.[0].query' /tmp/job_info.json > /tmp/original_query.sql
 
 # 元の行数を記録
-bq query --project_id="$PROJECT_ID" --format=json "
+bq query --format=json "
   SELECT COUNT(*) as row_count
   FROM ($(cat /tmp/original_query.sql)) AS t" > /tmp/original_count.json
 
 # 元のスキーマ（列数とカラム名）を記録
-bq query --project_id="$PROJECT_ID" --format=json --max_results=0 \
+bq query --format=json --max_results=0 \
   "$(cat /tmp/original_query.sql)" 2>&1 | \
   jq '.schema.fields | length' > /tmp/original_columns.txt
 
 # カラム名リストも保存（詳細検証用）
-bq query --project_id="$PROJECT_ID" --format=json --max_results=0 \
+bq query --format=json --max_results=0 \
   "$(cat /tmp/original_query.sql)" 2>&1 | \
   jq -r '.schema.fields[].name' > /tmp/original_column_names.txt
 ```
 
-#### Execution Graph分析
+#### Execution Graph分析（INFORMATION_SCHEMAから直接取得）
 ```bash
-jq '.statistics.query.queryPlan[]' /tmp/job_details.json
+# 全ステージのパフォーマンスデータを取得（パラメータを使用）
+bq query --format=json \
+  --parameter="job_id:STRING:${JOB_ID}" "
+  SELECT
+    stage.name as stage_name,
+    CAST(stage.compute_ms_avg AS INT64) as compute_ms_avg,
+    CAST(stage.compute_ms_max AS INT64) as compute_ms_max,
+    CAST(stage.wait_ms_avg AS INT64) as wait_ms_avg,
+    CAST(stage.wait_ms_max AS INT64) as wait_ms_max,
+    CAST(stage.shuffle_output_bytes AS INT64) as shuffle_bytes,
+    CAST(stage.shuffle_output_bytes_spilled AS INT64) as shuffle_spilled,
+    CAST(stage.records_read AS INT64) as records_read,
+    CAST(stage.records_written AS INT64) as records_written,
+    CAST(stage.slot_ms AS INT64) as slot_ms,
+    -- データスキュー率の計算
+    SAFE_DIVIDE(CAST(stage.compute_ms_max AS FLOAT64),
+                CAST(stage.compute_ms_avg AS FLOAT64)) as skew_ratio
+  FROM
+    \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+    UNNEST(job_stages) AS stage
+  WHERE
+    job_id = @job_id
+  ORDER BY
+    stage.slot_ms DESC" > /tmp/execution_graph.json
 ```
 
 **注目メトリクス:**
-- `computeMsMax`: 最大計算時間
-- `shuffleOutputBytes`: シャッフルデータ量
-- データスキュー: `computeMsMax / computeMsAvg`が2.0以上
-- ステージ名（`name`）: "Join+", "Sort+", "Aggregate+"など
+- `compute_ms_max`: 最大計算時間
+- `shuffle_bytes`: シャッフルデータ量
+- `skew_ratio`: データスキュー率（2.0以上で問題）
+- `stage_name`: "S00: Input", "S06: Sort+", "S0E: Join+"など
 
-#### 時系列データ（リージョン対応）
+#### 時系列スロット使用データ
 ```bash
-bq query --project_id="$PROJECT_ID" --format=json "
-  SELECT period_start, period_slot_ms, state
-  FROM \`${REGION_PREFIX}\`.INFORMATION_SCHEMA.JOBS_TIMELINE_BY_PROJECT
-  WHERE job_id = '$JOB_ID'"
+bq query --format=json \
+  --parameter="job_id:STRING:${JOB_ID}" "
+  SELECT
+    period_start,
+    period_slot_ms,
+    state,
+    period_shuffle_ram_usage_ratio
+  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_TIMELINE_BY_PROJECT
+  WHERE job_id = @job_id
+  ORDER BY period_start"
 ```
 
 ### 3. ボトルネック診断（ステージとSQL対応付け）
 
 収集したメトリクスから問題を特定し、**元のSQLのどの部分が原因か説明してください**：
 
-1. **最も遅いステージの特定と原因説明**
-   - Stage名が"Join+"の場合 → SQLのJOIN句を確認
-   - 大きいテーブル同士のJOINが原因か判定
-   - 「テーブルAとBのJOINで○○MBのシャッフル発生」と説明
+```bash
+# execution_graph.jsonから問題のあるステージを分析
+echo "=== パフォーマンス分析 ==="
 
-2. **データスキューの検出と該当箇所**
-   - スキュー率2.0以上 → GROUP BYのキーを確認
-   - 「GROUP BY user_idで特定ユーザーにデータ偏り」と説明
+# 1. 最も遅いステージTOP5を表示
+echo "最も時間のかかるステージ:"
+jq -r '.[] | "\(.stage_name): \(.slot_ms)ms (compute: \(.compute_ms_max)ms, wait: \(.wait_ms_max)ms)"' \
+  /tmp/execution_graph.json | head -5
 
-3. **非効率なJOINの明示**
-   - シャッフル量100MB以上のJOINステージ
-   - 「customers（10GB）とorders（50GB）を先にJOINしている」と説明
+# 2. データスキューの検出（スキュー率2.0以上）
+echo -e "\nデータスキュー検出:"
+jq -r '.[] | select(.skew_ratio >= 2.0) | "\(.stage_name): スキュー率 \(.skew_ratio)"' \
+  /tmp/execution_graph.json
 
-4. **リソース待機の原因**
-   - waitMsMaxが大きい → 並列度不足やスロット競合
+# 3. 大量シャッフルステージ（100MB以上）
+echo -e "\n大量データシャッフル:"
+jq -r '.[] | select(.shuffle_bytes >= 104857600) | "\(.stage_name): \(.shuffle_bytes / 1048576 | floor)MB"' \
+  /tmp/execution_graph.json
+```
+
+**分析結果の解釈:**
+- Stage名が"Join+"の場合 → SQLのJOIN句を確認、大きいテーブル同士のJOINが原因
+- Stage名が"Sort+"の場合 → ORDER BY句やウィンドウ関数のソート処理
+- Stage名が"Aggregate+"の場合 → GROUP BY句の集計処理
+- スキュー率2.0以上 → 特定のキー値にデータが偏っている
+- シャッフル量100MB以上 → 大量データ移動が発生、JOIN順序の見直しが必要
 
 ### 4. 最適化パターンの選択（優先度付きで複数提案）
 
@@ -180,17 +202,17 @@ bq query --project_id="$PROJECT_ID" --format=json "
 #### 結果同一性の完全検証（行数＋列数）
 ```bash
 # 最適化後の行数確認
-bq query --project_id="$PROJECT_ID" --format=json "
+bq query --format=json "
   SELECT COUNT(*) as row_count
   FROM ($(cat /tmp/optimized_query.sql)) AS t" > /tmp/optimized_count.json
 
 # 最適化後の列数確認
-bq query --project_id="$PROJECT_ID" --format=json --max_results=0 \
+bq query --format=json --max_results=0 \
   "$(cat /tmp/optimized_query.sql)" 2>&1 | \
   jq '.schema.fields | length' > /tmp/optimized_columns.txt
 
 # 最適化後のカラム名リスト
-bq query --project_id="$PROJECT_ID" --format=json --max_results=0 \
+bq query --format=json --max_results=0 \
   "$(cat /tmp/optimized_query.sql)" 2>&1 | \
   jq -r '.schema.fields[].name' > /tmp/optimized_column_names.txt
 
@@ -222,12 +244,19 @@ NEW_JOB_OUTPUT=$(bq query --project_id="$PROJECT_ID" --format=none \
 NEW_JOB_ID=$(echo "$NEW_JOB_OUTPUT" | \
   grep -oE '(bquxjob_[a-z0-9_]+|job_[a-zA-Z0-9_-]+)' | head -1)
 
-# 新しいexecution graphを取得
-bq show -j --format=json "$NEW_JOB_ID" > /tmp/new_job_details.json
+# 新しいジョブのメトリクスを取得
+NEW_JOB_INFO=$(bq query --format=json \
+  --parameter="job_id:STRING:${NEW_JOB_ID}" "
+  SELECT
+    total_slot_ms,
+    total_bytes_processed,
+    TIMESTAMP_DIFF(end_time, start_time, MILLISECOND) as elapsed_ms
+  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  WHERE job_id = @job_id")
 
 # 改善度を計算
-ORIGINAL_SLOT_MS=$(jq '.statistics.query.totalSlotMs' /tmp/job_details.json)
-NEW_SLOT_MS=$(jq '.statistics.query.totalSlotMs' /tmp/new_job_details.json)
+ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
+NEW_SLOT_MS=$(echo "$NEW_JOB_INFO" | jq -r '.[0].total_slot_ms')
 IMPROVEMENT_RATIO=$(echo "scale=2; $ORIGINAL_SLOT_MS / $NEW_SLOT_MS" | bc)
 ```
 
