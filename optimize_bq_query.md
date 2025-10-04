@@ -33,13 +33,12 @@ if [[ "$INPUT" =~ \.sql$ ]]; then
         echo "Error: ファイルが見つかりません: $INPUT"
         exit 1
     fi
-    # クエリを実行してジョブ情報を取得（--nosyncで即座にジョブ情報を返す）
+    # クエリを実行してジョブIDを取得（--nosyncで即座に戻る）
     echo "クエリを実行中..."
-    JOB_INFO=$(bq query --nosync --use_legacy_sql=false --format=json "$QUERY" 2>/dev/null)
-    JOB_ID=$(echo "$JOB_INFO" | jq -r '.jobReference.jobId')
+    JOB_ID=$(bq query --nosync --use_legacy_sql=false --format=json "$QUERY" 2>/dev/null | jq -r '.jobReference.jobId')
 
     echo "ジョブID: $JOB_ID"
-    # ジョブの完了を待つ（--nosyncを使った場合は待機が必要）
+    # ジョブの完了を待つ（--nosyncのため待機が必要）
     bq wait "$JOB_ID" 2>/dev/null
 
 # ジョブIDの場合
@@ -49,9 +48,8 @@ elif [[ "$INPUT" =~ ^(bquxjob_|job_|bq-) ]]; then
 # SQLクエリの場合
 else
     echo "SQLクエリを実行中..."
-    # クエリを実行してジョブ情報を取得（--nosyncで即座にジョブ情報を返す）
-    JOB_INFO=$(bq query --nosync --use_legacy_sql=false --format=json "$INPUT" 2>/dev/null)
-    JOB_ID=$(echo "$JOB_INFO" | jq -r '.jobReference.jobId')
+    # クエリを実行してジョブIDを取得（--nosyncで即座に戻る）
+    JOB_ID=$(bq query --nosync --use_legacy_sql=false --format=json "$INPUT" 2>/dev/null | jq -r '.jobReference.jobId')
 
     echo "ジョブID: $JOB_ID"
     # ジョブの完了を待つ
