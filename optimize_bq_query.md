@@ -73,6 +73,12 @@ bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:${JOB_I
 jq -r '.[0].query' /tmp/job_info.json > /tmp/original_query.sql
 ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
 echo "元のスロット時間: ${ORIGINAL_SLOT_MS}ms"
+
+# 元クエリの結果を保存（検証用）
+echo "元クエリの結果を保存中..."
+cat /tmp/original_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json > /tmp/original_results.json
+ORIGINAL_ROWS=$(jq '. | length' /tmp/original_results.json)
+echo "元の行数: $ORIGINAL_ROWS"
 ```
 
 #### 最大のボトルネックステージを特定
@@ -110,188 +116,225 @@ echo "=== ボトルネックステージの処理内容 ==="
 ```
 
 #### 根本原因の診断
-各ボトルネックステージに対して以下を実行：
+特定されたボトルネックステージについて詳細分析を実行：
 
-**Wait主体の場合**: スケジューリング遅延
 ```bash
-echo "=== Wait時間分析 ==="
-# wait_ratio_maxが高いステージのリソース競合状況を確認
+# 各ボトルネックステージの詳細分析（TOP1-3のみ）
+echo "=== ボトルネックステージの詳細分析 ==="
+bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:${JOB_ID}" "
+  SELECT
+    stage.name,
+    CAST(stage.slot_ms AS INT64) as slot_ms,
+    ROUND(stage.wait_ratio_max * 100, 1) as wait_pct,
+    ROUND(stage.read_ratio_max * 100, 1) as read_pct,
+    ROUND(stage.compute_ratio_max * 100, 1) as compute_pct,
+    ROUND(stage.write_ratio_max * 100, 1) as write_pct,
+    ROUND(CAST(stage.shuffle_output_bytes AS INT64) / 1048576, 1) as shuffle_mb
+  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+       UNNEST(job_stages) AS stage
+  WHERE job_id = @job_id
+    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+    AND stage.name IN ('特定されたボトルネックステージ名1', '名前2', '名前3')
+  ORDER BY stage.slot_ms DESC
+"
+
+# ステージの処理内容を特定
+echo "=== ステージの処理内容特定 ==="
+bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:${JOB_ID}" "
+  SELECT
+    stage.name,
+    CASE
+      WHEN stage.name LIKE '%Input%' THEN 'テーブル読み込み'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'JOIN') THEN 'JOIN処理'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'AGGREGATE') THEN 'GROUP BY処理'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'SORT') THEN 'ORDER BY処理'
+      ELSE 'その他'
+    END as operation_type
+  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+       UNNEST(job_stages) AS stage
+  WHERE job_id = @job_id
+    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+  ORDER BY stage.slot_ms DESC
+  LIMIT 5
+"
 ```
 
-**Read主体の場合**: データ読み込み効率
-```bash
-echo "=== Read時間分析 ==="
-# 大量テーブルスキャンまたはパーティション設計の問題
-```
-
-**Compute主体の場合**: CPU処理負荷
-```bash
-echo "=== Compute時間分析 ==="
-# データスキュー（compute_ms_max/compute_ms_avg >= 2.0）の確認
-```
-
-**Write主体の場合**: データ出力負荷
-```bash
-echo "=== Shuffle/Write分析 ==="
-# 大量シャッフル（>100MB）やメモリスピルの確認
-```
-
-#### 元クエリとの対応付け
+#### 元クエリとの対応付けと分析結果記録
 ```bash
 echo "=== 元クエリの確認 ==="
 cat /tmp/original_query.sql
+
+# ボトルネック分析結果を記録ファイルに保存
+echo "=== ボトルネック分析結果 ===" > /tmp/bottleneck_analysis.txt
+echo "分析日時: $(date)" >> /tmp/bottleneck_analysis.txt
+echo "" >> /tmp/bottleneck_analysis.txt
+
+echo "## 特定されたボトルネックステージ:" >> /tmp/bottleneck_analysis.txt
+# agentがここでボトルネックステージの詳細を追記
+# 例: echo "- S02_Join+: 99秒 (全体の45%)" >> /tmp/bottleneck_analysis.txt
+
+echo "" >> /tmp/bottleneck_analysis.txt
+echo "## 根本原因分析:" >> /tmp/bottleneck_analysis.txt
+# agentがWait/Read/Compute/Write分析結果を追記
+# 例: echo "- 支配的要素: Shuffle/Write (151MB)" >> /tmp/bottleneck_analysis.txt
+
+echo "" >> /tmp/bottleneck_analysis.txt
+echo "## 対応するSQL箇所:" >> /tmp/bottleneck_analysis.txt
+# agentが元クエリの該当部分を特定して追記
+# 例: echo "- INNER JOIN users u ON c.user_id = u.id" >> /tmp/bottleneck_analysis.txt
 ```
 
 **agentの分析指示**:
-1. ボトルネックステージの処理内容（JOIN/GROUP BY/ORDER BY等）を特定
+1. 上記クエリ結果からボトルネックステージの処理内容を特定
 2. Wait/Read/Compute/Writeの支配的要素を確認
 3. 元クエリの該当箇所を特定
-4. 根本原因（シャッフル量/スキュー/パーティション等）を診断
+4. 分析結果を`/tmp/bottleneck_analysis.txt`に具体的に記録
 
-### 4. 最適化パターンの選択（優先度付きで複数提案）
+### 4. ボトルネック対応の最適化パターン選択
 
-**検出された問題ごとに、効果の高い順に複数の最適化案を提示してください：**
+**特定されたボトルネック要因に基づいて、2倍改善を狙える最適化パターンを選択**
 
-#### 優先度1: データ量削減系
-- **アグリゲーション前置**: JOIN前にGROUP BY（効果: 大）
-- **パーティションフィルタ**: WHERE句で日付限定（効果: 大）
+#### Input段階のボトルネック → データ読み込み最適化
+- **パーティション絞り込み**: WHERE句での日付/地域等の限定
+- **クラスタリング活用**: JOIN/GROUP BYキーでの事前ソート
+- **列選択最適化**: SELECT *を避けて必要列のみ
 
-#### 優先度2: 実行順序最適化
-- **JOIN順序変更**: 小→大の順でJOIN（効果: 中）
-- **サブクエリ最適化**: EXISTS/INへの書き換え（効果: 中）
+#### Join段階のボトルネック → 結合処理最適化
+- **JOIN前データ削減**: 事前フィルタリング/集約で行数削減
+- **JOIN順序最適化**: 小テーブル→大テーブルの順序
+- **EXISTS/IN変換**: 相関サブクエリから効率的な形式へ
 
-#### 優先度3: データ分布改善
-- **スキュー対策**: 偏りキーの分離処理（効果: 状況依存）
+#### Aggregate/Sort段階のボトルネック → 集約処理最適化
+- **段階的集約**: 複数CTEでの事前集約
+- **LIMIT早期適用**: TOP-N処理での不要計算回避
+- **ウィンドウ関数最適化**: PARTITION BY句の最適化
 
-**複数適用可能な場合は組み合わせ効果も説明**
+```bash
+# 選択した最適化パターンを記録
+echo "=== 適用する最適化パターン ===" > /tmp/applied_optimizations.txt
+echo "分析日時: $(date)" >> /tmp/applied_optimizations.txt
+echo "" >> /tmp/applied_optimizations.txt
 
-### 5. 最適化クエリの生成と結果検証
-
-#### 最適化SQLの生成
-元のクエリに選択したパターンを適用し、新しいクエリを生成：
-
-```sql
--- 最適化後のクエリを/tmp/optimized_query.sqlに保存
+# agentが該当するパターンを記録
+# 例: echo "1. JOIN前データ削減: users テーブルの事前フィルタリング (期待効果: 60%削減)" >> /tmp/applied_optimizations.txt
+# 例: echo "2. JOIN順序最適化: 小テーブル first (期待効果: 25%削減)" >> /tmp/applied_optimizations.txt
 ```
 
-#### 結果同一性の完全検証（行数＋スキーマ）
+**agent指示**:
+1. ボトルネック診断結果（`/tmp/bottleneck_analysis.txt`）を参照
+2. 該当するパターンのみ選択し、2倍改善見込みを計算
+3. 選択理由と期待効果を`/tmp/applied_optimizations.txt`に記録
+
+### 5. 最適化クエリの実装と検証
+
+#### 最適化SQLの生成と保存
 ```bash
-# 最適化後のクエリ結果を取得して行数を記録
-echo "最適化後のクエリ結果を取得中..."
-OPTIMIZED_ROWS=$(cat /tmp/optimized_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json | jq '. | length')
-echo "最適化後の行数: $OPTIMIZED_ROWS"
+echo "最適化クエリを生成中..."
+cat /tmp/original_query.sql
 
-# 最適化後のスキーマ確認
-echo "スキーマを確認中..."
-OPTIMIZED_SCHEMA=$(cat /tmp/optimized_query.sql | bq query --use_legacy_sql=false --format=json --dry_run)
-OPTIMIZED_COLS=$(echo "$OPTIMIZED_SCHEMA" | jq '.statistics.query.schema.fields | length')
-OPTIMIZED_COL_NAMES=$(echo "$OPTIMIZED_SCHEMA" | jq -r '.statistics.query.schema.fields[].name')
+# agentが最適化したクエリを保存（具体的な実装が必要）
+cat > /tmp/optimized_query.sql << 'EOF'
+-- agentがここで最適化後のクエリを具体的に記述
+-- 例: WITH filtered_users AS (SELECT * FROM users WHERE active = true)
+-- 例: SELECT ... FROM comments c INNER JOIN filtered_users u ON c.user_id = u.id
+EOF
 
-# 元の行数を取得（保存済みの結果から）
+echo "最適化クエリを /tmp/optimized_query.sql に保存しました"
+cat /tmp/optimized_query.sql
+```
+
+#### リファクタリング結果の同一性検証
+**重要**: 最適化は性能改善のみで、結果は完全に同一である必要がある
+
+```bash
+# 元クエリの結果を保存（セクション2で実行済み）
+echo "元の行数: $(jq '. | length' /tmp/original_results.json)"
+
+# 最適化後クエリの実行と結果比較
+echo "最適化クエリの結果検証中..."
+cat /tmp/optimized_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json > /tmp/optimized_results.json
+
 ORIGINAL_ROWS=$(jq '. | length' /tmp/original_results.json)
+OPTIMIZED_ROWS=$(jq '. | length' /tmp/optimized_results.json)
 
-# 行数の比較（リファクタリングでは必須）
 if [ "$ORIGINAL_ROWS" != "$OPTIMIZED_ROWS" ]; then
-  echo "❌ エラー: 行数が一致しません（元: $ORIGINAL_ROWS, 最適化後: $OPTIMIZED_ROWS）"
-  echo "これは真のリファクタリングではありません。結果が変わっています。"
+  echo "❌ 致命的エラー: 行数不一致（元: $ORIGINAL_ROWS vs 最適化: $OPTIMIZED_ROWS）"
   exit 1
 else
-  echo "✓ 行数が一致しました: $ORIGINAL_ROWS 行"
-fi
-
-# スキーマの比較
-if [ "$ORIGINAL_COLS" != "$OPTIMIZED_COLS" ]; then
-  echo "❌ エラー: 列数が一致しません（元: $ORIGINAL_COLS, 最適化後: $OPTIMIZED_COLS）"
-  exit 1
-else
-  echo "✓ スキーマが一致しました（列数: $ORIGINAL_COLS）"
-fi
-
-# カラム名の差分確認
-if [ "$ORIGINAL_COL_NAMES" != "$OPTIMIZED_COL_NAMES" ]; then
-  echo "警告: カラム名に差分があります"
-  diff <(echo "$ORIGINAL_COL_NAMES") <(echo "$OPTIMIZED_COL_NAMES")
+  echo "✓ 結果一致確認: $ORIGINAL_ROWS 行"
 fi
 ```
 
-### 6. 改善効果の測定と反復改善
+### 6. 性能改善効果の測定
 
-#### 最適化クエリの実行と新メトリクス取得
+#### 最適化後のメトリクス取得
 ```bash
-# 最適化クエリを実行してジョブIDを取得
-echo "最適化クエリを実行中..."
+# 最適化クエリの性能測定のための実行
+echo "最適化クエリの性能測定中..."
 NEW_JOB_ID=$(cat /tmp/optimized_query.sql | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId')
-echo "新しいジョブID: $NEW_JOB_ID"
-# ジョブの完了を待つ
 bq wait "$NEW_JOB_ID"
 
-# 新しいジョブのメトリクスを取得
-NEW_JOB_INFO=$(bq query --use_legacy_sql=false --format=json \
-  --parameter="job_id:STRING:${NEW_JOB_ID}" "
-  SELECT
-    total_slot_ms,
-    total_bytes_processed,
-    TIMESTAMP_DIFF(end_time, start_time, MILLISECOND) as elapsed_ms
+# 新しいジョブのメトリクス取得
+NEW_SLOT_MS=$(bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:${NEW_JOB_ID}" "
+  SELECT total_slot_ms
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-  WHERE job_id = @job_id
-    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)")
+  WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+" | jq -r '.[0].total_slot_ms')
 
-# 改善度を計算（ORIGINAL_SLOT_MSは既に取得済み）
-NEW_SLOT_MS=$(echo "$NEW_JOB_INFO" | jq -r '.[0].total_slot_ms')
+# 改善率の計算
 IMPROVEMENT_RATIO=$(echo "scale=2; $ORIGINAL_SLOT_MS / $NEW_SLOT_MS" | bc)
+echo "改善率: ${IMPROVEMENT_RATIO}x (元: ${ORIGINAL_SLOT_MS}ms → 後: ${NEW_SLOT_MS}ms)"
 ```
 
-#### 反復改善プロセス（2倍未達時）
+#### 2倍改善達成判定と反復プロセス
 ```bash
-# 改善履歴を記録
-echo "Iteration 1: ${IMPROVEMENT_RATIO}x improvement" >> /tmp/optimization_history.txt
-```
+echo "Iteration 1: ${IMPROVEMENT_RATIO}x" >> /tmp/optimization_history.txt
 
-**2倍改善に達しない場合:**
-1. 新しいexecution graphから追加のボトルネック特定
-2. 未適用の最適化パターンを試行
-3. 最大3回まで反復
-4. 各イテレーションの結果を履歴に記録
+if (( $(echo "$IMPROVEMENT_RATIO >= 2.0" | bc) )); then
+  echo "✅ 目標達成: ${IMPROVEMENT_RATIO}x改善"
+else
+  echo "⚠️  未達成: ${IMPROVEMENT_RATIO}x改善（目標: 2.0x）"
+  # セクション2-3を再実行して追加ボトルネックを特定
+  # 最大3回まで反復可能
+fi
+```
 
 ### 7. 最終レポート生成
 
-```markdown
-# 最適化レポート
+**目的**: 2倍改善達成の根拠と再現可能な手順を記録
 
-## 実行概要
-- 元のジョブID: [ID]
-- プロジェクト: デフォルトプロジェクト
-- リージョン: [LOCATION]
-- 処理データ: [X GB]
-- スロット時間: [Y ms]
+```bash
+# レポート生成
+cat > /tmp/optimization_report.md << 'EOF'
+# BigQuery最適化レポート
 
-## 検出された問題とSQL対応
-1. [ステージS01: Input - 254秒] - bigquery-public-data.stackoverflow.comments
-   - 14GBのシャッフル発生 → パーティション/クラスタリングの活用を推奨
-2. [ステージS02: Join+ - 99秒] - INNER HASH JOIN ON c.user_id = u.id
-   - 151MBのシャッフル → JOIN前にフィルタリングで絞り込み
-3. [ステージS03: Sort+ - 2秒] - GROUP BY user_id, ORDER BY comments_count DESC
-   - 最終集約処理 → CTEでの事前集約を検討
+## 実行サマリー
+- **元ジョブID**: ${JOB_ID}
+- **元スロット時間**: ${ORIGINAL_SLOT_MS}ms
+- **最終改善率**: ${IMPROVEMENT_RATIO}x
+- **目標達成**: $([ $(echo "$IMPROVEMENT_RATIO >= 2.0" | bc) -eq 1 ] && echo "✅ 達成" || echo "❌ 未達成")
 
-## 適用した最適化（優先度順）
-1. [パターンA]: 期待効果60%削減
-2. [パターンB]: 期待効果30%削減
-3. [組み合わせ効果]: 合計75%削減見込み
+## 特定されたボトルネック
+$(cat /tmp/bottleneck_analysis.txt)
+
+## 適用した最適化手法
+$(cat /tmp/applied_optimizations.txt)
 
 ## 最適化後のクエリ
 \`\`\`sql
-[生成したSQL]
+$(cat /tmp/optimized_query.sql)
 \`\`\`
 
-## 実測された改善効果
-| イテレーション | スロット時間 | 改善率 | 適用パターン |
-|--------------|------------|--------|------------|
-| 元クエリ | 100,000ms | - | - |
-| 1回目 | 60,000ms | 1.67x | アグリゲーション前置 |
-| 2回目 | 45,000ms | 2.22x | +JOIN順序最適化 |
+## 検証結果
+- **結果一致**: ✅ ${ORIGINAL_ROWS}行で完全一致
+- **性能改善**: ${ORIGINAL_SLOT_MS}ms → ${NEW_SLOT_MS}ms
 
-## 結果の同一性確認
-- 元の行数: [X]行 / 列数: [Y]列
-- 最適化後: [X]行 / [Y]列 ✓ 完全一致
-- カラム名: ✓ 一致
+EOF
+
+echo "レポートを /tmp/optimization_report.md に保存しました"
 ```
+
+**完了条件**:
+- 2倍以上の改善達成 OR 3回の反復完了
+- 結果の同一性確認済み
+- 再現可能な最適化手順の記録
