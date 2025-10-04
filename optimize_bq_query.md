@@ -60,23 +60,22 @@ fi
 
 #### 元のクエリと基本メトリクスの取得
 ```bash
-# ジョブの基本情報とクエリを取得して保存
+# ジョブの基本情報とクエリを取得（クエリはファイルに直接出力）
 echo "ジョブ情報を取得中..."
-JOB_INFO=$(bq query --use_legacy_sql=false --format=json \
+bq query --use_legacy_sql=false --format=json \
   --parameter="job_id:STRING:${JOB_ID}" "
   SELECT
-    job_id,
     query,
     total_slot_ms,
     total_bytes_processed,
     TIMESTAMP_DIFF(end_time, start_time, MILLISECOND) as elapsed_ms
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-  WHERE job_id = @job_id")
+  WHERE job_id = @job_id" > /tmp/job_info.json
 
-# クエリを保存
-echo "$JOB_INFO" | jq -r '.[0].query' > /tmp/original_query.sql
-ORIGINAL_SLOT_MS=$(echo "$JOB_INFO" | jq -r '.[0].total_slot_ms')
-echo "元のクエリを保存しました"
+# メトリクスを変数に、クエリをファイルに保存
+jq -r '.[0].query' /tmp/job_info.json > /tmp/original_query.sql
+ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
+echo "元のスロット時間: ${ORIGINAL_SLOT_MS}ms"
 
 # 元のクエリの実際の結果を取得して行数を記録（結果は検証時に使うので保存）
 echo "元のクエリ結果を取得中..."
@@ -277,11 +276,12 @@ fi
 
 #### 最適化クエリの実行と新メトリクス取得
 ```bash
-# 最適化クエリを実行（両形式のジョブIDに対応）
-NEW_JOB_OUTPUT=$(bq query --use_legacy_sql=false --use_cache=false --format=none \
-  "$(cat /tmp/optimized_query.sql)")
-NEW_JOB_ID=$(echo "$NEW_JOB_OUTPUT" | \
-  grep -oE '(bquxjob_[a-z0-9_]+|job_[a-zA-Z0-9_-]+)' | head -1)
+# 最適化クエリを実行してジョブIDを取得
+echo "最適化クエリを実行中..."
+NEW_JOB_ID=$(cat /tmp/optimized_query.sql | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId')
+echo "新しいジョブID: $NEW_JOB_ID"
+# ジョブの完了を待つ
+bq wait "$NEW_JOB_ID"
 
 # 新しいジョブのメトリクスを取得
 NEW_JOB_INFO=$(bq query --use_legacy_sql=false --format=json \
