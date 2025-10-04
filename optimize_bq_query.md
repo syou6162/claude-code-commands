@@ -57,432 +57,96 @@ else
 fi
 ```
 
-### 2. パフォーマンスメトリクスの収集（SQLのみで完結）
+### 2. 全体ボトルネックの特定
 
-#### 元のクエリと基本メトリクスの取得
+#### 基本情報の収集
 ```bash
-# ジョブの基本情報とクエリを取得（クエリはファイルに直接出力）
-echo "ジョブ情報を取得中..."
-bq query --use_legacy_sql=false --format=json \
-  --parameter="job_id:STRING:${JOB_ID}" "
-  SELECT
-    query,
-    total_slot_ms,
-    total_bytes_processed,
-    TIMESTAMP_DIFF(end_time, start_time, MILLISECOND) as elapsed_ms
+# 元のクエリとメトリクスを取得
+echo "基本情報を収集中..."
+bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:${JOB_ID}" "
+  SELECT query, total_slot_ms, total_bytes_processed
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-  WHERE job_id = @job_id
-    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)" > /tmp/job_info.json
+  WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+" > /tmp/job_info.json
 
-# メトリクスを変数に、クエリをファイルに保存
+# 元クエリと基本メトリクスを保存
 jq -r '.[0].query' /tmp/job_info.json > /tmp/original_query.sql
 ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
 echo "元のスロット時間: ${ORIGINAL_SLOT_MS}ms"
-
-# 元のクエリの実際の結果を取得して行数を記録（結果は検証時に使うので保存）
-echo "元のクエリ結果を取得中..."
-cat /tmp/original_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json > /tmp/original_results.json
-echo "元の行数: $(jq '. | length' /tmp/original_results.json)"
-
-# 元のスキーマ情報を取得して変数に保存
-echo "スキーマ情報を取得中..."
-ORIGINAL_SCHEMA=$(cat /tmp/original_query.sql | bq query --use_legacy_sql=false --format=json --dry_run)
-ORIGINAL_COLS=$(echo "$ORIGINAL_SCHEMA" | jq '.statistics.query.schema.fields | length')
-ORIGINAL_COL_NAMES=$(echo "$ORIGINAL_SCHEMA" | jq -r '.statistics.query.schema.fields[].name')
 ```
 
-#### Execution Graph概要とステージ間依存関係
-```bash
-# ステージ間の依存関係とデータフローを分析
-echo "=== ステージ間の依存関係 ==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-  SELECT
-    stage.name as stage_name,
-    ARRAY_TO_STRING(ARRAY(SELECT CAST(s AS STRING) FROM UNNEST(stage.input_stages) AS s), ', ') as depends_on,
-    CAST(stage.slot_ms AS INT64) as slot_ms,
-    CAST(stage.parallel_inputs AS INT64) as parallel_units,
-    CAST(stage.completed_parallel_inputs AS INT64) as completed_units,
-    ROUND(100.0 * stage.completed_parallel_inputs / NULLIF(stage.parallel_inputs, 0), 1) as completion_rate
-  FROM
-    \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-    UNNEST(job_stages) AS stage
-  WHERE
-    job_id = @job_id
-    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-  ORDER BY
-    stage.id"
+#### 最大のボトルネックステージを特定
+**目的**: 全体のスロット時間の80%以上を占める真のボトルネックを見つける
 
-# 全ステージの概要を表示（上位10ステージ）
-echo -e "\n=== Execution Graph概要 ==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
+```bash
+echo "=== ボトルネックステージの特定 ==="
+bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:${JOB_ID}" "
   SELECT
     stage.name as stage_name,
     CAST(stage.slot_ms AS INT64) as slot_ms,
-    CAST(stage.compute_ms_max AS INT64) as compute_ms,
-    ROUND(CAST(stage.shuffle_output_bytes AS INT64) / 1048576, 1) as shuffle_mb,
-    ROUND(SAFE_DIVIDE(
-      CAST(stage.compute_ms_max AS FLOAT64),
-      CAST(stage.compute_ms_avg AS FLOAT64)
-    ), 2) as skew_ratio
-  FROM
-    \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-    UNNEST(job_stages) AS stage
-  WHERE
-    job_id = @job_id
-    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-  ORDER BY
-    stage.slot_ms DESC
-  LIMIT 10"
-
-# 変数の初期定義を確認（Inputステージのみで実カラム名が分かる）
-echo -e "\n=== 変数の初期定義（Inputステージ）==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-  SELECT
-    stage.name as stage_name,
-    substep as column_definition
-  FROM
-    \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-    UNNEST(job_stages) AS stage,
-    UNNEST(stage.steps) AS step,
-    UNNEST(step.substeps) AS substep
-  WHERE
-    job_id = @job_id
-    AND stage.name LIKE '%Input%'
-    AND step.kind = 'READ'
-    AND substep LIKE '$%:%'  -- $10:column_name形式を検出
-  LIMIT 20"
-```
-
-**注目メトリクス:**
-- `depends_on`: このステージが依存する前段ステージ
-- `parallel_units`: 並列実行可能な最大ワークユニット数
-- `completion_rate`: 並列処理の完了率（低い場合は偏り）
-- `column_definition`: Inputステージでの変数とカラム名の対応（例：$10:id）
-  - **制限事項**: 後続ステージでは変数番号のみで実カラム名は不明
-- `slot_ms`: スロット時間（全体的なコスト）
-- `compute_ms`: 最大計算時間
-- `shuffle_mb`: シャッフルデータ量（MB）
-- `skew_ratio`: データスキュー率（2.0以上で問題）
-
-#### 時系列スロット使用データ
-```bash
-echo -e "\n=== スロット使用状況の推移 ==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-  SELECT
-    FORMAT_TIMESTAMP('%H:%M:%S', period_start) as time,
-    period_slot_ms as slot_ms,
-    state,
-    ROUND(period_shuffle_ram_usage_ratio, 2) as shuffle_ram_ratio
-  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_TIMELINE_BY_PROJECT
+    ROUND(100.0 * stage.slot_ms / SUM(stage.slot_ms) OVER(), 1) as pct_of_total
+  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+       UNNEST(job_stages) AS stage
   WHERE job_id = @job_id
-    AND period_start >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-  ORDER BY period_start
-  LIMIT 20"
-```
-
-### 3. ボトルネック診断とSQL対応付け
-
-#### Wait/Read/Compute/Writeメトリクスの詳細分析
-```bash
-# 各ステージのWait/Read/Compute/Write時間を詳細分析
-echo "=== Wait/Read/Compute/Write詳細分析 ==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-  SELECT
-    stage.name as stage_name,
-    CAST(stage.slot_ms AS INT64) as total_slot_ms,
-    -- Wait時間分析（スケジューリング遅延）
-    CAST(stage.wait_ms_avg AS INT64) as wait_avg,
-    CAST(stage.wait_ms_max AS INT64) as wait_max,
-    ROUND(stage.wait_ratio_max * 100, 1) as wait_pct_max,
-    -- Read時間分析（データ入力性能）
-    CAST(stage.read_ms_avg AS INT64) as read_avg,
-    CAST(stage.read_ms_max AS INT64) as read_max,
-    ROUND(stage.read_ratio_max * 100, 1) as read_pct_max,
-    -- Compute時間分析（CPU処理）
-    CAST(stage.compute_ms_avg AS INT64) as compute_avg,
-    CAST(stage.compute_ms_max AS INT64) as compute_max,
-    ROUND(stage.compute_ratio_max * 100, 1) as compute_pct_max,
-    -- Write時間分析（出力性能）
-    CAST(stage.write_ms_avg AS INT64) as write_avg,
-    CAST(stage.write_ms_max AS INT64) as write_max,
-    ROUND(stage.write_ratio_max * 100, 1) as write_pct_max
-  FROM
-    \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-    UNNEST(job_stages) AS stage
-  WHERE
-    job_id = @job_id
     AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-  ORDER BY
-    stage.slot_ms DESC
-  LIMIT 10"
-
-# 各処理の支配的な要素を特定（判定ではなく実測値で表示）
-echo -e "\n=== ステージ別の支配的な処理要素 ==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-  SELECT
-    stage.name as stage_name,
-    CAST(stage.slot_ms AS INT64) as slot_ms,
-    -- 最も時間を消費している処理を特定
-    CASE
-      WHEN stage.wait_ratio_max = GREATEST(
-        stage.wait_ratio_max,
-        stage.read_ratio_max,
-        stage.compute_ratio_max,
-        stage.write_ratio_max
-      ) THEN CONCAT('WAIT: ', CAST(ROUND(stage.wait_ratio_max * 100, 1) AS STRING), '%')
-      WHEN stage.read_ratio_max = GREATEST(
-        stage.wait_ratio_max,
-        stage.read_ratio_max,
-        stage.compute_ratio_max,
-        stage.write_ratio_max
-      ) THEN CONCAT('READ: ', CAST(ROUND(stage.read_ratio_max * 100, 1) AS STRING), '%')
-      WHEN stage.compute_ratio_max = GREATEST(
-        stage.wait_ratio_max,
-        stage.read_ratio_max,
-        stage.compute_ratio_max,
-        stage.write_ratio_max
-      ) THEN CONCAT('COMPUTE: ', CAST(ROUND(stage.compute_ratio_max * 100, 1) AS STRING), '%')
-      ELSE CONCAT('WRITE: ', CAST(ROUND(stage.write_ratio_max * 100, 1) AS STRING), '%')
-    END as dominant_operation,
-    -- 参考: Googleドキュメントでは具体的な閾値は示されていない
-    -- 各環境で実測値を基に判断することを推奨
-    ROUND(GREATEST(
-      stage.wait_ratio_max,
-      stage.read_ratio_max,
-      stage.compute_ratio_max,
-      stage.write_ratio_max
-    ) * 100, 1) as dominant_pct
-  FROM
-    \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-    UNNEST(job_stages) AS stage
-  WHERE
-    job_id = @job_id
-    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-    AND stage.slot_ms > 1000  -- 1秒以上のステージのみ
-  ORDER BY
-    stage.slot_ms DESC"
+  ORDER BY stage.slot_ms DESC
+  LIMIT 5
+"
 ```
 
-#### ステージとSQL要素の自動対応付け
-```bash
-# 元のクエリを取得して表示
-echo "=== 元のクエリ ==="
-bq query --use_legacy_sql=false --format=json \
-  --parameter="job_id:STRING:${JOB_ID}" "
-SELECT query
-FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-WHERE job_id = @job_id
-  AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)" | jq -r '.[0].query'
+**この結果から上位1-3ステージ（合計80%以上）を特定し、以降はそれらのみを分析対象とする**
 
-# ステージとSQL操作の詳細な対応関係を分析
-echo -e "\n=== ステージとSQL操作の対応付け ==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-SELECT
-  stage.name as stage_name,
-  CAST(stage.slot_ms AS INT64) as slot_ms,
-  ROUND(CAST(stage.shuffle_output_bytes AS INT64) / 1048576, 1) as shuffle_mb,
-  CASE
-    -- Input ステージの判定
-    WHEN stage.name LIKE '%Input%' THEN
-      (SELECT STRING_AGG(
-        REGEXP_EXTRACT(substep, r'FROM \`?([^\`\s]+)\`?'), ', ')
-       FROM UNNEST(stage.steps) AS step, UNNEST(step.substeps) AS substep
-       WHERE substep LIKE 'FROM %' AND substep NOT LIKE 'FROM __stage%')
-    -- Join ステージの判定
-    WHEN EXISTS(
-      SELECT 1 FROM UNNEST(stage.steps) AS step
-      WHERE step.kind = 'JOIN'
-    ) THEN
-      CONCAT('JOIN処理: ',
-        (SELECT REGEXP_EXTRACT(substep, r'(INNER|LEFT|RIGHT|FULL|CROSS).*JOIN')
-         FROM UNNEST(stage.steps) AS step, UNNEST(step.substeps) AS substep
-         WHERE substep LIKE '%JOIN%' LIMIT 1))
-    -- Aggregate ステージの判定
-    WHEN EXISTS(
-      SELECT 1 FROM UNNEST(stage.steps) AS step
-      WHERE step.kind = 'AGGREGATE'
-    ) THEN 'GROUP BY処理'
-    -- Sort ステージの判定
-    WHEN EXISTS(
-      SELECT 1 FROM UNNEST(stage.steps) AS step
-      WHERE step.kind = 'SORT'
-    ) THEN 'ORDER BY/SORT処理'
-    -- Filter ステージの判定
-    WHEN EXISTS(
-      SELECT 1 FROM UNNEST(stage.steps) AS step
-      WHERE step.kind = 'FILTER'
-    ) THEN 'WHERE句フィルタ処理'
-    ELSE 'その他の処理'
-  END as sql_operation
-FROM
-  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-  UNNEST(job_stages) AS stage
-WHERE
-  job_id = @job_id
-ORDER BY
-  stage.slot_ms DESC"
+### 3. ボトルネック根本原因の分析
 
-# JOIN操作の詳細情報を取得
-echo -e "\n=== JOIN操作の詳細 ==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-SELECT
-  stage.name as stage_name,
-  CAST(stage.slot_ms AS INT64) as slot_ms,
-  SUBSTRING(substep, 1, 100) as join_condition
-FROM
-  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-  UNNEST(job_stages) AS stage,
-  UNNEST(stage.steps) AS step,
-  UNNEST(step.substeps) AS substep
-WHERE
-  job_id = @job_id
-  AND step.kind = 'JOIN'
-  AND substep LIKE '%JOIN%'"
+**前提**: セクション2で特定したボトルネックステージ（TOP1-3）のみを詳細分析する
 
-# 各ステップ種別の詳細分析
-echo -e "\n=== ステップ種別ごとの処理内容 ==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-SELECT
-  step.kind as step_type,
-  COUNT(*) as step_count,
-  STRING_AGG(DISTINCT stage.name, ', ' ORDER BY stage.name LIMIT 3) as stages_using,
-  CASE step.kind
-    WHEN 'READ' THEN 'テーブルまたは中間シャッフルからデータ読み込み'
-    WHEN 'WRITE' THEN 'テーブルまたはシャッフルへデータ書き込み'
-    WHEN 'COMPUTE' THEN '式評価やSQL関数の実行'
-    WHEN 'FILTER' THEN 'WHERE句、HAVING句の条件評価'
-    WHEN 'SORT' THEN 'ORDER BY処理'
-    WHEN 'AGGREGATE' THEN 'GROUP BYと集計関数の実行'
-    WHEN 'JOIN' THEN 'テーブル結合処理'
-    WHEN 'LIMIT' THEN '行数制限の適用'
-    WHEN 'ANALYTIC_FUNCTION' THEN 'ウィンドウ関数の処理'
-    ELSE 'その他の処理'
-  END as description
-FROM
-  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-  UNNEST(job_stages) AS stage,
-  UNNEST(stage.steps) AS step
-WHERE
-  job_id = @job_id
-GROUP BY
-  step.kind
-ORDER BY
-  step_count DESC"
-```
-
-パフォーマンス問題を分析して、結果をテーブル形式で表示します：
+#### ボトルネックステージの処理内容を特定
+**目的**: 各ボトルネックステージが何の処理をしているかをSQL要素と対応付ける
 
 ```bash
-# 最も遅いステージTOP5
-echo "=== 最も時間のかかるステージ TOP5 ==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-SELECT
-  stage.name as stage_name,
-  CAST(stage.slot_ms AS INT64) as slot_ms,
-  CAST(stage.compute_ms_max AS INT64) as compute_ms_max,
-  CAST(stage.wait_ms_max AS INT64) as wait_ms_max
-FROM
-  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-  UNNEST(job_stages) AS stage
-WHERE
-  job_id = @job_id
-ORDER BY
-  stage.slot_ms DESC
-LIMIT 5"
-
-# データスキューの検出（スキュー率2.0以上）
-echo -e "\n=== データスキュー検出（スキュー率 >= 2.0）==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-SELECT
-  stage.name as stage_name,
-  ROUND(SAFE_DIVIDE(
-    CAST(stage.compute_ms_max AS FLOAT64),
-    CAST(stage.compute_ms_avg AS FLOAT64)
-  ), 2) as skew_ratio
-FROM
-  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-  UNNEST(job_stages) AS stage
-WHERE
-  job_id = @job_id
-  AND SAFE_DIVIDE(
-    CAST(stage.compute_ms_max AS FLOAT64),
-    CAST(stage.compute_ms_avg AS FLOAT64)
-  ) >= 2.0
-ORDER BY
-  skew_ratio DESC"
-
-# 大量データシャッフル（100MB以上）
-echo -e "\n=== 大量データシャッフル（>= 100MB）==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-SELECT
-  stage.name as stage_name,
-  ROUND(CAST(stage.shuffle_output_bytes AS INT64) / 1048576, 1) as shuffle_mb
-FROM
-  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-  UNNEST(job_stages) AS stage
-WHERE
-  job_id = @job_id
-  AND CAST(stage.shuffle_output_bytes AS INT64) >= 104857600
-ORDER BY
-  shuffle_mb DESC"
-
-# シャッフルスピルの分析（メモリ不足の検出）
-echo -e "\n=== シャッフルスピル分析（メモリ不足検出）==="
-bq query --use_legacy_sql=false --format=pretty \
-  --parameter="job_id:STRING:${JOB_ID}" "
-SELECT
-  stage.name as stage_name,
-  CAST(stage.slot_ms AS INT64) as slot_ms,
-  ROUND(CAST(stage.shuffle_output_bytes AS INT64) / 1048576, 1) as shuffle_mb,
-  ROUND(CAST(stage.shuffle_output_bytes_spilled AS INT64) / 1048576, 1) as spilled_mb,
-  ROUND(100.0 * stage.shuffle_output_bytes_spilled / NULLIF(stage.shuffle_output_bytes, 0), 1) as spill_pct,
-  CASE
-    WHEN stage.shuffle_output_bytes_spilled > 0 THEN 'メモリ不足発生'
-    ELSE 'メモリ十分'
-  END as memory_status
-FROM
-  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
-  UNNEST(job_stages) AS stage
-WHERE
-  job_id = @job_id
-  AND stage.shuffle_output_bytes > 0
-ORDER BY
-  spilled_mb DESC"
+echo "=== ボトルネックステージの処理内容 ==="
+# ステージ名からSQL操作を特定するクエリを実行
+# 結果を見て: Input=テーブル読み込み、Join+=結合処理、Aggregate+=集約、Sort+=ソート
 ```
 
-**分析結果の解釈:**
-- **Stage名が"Join+"の場合**
-  - substepsの`JOIN`句を確認して結合条件を特定
-  - shuffle_output_bytesが大きい場合は、JOIN前の絞り込み不足
-  - 例：`INNER HASH JOIN EACH WITH EACH ON $2 = $10` → user_idでの結合
+#### 根本原因の診断
+各ボトルネックステージに対して以下を実行：
 
-- **Stage名が"Input"の場合**
-  - substepsの`FROM`句で読み込みテーブルを特定
-  - slot_msが大きい場合は、パーティション指定やクラスタリングの活用を検討
+**Wait主体の場合**: スケジューリング遅延
+```bash
+echo "=== Wait時間分析 ==="
+# wait_ratio_maxが高いステージのリソース競合状況を確認
+```
 
-- **Stage名が"Sort+"の場合**
-  - ORDER BY句やウィンドウ関数のソート処理
-  - 最終段階のソートならLIMIT句との組み合わせを確認
+**Read主体の場合**: データ読み込み効率
+```bash
+echo "=== Read時間分析 ==="
+# 大量テーブルスキャンまたはパーティション設計の問題
+```
 
-- **Stage名が"Aggregate+"の場合**
-  - substepsの`GROUP BY`句で集計キーを特定
-  - 多段階の集約が発生している場合は、CTEでの事前集約を検討
+**Compute主体の場合**: CPU処理負荷
+```bash
+echo "=== Compute時間分析 ==="
+# データスキュー（compute_ms_max/compute_ms_avg >= 2.0）の確認
+```
 
-- **スキュー率2.0以上** → 特定のキー値にデータが偏っている
-- **シャッフル量100MB以上** → 大量データ移動が発生、JOIN順序の見直しが必要
+**Write主体の場合**: データ出力負荷
+```bash
+echo "=== Shuffle/Write分析 ==="
+# 大量シャッフル（>100MB）やメモリスピルの確認
+```
+
+#### 元クエリとの対応付け
+```bash
+echo "=== 元クエリの確認 ==="
+cat /tmp/original_query.sql
+```
+
+**agentの分析指示**:
+1. ボトルネックステージの処理内容（JOIN/GROUP BY/ORDER BY等）を特定
+2. Wait/Read/Compute/Writeの支配的要素を確認
+3. 元クエリの該当箇所を特定
+4. 根本原因（シャッフル量/スキュー/パーティション等）を診断
 
 ### 4. 最適化パターンの選択（優先度付きで複数提案）
 
@@ -569,7 +233,8 @@ NEW_JOB_INFO=$(bq query --use_legacy_sql=false --format=json \
     total_bytes_processed,
     TIMESTAMP_DIFF(end_time, start_time, MILLISECOND) as elapsed_ms
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
-  WHERE job_id = @job_id")
+  WHERE job_id = @job_id
+    AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)")
 
 # 改善度を計算（ORIGINAL_SLOT_MSは既に取得済み）
 NEW_SLOT_MS=$(echo "$NEW_JOB_INFO" | jq -r '.[0].total_slot_ms')
