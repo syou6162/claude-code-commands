@@ -137,7 +137,85 @@ bq query --use_legacy_sql=false --format=pretty \
   LIMIT 20"
 ```
 
-### 3. ボトルネック診断（テーブル形式で直接表示）
+### 3. ボトルネック診断とSQL対応付け
+
+#### ステージとSQL要素の自動対応付け
+```bash
+# 元のクエリを取得して表示
+echo "=== 元のクエリ ==="
+bq query --use_legacy_sql=false --format=json \
+  --parameter="job_id:STRING:${JOB_ID}" "
+SELECT query
+FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+WHERE job_id = @job_id" | jq -r '.[0].query'
+
+# ステージとSQL操作の詳細な対応関係を分析
+echo -e "\n=== ステージとSQL操作の対応付け ==="
+bq query --use_legacy_sql=false --format=pretty \
+  --parameter="job_id:STRING:${JOB_ID}" "
+SELECT
+  stage.name as stage_name,
+  CAST(stage.slot_ms AS INT64) as slot_ms,
+  ROUND(CAST(stage.shuffle_output_bytes AS INT64) / 1048576, 1) as shuffle_mb,
+  CASE
+    -- Input ステージの判定
+    WHEN stage.name LIKE '%Input%' THEN
+      (SELECT STRING_AGG(
+        REGEXP_EXTRACT(substep, r'FROM \`?([^\`\s]+)\`?'), ', ')
+       FROM UNNEST(stage.steps) AS step, UNNEST(step.substeps) AS substep
+       WHERE substep LIKE 'FROM %' AND substep NOT LIKE 'FROM __stage%')
+    -- Join ステージの判定
+    WHEN EXISTS(
+      SELECT 1 FROM UNNEST(stage.steps) AS step
+      WHERE step.kind = 'JOIN'
+    ) THEN
+      CONCAT('JOIN処理: ',
+        (SELECT REGEXP_EXTRACT(substep, r'(INNER|LEFT|RIGHT|FULL|CROSS).*JOIN')
+         FROM UNNEST(stage.steps) AS step, UNNEST(step.substeps) AS substep
+         WHERE substep LIKE '%JOIN%' LIMIT 1))
+    -- Aggregate ステージの判定
+    WHEN EXISTS(
+      SELECT 1 FROM UNNEST(stage.steps) AS step
+      WHERE step.kind = 'AGGREGATE'
+    ) THEN 'GROUP BY処理'
+    -- Sort ステージの判定
+    WHEN EXISTS(
+      SELECT 1 FROM UNNEST(stage.steps) AS step
+      WHERE step.kind = 'SORT'
+    ) THEN 'ORDER BY/SORT処理'
+    -- Filter ステージの判定
+    WHEN EXISTS(
+      SELECT 1 FROM UNNEST(stage.steps) AS step
+      WHERE step.kind = 'FILTER'
+    ) THEN 'WHERE句フィルタ処理'
+    ELSE 'その他の処理'
+  END as sql_operation
+FROM
+  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+  UNNEST(job_stages) AS stage
+WHERE
+  job_id = @job_id
+ORDER BY
+  stage.slot_ms DESC"
+
+# JOIN操作の詳細情報を取得
+echo -e "\n=== JOIN操作の詳細 ==="
+bq query --use_legacy_sql=false --format=pretty \
+  --parameter="job_id:STRING:${JOB_ID}" "
+SELECT
+  stage.name as stage_name,
+  CAST(stage.slot_ms AS INT64) as slot_ms,
+  SUBSTRING(substep, 1, 100) as join_condition
+FROM
+  \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+  UNNEST(job_stages) AS stage,
+  UNNEST(stage.steps) AS step,
+  UNNEST(step.substeps) AS substep
+WHERE
+  job_id = @job_id
+  AND step.kind = 'JOIN'
+  AND substep LIKE '%JOIN%'"
+```
 
 パフォーマンス問題を分析して、結果をテーブル形式で表示します：
 
@@ -200,11 +278,25 @@ ORDER BY
 ```
 
 **分析結果の解釈:**
-- Stage名が"Join+"の場合 → SQLのJOIN句を確認、大きいテーブル同士のJOINが原因
-- Stage名が"Sort+"の場合 → ORDER BY句やウィンドウ関数のソート処理
-- Stage名が"Aggregate+"の場合 → GROUP BY句の集計処理
-- スキュー率2.0以上 → 特定のキー値にデータが偏っている
-- シャッフル量100MB以上 → 大量データ移動が発生、JOIN順序の見直しが必要
+- **Stage名が"Join+"の場合**
+  - substepsの`JOIN`句を確認して結合条件を特定
+  - shuffle_output_bytesが大きい場合は、JOIN前の絞り込み不足
+  - 例：`INNER HASH JOIN EACH WITH EACH ON $2 = $10` → user_idでの結合
+
+- **Stage名が"Input"の場合**
+  - substepsの`FROM`句で読み込みテーブルを特定
+  - slot_msが大きい場合は、パーティション指定やクラスタリングの活用を検討
+
+- **Stage名が"Sort+"の場合**
+  - ORDER BY句やウィンドウ関数のソート処理
+  - 最終段階のソートならLIMIT句との組み合わせを確認
+
+- **Stage名が"Aggregate+"の場合**
+  - substepsの`GROUP BY`句で集計キーを特定
+  - 多段階の集約が発生している場合は、CTEでの事前集約を検討
+
+- **スキュー率2.0以上** → 特定のキー値にデータが偏っている
+- **シャッフル量100MB以上** → 大量データ移動が発生、JOIN順序の見直しが必要
 
 ### 4. 最適化パターンの選択（優先度付きで複数提案）
 
@@ -323,8 +415,12 @@ echo "Iteration 1: ${IMPROVEMENT_RATIO}x improvement" >> /tmp/optimization_histo
 - スロット時間: [Y ms]
 
 ## 検出された問題とSQL対応
-1. [ステージX: JOINの非効率] - L10-15のcustomers JOIN orders
-2. [ステージY: データスキュー] - L20のGROUP BY user_id
+1. [ステージS01: Input - 254秒] - bigquery-public-data.stackoverflow.comments
+   - 14GBのシャッフル発生 → パーティション/クラスタリングの活用を推奨
+2. [ステージS02: Join+ - 99秒] - INNER HASH JOIN ON c.user_id = u.id
+   - 151MBのシャッフル → JOIN前にフィルタリングで絞り込み
+3. [ステージS03: Sort+ - 2秒] - GROUP BY user_id, ORDER BY comments_count DESC
+   - 最終集約処理 → CTEでの事前集約を検討
 
 ## 適用した最適化（優先度順）
 1. [パターンA]: 期待効果60%削減
