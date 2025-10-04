@@ -35,11 +35,11 @@ if [[ "$INPUT" =~ \.sql$ ]]; then
     fi
     # クエリを実行してジョブIDを取得（--nosyncで即座に戻る）
     echo "クエリを実行中..."
-    JOB_ID=$(bq query --nosync --use_legacy_sql=false --format=json "$QUERY" 2>/dev/null | jq -r '.jobReference.jobId')
+    JOB_ID=$(bq query --nosync --use_legacy_sql=false --format=json "$QUERY" | jq -r '.jobReference.jobId')
 
     echo "ジョブID: $JOB_ID"
     # ジョブの完了を待つ（--nosyncのため待機が必要）
-    bq wait "$JOB_ID" 2>/dev/null
+    bq wait "$JOB_ID"
 
 # ジョブIDの場合
 elif [[ "$INPUT" =~ ^(bquxjob_|job_|bq-) ]]; then
@@ -49,11 +49,11 @@ elif [[ "$INPUT" =~ ^(bquxjob_|job_|bq-) ]]; then
 else
     echo "SQLクエリを実行中..."
     # クエリを実行してジョブIDを取得（--nosyncで即座に戻る）
-    JOB_ID=$(bq query --nosync --use_legacy_sql=false --format=json "$INPUT" 2>/dev/null | jq -r '.jobReference.jobId')
+    JOB_ID=$(bq query --nosync --use_legacy_sql=false --format=json "$INPUT" | jq -r '.jobReference.jobId')
 
     echo "ジョブID: $JOB_ID"
     # ジョブの完了を待つ
-    bq wait "$JOB_ID" 2>/dev/null
+    bq wait "$JOB_ID"
 fi
 ```
 
