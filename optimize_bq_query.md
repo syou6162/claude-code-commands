@@ -33,7 +33,7 @@ BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改�
 
 - ファイルの存在確認: `!test -f "$ARGUMENTS" && echo "ファイル存在" || echo "ファイルなし"`
 - ジョブIDを取得（出力を`JOB_ID`として認識）: `!cat "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
-- ジョブの完了を待機: `!bq wait "JOB_ID"`
+- ジョブの完了を待機: `!bq wait "<JOB_ID>"`
 
 **ステップ2-B: ジョブIDの場合**
 
@@ -42,7 +42,7 @@ BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改�
 **ステップ2-C: SQLクエリ文字列の場合**
 
 - ジョブIDを取得（出力を`JOB_ID`として認識）: `!echo "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
-- ジョブの完了を待機: `!bq wait "JOB_ID"`
+- ジョブの完了を待機: `!bq wait "<JOB_ID>"`
 
 ### 2. 全体ボトルネックの特定
 
@@ -50,7 +50,7 @@ BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改�
 ```bash
 # 元のクエリとメトリクスを取得
 echo "基本情報を収集中..."
-bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:${JOB_ID}" "
+bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<JOB_ID>" "
   SELECT query, total_slot_ms, total_bytes_processed
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
@@ -73,7 +73,7 @@ echo "元の行数: $ORIGINAL_ROWS"
 
 ```bash
 echo "=== ボトルネックステージの特定 ==="
-bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:${JOB_ID}" "
+bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_ID>" "
   SELECT
     stage.name as stage_name,
     CAST(stage.slot_ms AS INT64) as slot_ms,
@@ -108,7 +108,7 @@ echo "=== ボトルネックステージの処理内容 ==="
 ```bash
 # 各ボトルネックステージの詳細分析（TOP1-3のみ）
 echo "=== ボトルネックステージの詳細分析 ==="
-bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:${JOB_ID}" "
+bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_ID>" "
   SELECT
     stage.name,
     CAST(stage.slot_ms AS INT64) as slot_ms,
@@ -127,7 +127,7 @@ bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:${JOB
 
 # ステージの処理内容を特定
 echo "=== ステージの処理内容特定 ==="
-bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:${JOB_ID}" "
+bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_ID>" "
   SELECT
     stage.name,
     CASE
@@ -265,7 +265,7 @@ bq wait "$NEW_JOB_ID"
 ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
 
 # 新しいジョブのメトリクス取得
-bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:${NEW_JOB_ID}" "
+bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<NEW_JOB_ID>" "
   SELECT total_slot_ms
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
