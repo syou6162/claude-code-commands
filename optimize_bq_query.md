@@ -70,21 +70,12 @@ bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_
 
 **前提**: セクション2で特定したボトルネックステージ（TOP1-3）のみを詳細分析する
 
-#### ボトルネックステージの処理内容を特定
-**目的**: 各ボトルネックステージが何の処理をしているかをSQL要素と対応付ける
-
-```bash
-echo "=== ボトルネックステージの処理内容 ==="
-# ステージ名からSQL操作を特定するクエリを実行
-# 結果を見て: Input=テーブル読み込み、Join+=結合処理、Aggregate+=集約、Sort+=ソート
-```
-
 #### 根本原因の診断
-特定されたボトルネックステージについて詳細分析を実行：
+
+1. **ボトルネックステージの詳細メトリクスを取得**
+  - セクション2で特定したボトルネックステージ（TOP1-3）に対して以下のクエリを実行:
 
 ```bash
-# 各ボトルネックステージの詳細分析（TOP1-3のみ）
-echo "=== ボトルネックステージの詳細分析 ==="
 bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_ID>" "
   SELECT
     stage.name,
@@ -101,9 +92,12 @@ bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_
     AND stage.name IN ('特定されたボトルネックステージ名1', '名前2', '名前3')
   ORDER BY stage.slot_ms DESC
 "
+```
 
-# ステージの処理内容を特定
-echo "=== ステージの処理内容特定 ==="
+2. **ステージの処理内容を特定**
+  - 各ステージがどの種類の処理を行っているかを以下のクエリで確認:
+
+```bash
 bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_ID>" "
   SELECT
     stage.name,
