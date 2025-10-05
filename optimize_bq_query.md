@@ -190,9 +190,8 @@ echo "" >> /tmp/applied_optimizations.txt
 2. 該当するパターンのみ選択し、2倍改善見込みを計算
 3. 選択理由と期待効果を`/tmp/applied_optimizations.txt`に記録
 
-### 5. 最適化クエリの実装と検証
+### 5. 最適化クエリの実装
 
-#### 最適化SQLの生成と保存
 ```bash
 echo "最適化クエリを生成中..."
 cat /tmp/original_query.sql
@@ -208,28 +207,31 @@ echo "最適化クエリを /tmp/optimized_query.sql に保存しました"
 cat /tmp/optimized_query.sql
 ```
 
-#### リファクタリング結果の同一性検証
-**重要**: 最適化は性能改善のみで、結果は完全に同一である必要がある
+### 6. リファクタリング結果の同一性検証
+- **重要**: 最適化は性能改善のみで、出力結果は完全に同一である必要がある
+- **注意**: `BIT_XOR`と`FARM_FINGERPRINT`は行の順序に依存しないため、結果の同一性を検証できる
 
-**チェックサムによる検証手順**:
+**BigQueryチェックサムによる検証手順**:
 
-1. **元クエリのチェックサムを計算**
-  - `/tmp/original_query.sql`の内容を以下のクエリでラップして実行
-  - `SELECT BIT_XOR(FARM_FINGERPRINT(TO_JSON_STRING(t))) as checksum FROM (<元クエリ>) AS t`
-  - 結果のチェックサム値を記録
+1. **元クエリの結果テーブル名を取得してチェックサムを計算**
+  - `JOB_ID`(セクション1で取得済み)から`destination_table`を取得し、完全修飾名を組み立て
+    - `bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<JOB_ID>" "SELECT destination_table FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)" | jq -r '.[0].destination_table | [.project_id, .dataset_id, .table_id] | join(".")'`
+  - 取得したテーブル名に対してチェックサムを計算
+    - `bq query --use_legacy_sql=false --format=json "SELECT BIT_XOR(FARM_FINGERPRINT(TO_JSON_STRING(t))) as checksum FROM <テーブル名> AS t" | jq -r '.[0].checksum'`
+  - チェックサム値（整数文字列）を記録
 
-2. **最適化クエリのチェックサムを計算**
-  - `/tmp/optimized_query.sql`の内容を同様にラップして実行
-  - `SELECT BIT_XOR(FARM_FINGERPRINT(TO_JSON_STRING(t))) as checksum FROM (<最適化クエリ>) AS t`
-  - 結果のチェックサム値を記録
+2. **最適化クエリの結果テーブル名を取得してチェックサムを計算**
+  - `NEW_JOB_ID`(セクション6で取得)から`destination_table`を取得し、完全修飾名を組み立て
+    - `bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<NEW_JOB_ID>" "SELECT destination_table FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)" | jq -r '.[0].destination_table | [.project_id, .dataset_id, .table_id] | join(".")'`
+  - 取得したテーブル名に対してチェックサムを計算
+    - `bq query --use_legacy_sql=false --format=json "SELECT BIT_XOR(FARM_FINGERPRINT(TO_JSON_STRING(t))) as checksum FROM <テーブル名> AS t" | jq -r '.[0].checksum'`
+  - チェックサム値（整数文字列）を記録
 
 3. **チェックサム値を比較**
   - 2つのチェックサム値が完全に一致することを確認
   - 不一致の場合は最適化を中止し、原因を調査
 
-**注意**: この手法は行の順序に依存しないため、ORDER BY句の有無に関わらず結果の同一性を検証できます
-
-### 6. 性能改善効果の測定
+### 7. 性能改善効果の測定
 
 #### 最適化後のメトリクス取得
 ```bash
@@ -268,7 +270,7 @@ else
 fi
 ```
 
-### 7. 最終レポート生成
+### 8. 最終レポート生成
 
 **目的**: 2倍改善達成の根拠と再現可能な手順を記録
 
