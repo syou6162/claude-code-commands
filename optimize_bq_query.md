@@ -236,43 +236,29 @@ cat /tmp/optimized_query.sql
   - 不一致の場合は最適化を中止し、原因を調査
 
 ### 7. 性能改善効果の測定
+- 最適化後のクエリを実行し、同様にジョブIDを取得してメトリクスを収集
+  - !`cat /tmp/optimized_query.sql | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
+  - 取得したジョブIDを`NEW_JOB_ID`として以降の分析で使用
+  - `NEW_JOB_ID`をシェル変数として設定する必要はありません
+- `bq wait "<NEW_JOB_ID>"`でジョブが完了するまで待機
+- 元のスロット時間を取得（セクション2で保存したjsonから）
+  - !`cat /tmp/job_info.json | jq -r '.[0].total_slot_ms'`
+- 以下のコマンドで、最適化後のスロット時間を取得
 
-#### 最適化後のメトリクス取得
 ```bash
-# 最適化クエリの性能測定のための実行
-echo "最適化クエリの性能測定中..."
-NEW_JOB_ID=$(cat /tmp/optimized_query.sql | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId')
-bq wait "$NEW_JOB_ID"
-
-# 元のスロット時間を取得（セクション2で保存したjsonから）
-ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
-
-# 新しいジョブのメトリクス取得
 bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<NEW_JOB_ID>" "
   SELECT total_slot_ms
   FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-" | tee /tmp/new_job_info.json
-
-NEW_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/new_job_info.json)
-
-# 改善率の計算
-IMPROVEMENT_RATIO=$(echo "scale=2; $ORIGINAL_SLOT_MS / $NEW_SLOT_MS" | bc)
-echo "改善率: ${IMPROVEMENT_RATIO}x (元: ${ORIGINAL_SLOT_MS}ms → 後: ${NEW_SLOT_MS}ms)"
+" | jq -r '.[0].total_slot_ms'
 ```
 
-#### 2倍改善達成判定と反復プロセス
-```bash
-echo "Iteration 1: ${IMPROVEMENT_RATIO}x" >> /tmp/optimization_history.txt
-
-if (( $(echo "$IMPROVEMENT_RATIO >= 2.0" | bc) )); then
-  echo "✅ 目標達成: ${IMPROVEMENT_RATIO}x改善"
-else
-  echo "⚠️  未達成: ${IMPROVEMENT_RATIO}x改善（目標: 2.0x）"
-  # セクション2-3を再実行して追加ボトルネックを特定
-  # 最大3回まで反復可能
-fi
-```
+#### 改善率の計算と判定:
+- 元のスロット時間と最適化後のスロット時間を比較し、改善率を計算
+  - `bc`コマンドなどは使用せず、Agent自身が計算を行う
+- 2倍以上の改善が達成されたかを判定
+  - 改善率が2倍以上であれば成功とし、最適化プロセスを終了
+  - 達成されていない場合は、セクション3で特定したボトルネックに戻り、セクション4-6を繰り返す
 
 ### 8. 最終レポート生成
 
@@ -316,6 +302,6 @@ echo "レポートを /tmp/optimization_report.md に保存しました"
 ```
 
 **完了条件**:
-- 2倍以上の改善達成 OR 3回の反復完了
+- 2倍以上の改善達成 OR 5回の反復完了
 - 結果の同一性確認済み
 - 再現可能な最適化手順の記録
