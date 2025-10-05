@@ -10,42 +10,21 @@ description: "BigQueryクエリのパフォーマンスを分析し、2倍以上
 - **スキャン量削減**: INFORMATION_SCHEMAは直近7日間のみ検索（creation_timeで絞り込み）
 
 ## 分析対象
-入力: $ARGUMENTS（ジョブID、SQLクエリ、またはSQLファイルパス）
+入力: $ARGUMENTS（SQLファイルパス `.sql`）
 
 ## 実行手順
 
-### 1. ジョブ情報の取得（複数手段でフォールバック）
+### 1. クエリ実行とジョブIDの取得
 
-入力を判定してジョブ詳細を取得してください：
+**前提**: `$ARGUMENTS`は最適化対象のSQLクエリが記述された`.sql`ファイルのパスです
 
-- **ジョブIDの場合**（`bquxjob_`や`job_`で始まる）: そのまま使用
-- **ファイルパスの場合**（`.sql`で終わる）: ファイルを読み込んでクエリとして実行
-- **SQLクエリの場合**（その他）: 直接実行
-
-**ステップ1: 入力の種類を判定**
-
-まず、$ARGUMENTSがどの形式か判定してください：
-
-- `.sql`で終わる → **ファイルパス** (ステップ2-A)
-- `bquxjob_`、`job_`、`bq-`で始まる → **ジョブID** (ステップ2-B)
-- それ以外 → **SQLクエリ文字列** (ステップ2-C)
-
-**ステップ2-A: ファイルパスの場合**
-
-- ファイルの存在確認: `!test -f "$ARGUMENTS" && echo "ファイル存在" || echo "ファイルなし"`
-- ジョブIDを取得（出力を`JOB_ID`として認識）: `!cat "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
+1. クエリを実行してジョブIDを取得
+  - !`cat "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
+  - 取得したジョブIDを`JOB_ID`として以降の分析で使用
   - `JOB_ID`をシェル変数として設定する必要はありません
-- ジョブの完了を待機: `!bq wait "<JOB_ID>"`
 
-**ステップ2-B: ジョブIDの場合**
-
-`$ARGUMENTS`がそのまま`JOB_ID`です。この場合はジョブIDが既に確定しているため、waitは不要です。
-
-**ステップ2-C: SQLクエリ文字列の場合**
-
-- ジョブIDを取得（出力を`JOB_ID`として認識）: `!echo "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
-  - `JOB_ID`をシェル変数として設定する必要はありません
-- ジョブの完了を待機: `!bq wait "<JOB_ID>"`
+2. ジョブの完了を待機
+  - `bq wait "<JOB_ID>"`でジョブが完了するまで待機
 
 ### 2. 全体ボトルネックの特定
 
