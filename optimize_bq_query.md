@@ -47,38 +47,31 @@ BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改�
 ### 2. 全体ボトルネックの特定
 
 #### 基本情報の収集
+- 以下のクエリで元のクエリと基本メトリクス(スロット時間、スキャン量)を取得
+
 ```bash
-# 元のクエリとメトリクスを取得
-echo "基本情報を収集中..."
 bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<JOB_ID>" "
   SELECT query, total_slot_ms, total_bytes_processed
-  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
 " > /tmp/job_info.json
-
-# 元クエリと基本メトリクスを保存
-jq -r '.[0].query' /tmp/job_info.json > /tmp/original_query.sql
-ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
-echo "元のスロット時間: ${ORIGINAL_SLOT_MS}ms"
-
-# 元クエリの結果を保存（検証用）
-echo "元クエリの結果を保存中..."
-cat /tmp/original_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json > /tmp/original_results.json
-ORIGINAL_ROWS=$(jq '. | length' /tmp/original_results.json)
-echo "元の行数: $ORIGINAL_ROWS"
 ```
+
+- 元クエリと基本メトリクスを保存
+  - `cat /tmp/job_info.json | jq -r '.[0].query' > /tmp/original_query.sql`
+- 検証用に元クエリの結果も保存
+  - `cat /tmp/original_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json > /tmp/original_results.json`
 
 #### 最大のボトルネックステージを特定
 **目的**: 全体のスロット時間の80%以上を占める真のボトルネックを見つける
 
 ```bash
-echo "=== ボトルネックステージの特定 ==="
 bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_ID>" "
   SELECT
     stage.name as stage_name,
     CAST(stage.slot_ms AS INT64) as slot_ms,
     ROUND(100.0 * stage.slot_ms / SUM(stage.slot_ms) OVER(), 1) as pct_of_total
-  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+  FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
        UNNEST(job_stages) AS stage
   WHERE job_id = @job_id
     AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
@@ -117,7 +110,7 @@ bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_
     ROUND(stage.compute_ratio_max * 100, 1) as compute_pct,
     ROUND(stage.write_ratio_max * 100, 1) as write_pct,
     ROUND(CAST(stage.shuffle_output_bytes AS INT64) / 1048576, 1) as shuffle_mb
-  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+  FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
        UNNEST(job_stages) AS stage
   WHERE job_id = @job_id
     AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
@@ -137,7 +130,7 @@ bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_
       WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'SORT') THEN 'ORDER BY処理'
       ELSE 'その他'
     END as operation_type
-  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
+  FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
        UNNEST(job_stages) AS stage
   WHERE job_id = @job_id
     AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
@@ -267,7 +260,7 @@ ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
 # 新しいジョブのメトリクス取得
 bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<NEW_JOB_ID>" "
   SELECT total_slot_ms
-  FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
 " > /tmp/new_job_info.json
 
