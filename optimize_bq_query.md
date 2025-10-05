@@ -10,7 +10,8 @@ description: "BigQueryクエリのパフォーマンスを分析し、2倍以上
 - **スキャン量削減**: INFORMATION_SCHEMAは直近7日間のみ検索（creation_timeで絞り込み）
 
 ## 分析対象
-入力: $ARGUMENTS（SQLファイルパス `.sql`）
+- 入力: $ARGUMENTS(SQLファイルパス `.sql`)
+- SQLのファイルのみで最適化内容を判断するのではなく、実際にクエリを実行してジョブ情報を取得し、ボトルネック分析を行う
 
 ## 実行手順
 
