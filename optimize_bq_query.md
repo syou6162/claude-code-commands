@@ -21,41 +21,28 @@ BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改�
 - **ファイルパスの場合**（`.sql`で終わる）: ファイルを読み込んでクエリとして実行
 - **SQLクエリの場合**（その他）: 直接実行
 
-**入力処理:**
-```bash
-INPUT="$ARGUMENTS"
+**ステップ1: 入力の種類を判定**
 
-# ファイルパスの場合
-if [[ "$INPUT" =~ \.sql$ ]]; then
-    if [ -f "$INPUT" ]; then
-        echo "SQLファイルを読み込みました: $INPUT"
-    else
-        echo "Error: ファイルが見つかりません: $INPUT"
-        exit 1
-    fi
-    # ファイルから直接クエリを実行（改行を含むクエリに対応）
-    echo "クエリを実行中..."
-    JOB_ID=$(cat "$INPUT" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId')
+まず、$ARGUMENTSがどの形式か判定してください：
 
-    echo "ジョブID: $JOB_ID"
-    # ジョブの完了を待つ（--nosyncのため待機が必要）
-    bq wait "$JOB_ID"
+- `.sql`で終わる → **ファイルパス** (ステップ2-A)
+- `bquxjob_`、`job_`、`bq-`で始まる → **ジョブID** (ステップ2-B)
+- それ以外 → **SQLクエリ文字列** (ステップ2-C)
 
-# ジョブIDの場合
-elif [[ "$INPUT" =~ ^(bquxjob_|job_|bq-) ]]; then
-    JOB_ID="$INPUT"
+**ステップ2-A: ファイルパスの場合**
 
-# SQLクエリの場合
-else
-    echo "SQLクエリを実行中..."
-    # クエリをパイプで渡して実行（改行を含むクエリに対応）
-    JOB_ID=$(echo "$INPUT" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId')
+- ファイルの存在確認: `!test -f "$ARGUMENTS" && echo "ファイル存在" || echo "ファイルなし"`
+- ジョブIDを取得（出力を`JOB_ID`として認識）: `!cat "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
+- ジョブの完了を待機: `!bq wait "JOB_ID"`
 
-    echo "ジョブID: $JOB_ID"
-    # ジョブの完了を待つ
-    bq wait "$JOB_ID"
-fi
-```
+**ステップ2-B: ジョブIDの場合**
+
+`$ARGUMENTS`がそのまま`JOB_ID`です。この場合はジョブIDが既に確定しているため、waitは不要です。
+
+**ステップ2-C: SQLクエリ文字列の場合**
+
+- ジョブIDを取得（出力を`JOB_ID`として認識）: `!echo "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
+- ジョブの完了を待機: `!bq wait "JOB_ID"`
 
 ### 2. 全体ボトルネックの特定
 
