@@ -166,21 +166,24 @@ bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_
 - **LIMIT早期適用**: TOP-N処理での不要計算回避
 - **ウィンドウ関数最適化**: PARTITION BY句の最適化
 
-```bash
-# 選択した最適化パターンを記録
-echo "=== 適用する最適化パターン ===" > /tmp/applied_optimizations.txt
-echo "分析日時: $(date)" >> /tmp/applied_optimizations.txt
-echo "" >> /tmp/applied_optimizations.txt
+**最適化パターンの選択と記録**:
 
-# agentが該当するパターンを記録
-# 例: echo "1. JOIN前データ削減: users テーブルの事前フィルタリング (期待効果: 60%削減)" >> /tmp/applied_optimizations.txt
-# 例: echo "2. JOIN順序最適化: 小テーブル first (期待効果: 25%削減)" >> /tmp/applied_optimizations.txt
+1. **ボトルネック診断結果を参照**
+  - `/tmp/bottleneck_analysis.md`の内容を確認
+
+2. **最適化パターンファイルの初期化**
+  - Writeツールを使って`/tmp/applied_optimizations.md`を以下の内容で作成:
+
+```markdown
+## 適用する最適化パターン
+<!-- 例: 1. JOIN前データ削減: users テーブルの事前フィルタリング (期待効果: 60%削減) -->
+<!-- 例: 2. JOIN順序最適化: 小テーブル first (期待効果: 25%削減) -->
 ```
 
-**agent指示**:
-1. ボトルネック診断結果（`/tmp/bottleneck_analysis.md`）を参照
-2. 該当するパターンのみ選択し、2倍改善見込みを計算
-3. 選択理由と期待効果を`/tmp/applied_optimizations.txt`に記録
+3. **最適化パターンの記録**
+  - ボトルネック要因に対応するパターンを選択
+  - 各パターンの期待効果を計算し、2倍改善の見込みを確認
+  - Editツールで具体的な最適化内容を追記
 
 ### 5. 最適化クエリの実装
 
@@ -273,7 +276,7 @@ cat > /tmp/optimization_report.md << EOF
 \$(cat /tmp/bottleneck_analysis.md)
 
 ## 適用した最適化手法
-\$(cat /tmp/applied_optimizations.txt)
+\$(cat /tmp/applied_optimizations.md)
 
 ## 最適化後のクエリ
 \`\`\`sql
