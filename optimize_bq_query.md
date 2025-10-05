@@ -225,7 +225,7 @@ cat /tmp/optimized_query.sql
 
 ### 7. 性能改善効果の測定
 - 最適化後のクエリを実行し、同様にジョブIDを取得してメトリクスを収集
-  - !`cat /tmp/optimized_query.sql | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
+  - `cat /tmp/optimized_query.sql | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
   - 取得したジョブIDを`NEW_JOB_ID`として以降の分析で使用
   - `NEW_JOB_ID`をシェル変数として設定する必要はありません
 - `bq wait "<NEW_JOB_ID>"`でジョブが完了するまで待機
