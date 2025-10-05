@@ -124,13 +124,19 @@ echo "=== ステージの処理内容特定 ==="
 bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_ID>" "
   SELECT
     stage.name,
+    ARRAY_AGG(DISTINCT step.kind ORDER BY step.kind) as step_kinds,
     CASE
-      WHEN stage.name LIKE '%Input%' THEN 'テーブル読み込み'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'READ') THEN 'READ処理'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'WRITE') THEN 'WRITE処理'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'COMPUTE') THEN 'COMPUTE処理'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'FILTER') THEN 'FILTER処理'
       WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'JOIN') THEN 'JOIN処理'
-      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'AGGREGATE') THEN 'GROUP BY処理'
-      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'SORT') THEN 'ORDER BY処理'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'AGGREGATE') THEN 'AGGREGATE処理'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'ANALYTIC') THEN 'ANALYTIC処理'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'SORT') THEN 'SORT処理'
+      WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'LIMIT') THEN 'LIMIT処理'
       ELSE 'その他'
-    END as operation_type
+    END as primary_operation
   FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
        UNNEST(job_stages) AS stage
   WHERE job_id = @job_id
