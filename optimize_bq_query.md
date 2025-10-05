@@ -274,6 +274,9 @@ echo "最適化クエリの性能測定中..."
 NEW_JOB_ID=$(cat /tmp/optimized_query.sql | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId')
 bq wait "$NEW_JOB_ID"
 
+# 元のスロット時間を取得（セクション2で保存したjsonから）
+ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
+
 # 新しいジョブのメトリクス取得
 NEW_SLOT_MS=$(bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:${NEW_JOB_ID}" "
   SELECT total_slot_ms
