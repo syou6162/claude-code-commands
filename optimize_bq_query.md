@@ -272,6 +272,7 @@ bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<NEW_JO
 # BigQuery最適化レポート
 
 ## 実行サマリー
+- **元クエリファイル**: <$ARGUMENTSの値>
 - **元ジョブID**: <JOB_ID>
 - **元スロット時間**: <ORIGINAL_SLOT_MS>ms
 - **最終改善率**: <IMPROVEMENT_RATIO>x
