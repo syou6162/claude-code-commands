@@ -34,6 +34,7 @@ description: "BigQueryクエリのパフォーマンスを分析し、2倍以上
 
 - ファイルの存在確認: `!test -f "$ARGUMENTS" && echo "ファイル存在" || echo "ファイルなし"`
 - ジョブIDを取得（出力を`JOB_ID`として認識）: `!cat "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
+  - `JOB_ID`をシェル変数として設定する必要はありません
 - ジョブの完了を待機: `!bq wait "<JOB_ID>"`
 
 **ステップ2-B: ジョブIDの場合**
@@ -43,6 +44,7 @@ description: "BigQueryクエリのパフォーマンスを分析し、2倍以上
 **ステップ2-C: SQLクエリ文字列の場合**
 
 - ジョブIDを取得（出力を`JOB_ID`として認識）: `!echo "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
+  - `JOB_ID`をシェル変数として設定する必要はありません
 - ジョブの完了を待機: `!bq wait "<JOB_ID>"`
 
 ### 2. 全体ボトルネックの特定
