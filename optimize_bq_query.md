@@ -62,8 +62,6 @@ bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<JOB_ID
 
 - 元クエリと基本メトリクスを保存
   - `cat /tmp/job_info.json | jq -r '.[0].query' | tee /tmp/original_query.sql`
-- 検証用に元クエリの結果も保存
-  - `cat /tmp/original_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json | tee /tmp/original_results.json | head -n 10`
 
 #### 最大のボトルネックステージを特定
 **目的**: 全体のスロット時間の80%以上を占める真のボトルネックを見つける
@@ -234,24 +232,23 @@ cat /tmp/optimized_query.sql
 #### リファクタリング結果の同一性検証
 **重要**: 最適化は性能改善のみで、結果は完全に同一である必要がある
 
-```bash
-# 元クエリの結果を保存（セクション2で実行済み）
-echo "元の行数: $(jq '. | length' /tmp/original_results.json)"
+**チェックサムによる検証手順**:
 
-# 最適化後クエリの実行と結果比較
-echo "最適化クエリの結果検証中..."
-cat /tmp/optimized_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json | tee /tmp/optimized_results.json | head -n 10
+1. **元クエリのチェックサムを計算**
+  - `/tmp/original_query.sql`の内容を以下のクエリでラップして実行
+  - `SELECT BIT_XOR(FARM_FINGERPRINT(TO_JSON_STRING(t))) as checksum FROM (<元クエリ>) AS t`
+  - 結果のチェックサム値を記録
 
-ORIGINAL_ROWS=$(jq '. | length' /tmp/original_results.json)
-OPTIMIZED_ROWS=$(jq '. | length' /tmp/optimized_results.json)
+2. **最適化クエリのチェックサムを計算**
+  - `/tmp/optimized_query.sql`の内容を同様にラップして実行
+  - `SELECT BIT_XOR(FARM_FINGERPRINT(TO_JSON_STRING(t))) as checksum FROM (<最適化クエリ>) AS t`
+  - 結果のチェックサム値を記録
 
-if [ "$ORIGINAL_ROWS" != "$OPTIMIZED_ROWS" ]; then
-  echo "❌ 致命的エラー: 行数不一致（元: $ORIGINAL_ROWS vs 最適化: $OPTIMIZED_ROWS）"
-  exit 1
-else
-  echo "✓ 結果一致確認: $ORIGINAL_ROWS 行"
-fi
-```
+3. **チェックサム値を比較**
+  - 2つのチェックサム値が完全に一致することを確認
+  - 不一致の場合は最適化を中止し、原因を調査
+
+**注意**: この手法は行の順序に依存しないため、ORDER BY句の有無に関わらず結果の同一性を検証できます
 
 ### 6. 性能改善効果の測定
 
