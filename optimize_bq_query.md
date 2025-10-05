@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(bq query:*), Bash(bq wait:*), Bash(tee:*), Write(/tmp/**), Edit(/tmp/**)
+allowed-tools: Bash(bq query:*), Bash(bq wait:*), Bash(tee:*), Write(/tmp/**), Edit(/tmp/**), Read(/tmp/**)
 description: "BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改善を目標とした最適化を提案します。"
 ---
 
