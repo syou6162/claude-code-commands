@@ -124,7 +124,6 @@ echo "=== ステージの処理内容特定 ==="
 bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_ID>" "
   SELECT
     stage.name,
-    ARRAY_AGG(DISTINCT step.kind ORDER BY step.kind) as step_kinds,
     CASE
       WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'READ') THEN 'READ処理'
       WHEN EXISTS(SELECT 1 FROM UNNEST(stage.steps) AS step WHERE step.kind = 'WRITE') THEN 'WRITE処理'
