@@ -23,7 +23,7 @@ description: "BigQueryクエリのパフォーマンスを分析し、2倍以上
 **前提**: `$ARGUMENTS`は最適化対象のSQLクエリが記述された`.sql`ファイルのパスです
 
 1. クエリを実行してジョブIDを取得
-  - !`cat "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
+  - `cat "$ARGUMENTS" | bq query --nosync --use_legacy_sql=false --use_cache=false --format=json | jq -r '.jobReference.jobId'`
   - 取得したジョブIDを`JOB_ID`として以降の分析で使用
   - `JOB_ID`をシェル変数として設定する必要はありません
 
