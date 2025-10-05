@@ -1,6 +1,7 @@
-# optimize_bq_query
-
-BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改善を目標とした最適化を提案します。
+---
+allowed-tools: Bash(bq query:*), Bash(bq wait:*), Bash(tee:*)
+description: "BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改善を目標とした最適化を提案します。"
+---
 
 ## 前提条件
 - **リージョン**: US（region-us）固定
@@ -54,13 +55,13 @@ bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<JOB_ID
   SELECT query, total_slot_ms, total_bytes_processed
   FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-" > /tmp/job_info.json
+" | tee /tmp/job_info.json | head -n 10
 ```
 
 - 元クエリと基本メトリクスを保存
-  - `cat /tmp/job_info.json | jq -r '.[0].query' > /tmp/original_query.sql`
+  - `cat /tmp/job_info.json | jq -r '.[0].query' | tee /tmp/original_query.sql`
 - 検証用に元クエリの結果も保存
-  - `cat /tmp/original_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json > /tmp/original_results.json`
+  - `cat /tmp/original_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json | tee /tmp/original_results.json | head -n 10`
 
 #### 最大のボトルネックステージを特定
 **目的**: 全体のスロット時間の80%以上を占める真のボトルネックを見つける
@@ -232,7 +233,7 @@ echo "元の行数: $(jq '. | length' /tmp/original_results.json)"
 
 # 最適化後クエリの実行と結果比較
 echo "最適化クエリの結果検証中..."
-cat /tmp/optimized_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json > /tmp/optimized_results.json
+cat /tmp/optimized_query.sql | bq query --use_legacy_sql=false --use_cache=false --format=json | tee /tmp/optimized_results.json | head -n 10
 
 ORIGINAL_ROWS=$(jq '. | length' /tmp/original_results.json)
 OPTIMIZED_ROWS=$(jq '. | length' /tmp/optimized_results.json)
@@ -262,7 +263,7 @@ bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<NEW_JO
   SELECT total_slot_ms
   FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-" > /tmp/new_job_info.json
+" | tee /tmp/new_job_info.json
 
 NEW_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/new_job_info.json)
 
