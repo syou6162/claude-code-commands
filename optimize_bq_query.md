@@ -278,11 +278,13 @@ bq wait "$NEW_JOB_ID"
 ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
 
 # 新しいジョブのメトリクス取得
-NEW_SLOT_MS=$(bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:${NEW_JOB_ID}" "
+bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:${NEW_JOB_ID}" "
   SELECT total_slot_ms
   FROM \`region-us\`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
   WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
-" | jq -r '.[0].total_slot_ms')
+" > /tmp/new_job_info.json
+
+NEW_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/new_job_info.json)
 
 # 改善率の計算
 IMPROVEMENT_RATIO=$(echo "scale=2; $ORIGINAL_SLOT_MS / $NEW_SLOT_MS" | bc)
@@ -307,25 +309,31 @@ fi
 **目的**: 2倍改善達成の根拠と再現可能な手順を記録
 
 ```bash
+# レポート生成に必要な変数を取得
+ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
+ORIGINAL_ROWS=$(jq '. | length' /tmp/original_results.json)
+NEW_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/new_job_info.json)
+IMPROVEMENT_RATIO=$(echo "scale=2; $ORIGINAL_SLOT_MS / $NEW_SLOT_MS" | bc)
+
 # レポート生成
-cat > /tmp/optimization_report.md << 'EOF'
+cat > /tmp/optimization_report.md << EOF
 # BigQuery最適化レポート
 
 ## 実行サマリー
 - **元ジョブID**: ${JOB_ID}
 - **元スロット時間**: ${ORIGINAL_SLOT_MS}ms
 - **最終改善率**: ${IMPROVEMENT_RATIO}x
-- **目標達成**: $([ $(echo "$IMPROVEMENT_RATIO >= 2.0" | bc) -eq 1 ] && echo "✅ 達成" || echo "❌ 未達成")
+- **目標達成**: \$([ \$(echo "\$IMPROVEMENT_RATIO >= 2.0" | bc) -eq 1 ] && echo "✅ 達成" || echo "❌ 未達成")
 
 ## 特定されたボトルネック
-$(cat /tmp/bottleneck_analysis.txt)
+\$(cat /tmp/bottleneck_analysis.txt)
 
 ## 適用した最適化手法
-$(cat /tmp/applied_optimizations.txt)
+\$(cat /tmp/applied_optimizations.txt)
 
 ## 最適化後のクエリ
 \`\`\`sql
-$(cat /tmp/optimized_query.sql)
+\$(cat /tmp/optimized_query.sql)
 \`\`\`
 
 ## 検証結果
