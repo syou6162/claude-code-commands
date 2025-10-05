@@ -129,35 +129,29 @@ bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_
 ```
 
 #### 元クエリとの対応付けと分析結果記録
-```bash
-echo "=== 元クエリの確認 ==="
-cat /tmp/original_query.sql
 
-# ボトルネック分析結果を記録ファイルに保存
-echo "=== ボトルネック分析結果 ===" > /tmp/bottleneck_analysis.txt
-echo "分析日時: $(date)" >> /tmp/bottleneck_analysis.txt
-echo "" >> /tmp/bottleneck_analysis.txt
+1. **元クエリを確認**
+  - `cat "$ARGUMENTS"`で元クエリの内容を表示
 
-echo "## 特定されたボトルネックステージ:" >> /tmp/bottleneck_analysis.txt
-# agentがここでボトルネックステージの詳細を追記
-# 例: echo "- S02_Join+: 99秒 (全体の45%)" >> /tmp/bottleneck_analysis.txt
+2. **ボトルネック分析結果ファイルの初期化**
+  - Writeツールを使って`/tmp/bottleneck_analysis.md`を以下の内容で作成:
 
-echo "" >> /tmp/bottleneck_analysis.txt
-echo "## 根本原因分析:" >> /tmp/bottleneck_analysis.txt
-# agentがWait/Read/Compute/Write分析結果を追記
-# 例: echo "- 支配的要素: Shuffle/Write (151MB)" >> /tmp/bottleneck_analysis.txt
+```markdown
+## 特定されたボトルネックステージ:
+<!-- 例: - S02_Join+: 99000ms (全体の45%) -->
+<!-- 例: - S03_Aggregate: 55000ms (全体の25%) -->
 
-echo "" >> /tmp/bottleneck_analysis.txt
-echo "## 対応するSQL箇所:" >> /tmp/bottleneck_analysis.txt
-# agentが元クエリの該当部分を特定して追記
-# 例: echo "- INNER JOIN users u ON c.user_id = u.id" >> /tmp/bottleneck_analysis.txt
+## 根本原因分析:
+<!-- 例: - S02_Join+の支配的要素: Write (shuffle_mb: 151MB), wait_pct: 5%, compute_pct: 35% -->
+<!-- 例: - S03_Aggregateの支配的要素: Compute (compute_pct: 80%), read_pct: 15% -->
+
+## 対応するSQL箇所:
+<!-- 例: - S02_Join+に対応: INNER JOIN users u ON c.user_id = u.id (行11-12) -->
+<!-- 例: - S03_Aggregateに対応: GROUP BY category, date (行18) -->
 ```
 
-**agentの分析指示**:
-1. 上記クエリ結果からボトルネックステージの処理内容を特定
-2. Wait/Read/Compute/Writeの支配的要素を確認
-3. 元クエリの該当箇所を特定
-4. 分析結果を`/tmp/bottleneck_analysis.txt`に具体的に記録
+3. **分析結果の記録**
+  - 上記bqクエリ結果を参照し、Editツールで各セクションに情報を追記
 
 ### 4. ボトルネック対応の最適化パターン選択
 
@@ -190,7 +184,7 @@ echo "" >> /tmp/applied_optimizations.txt
 ```
 
 **agent指示**:
-1. ボトルネック診断結果（`/tmp/bottleneck_analysis.txt`）を参照
+1. ボトルネック診断結果（`/tmp/bottleneck_analysis.md`）を参照
 2. 該当するパターンのみ選択し、2倍改善見込みを計算
 3. 選択理由と期待効果を`/tmp/applied_optimizations.txt`に記録
 
@@ -282,7 +276,7 @@ cat > /tmp/optimization_report.md << EOF
 - **目標達成**: \$([ \$(echo "\$IMPROVEMENT_RATIO >= 2.0" | bc) -eq 1 ] && echo "✅ 達成" || echo "❌ 未達成")
 
 ## 特定されたボトルネック
-\$(cat /tmp/bottleneck_analysis.txt)
+\$(cat /tmp/bottleneck_analysis.md)
 
 ## 適用した最適化手法
 \$(cat /tmp/applied_optimizations.txt)
