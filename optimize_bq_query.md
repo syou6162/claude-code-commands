@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(bq query:*), Bash(bq wait:*), Bash(tee:*)
+allowed-tools: Bash(bq query:*), Bash(bq wait:*), Bash(tee:*), Write(/tmp/**), Edit(/tmp/**)
 description: "BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改善を目標とした最適化を提案します。"
 ---
 
@@ -259,42 +259,42 @@ bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<NEW_JO
 
 **目的**: 2倍改善達成の根拠と再現可能な手順を記録
 
-```bash
-# レポート生成に必要な変数を取得
-ORIGINAL_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/job_info.json)
-ORIGINAL_ROWS=$(jq '. | length' /tmp/original_results.json)
-NEW_SLOT_MS=$(jq -r '.[0].total_slot_ms' /tmp/new_job_info.json)
-IMPROVEMENT_RATIO=$(echo "scale=2; $ORIGINAL_SLOT_MS / $NEW_SLOT_MS" | bc)
+1. **必要な情報を収集**
+  - 元のスロット時間: `cat /tmp/job_info.json | jq -r '.[0].total_slot_ms'`で取得
+  - 最適化後のスロット時間: セクション7で取得済み
+  - 改善率: Agent自身が計算
+  - 目標達成状況: 改善率が2.0倍以上かを判定
 
-# レポート生成
-cat > /tmp/optimization_report.md << EOF
+2. **最終レポートの生成**
+  - Writeツールを使って`/tmp/optimization_report.md`を以下の構造で作成:
+
+```markdown
 # BigQuery最適化レポート
 
 ## 実行サマリー
-- **元ジョブID**: ${JOB_ID}
-- **元スロット時間**: ${ORIGINAL_SLOT_MS}ms
-- **最終改善率**: ${IMPROVEMENT_RATIO}x
-- **目標達成**: \$([ \$(echo "\$IMPROVEMENT_RATIO >= 2.0" | bc) -eq 1 ] && echo "✅ 達成" || echo "❌ 未達成")
+- **元ジョブID**: <JOB_ID>
+- **元スロット時間**: <ORIGINAL_SLOT_MS>ms
+- **最終改善率**: <IMPROVEMENT_RATIO>x
+- **目標達成**: <達成状況（✅ 達成 or ❌ 未達成）>
 
 ## 特定されたボトルネック
-\$(cat /tmp/bottleneck_analysis.md)
+<bottleneck_analysis.mdの内容をReadツールで読み込んで転記>
 
 ## 適用した最適化手法
-\$(cat /tmp/applied_optimizations.md)
+<applied_optimizations.mdの内容をReadツールで読み込んで転記>
 
 ## 最適化後のクエリ
-\`\`\`sql
-\$(cat /tmp/optimized_query.sql)
-\`\`\`
+```sql
+<optimized_query.sqlの内容をReadツールで読み込んで転記>
+```
 
 ## 検証結果
-- **結果一致**: ✅ ${ORIGINAL_ROWS}行で完全一致
-- **性能改善**: ${ORIGINAL_SLOT_MS}ms → ${NEW_SLOT_MS}ms
-
-EOF
-
-echo "レポートを /tmp/optimization_report.md に保存しました"
+- **結果一致**: ✅ チェックサム一致で完全同一
+- **性能改善**: <ORIGINAL_SLOT_MS>ms → <NEW_SLOT_MS>ms
 ```
+
+3. **レポートの確認**
+  - `cat /tmp/optimization_report.md`でレポート内容を表示
 
 **完了条件**:
 - 2倍以上の改善達成 OR 5回の反復完了
