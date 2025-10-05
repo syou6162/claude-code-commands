@@ -220,14 +220,14 @@ cat /tmp/optimized_query.sql
 1. **元クエリの結果テーブル名を取得してチェックサムを計算**
   - `JOB_ID`(セクション1で取得済み)から以下のコマンドを実行し、`DESTINATION_TABLE`として設定
     - `bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<JOB_ID>" "SELECT destination_table FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)" | jq -r '.[0].destination_table | [.project_id, .dataset_id, .table_id] | join(".")'`
-  - 取得したテーブル名に対してチェックサムを計算
+  - `DESTINATION_TABLE`に対して、チェックサムを計算
     - `bq query --use_legacy_sql=false --format=json "SELECT BIT_XOR(FARM_FINGERPRINT(TO_JSON_STRING(t))) as checksum FROM <DESTINATION_TABLE> AS t" | jq -r '.[0].checksum'`
   - チェックサム値（整数文字列）を記録
 
 2. **最適化クエリの結果テーブル名を取得してチェックサムを計算**
   - `NEW_JOB_ID`(セクション6で取得)から以下のコマンドを実行し、`DESTINATION_TABLE`として設定
     - `bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<NEW_JOB_ID>" "SELECT destination_table FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT WHERE job_id = @job_id AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)" | jq -r '.[0].destination_table | [.project_id, .dataset_id, .table_id] | join(".")'`
-  - 取得したテーブル名に対してチェックサムを計算
+  - `DESTINATION_TABLE`に対して、チェックサムを計算
     - `bq query --use_legacy_sql=false --format=json "SELECT BIT_XOR(FARM_FINGERPRINT(TO_JSON_STRING(t))) as checksum FROM <DESTINATION_TABLE> AS t" | jq -r '.[0].checksum'`
   - チェックサム値（整数文字列）を記録
 
