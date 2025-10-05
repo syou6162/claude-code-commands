@@ -186,21 +186,25 @@ bq query --use_legacy_sql=false --format=pretty --parameter="job_id:STRING:<JOB_
   - Editツールで具体的な最適化内容を追記
 
 ### 5. 最適化クエリの実装
+1. **元クエリを確認**
+  - `cat "$ARGUMENTS"`で元クエリの内容を確認
+2. **最適化クエリの生成と保存**
+  - セクション4で選択した最適化パターンを適用
+  - Writeツールを使って`/tmp/optimized_query.sql`に最適化後のクエリを保存
+  - 最適化例:
 
-```bash
-echo "最適化クエリを生成中..."
-cat /tmp/original_query.sql
-
-# agentが最適化したクエリを保存（具体的な実装が必要）
-cat > /tmp/optimized_query.sql << 'EOF'
--- agentがここで最適化後のクエリを具体的に記述
--- 例: WITH filtered_users AS (SELECT * FROM users WHERE active = true)
--- 例: SELECT ... FROM comments c INNER JOIN filtered_users u ON c.user_id = u.id
-EOF
-
-echo "最適化クエリを /tmp/optimized_query.sql に保存しました"
-cat /tmp/optimized_query.sql
+```sql
+-- 例: JOIN前データ削減
+WITH filtered_users AS (
+  SELECT * FROM users WHERE active = true
+)
+SELECT ...
+FROM comments c
+INNER JOIN filtered_users u ON c.user_id = u.id
 ```
+
+3. **最適化内容の確認**
+  - `cat /tmp/optimized_query.sql`で保存した最適化クエリを表示
 
 ### 6. リファクタリング結果の同一性検証
 - **重要**: 最適化は性能改善のみで、出力結果は完全に同一である必要がある
