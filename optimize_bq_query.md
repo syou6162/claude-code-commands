@@ -285,9 +285,10 @@ bq query --use_legacy_sql=false --format=json --parameter="job_id:STRING:<NEW_JO
 <applied_optimizations.mdの内容をReadツールで読み込んで転記>
 
 ## 最適化後のクエリ
-```sql
+
+\`\`\`sql
 <optimized_query.sqlの内容をReadツールで読み込んで転記>
-```
+\`\`\`
 
 ## 検証結果
 - **結果一致**: ✅ チェックサム一致で完全同一
