@@ -92,6 +92,18 @@ npx cccsc add syou6162/claude-code-commands/update_pr_title_and_description
 /user:update_pr_title_and_description     # グローバルインストール時
 ```
 
+### optimize_bq_query
+BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改善を目標とした最適化を提案します。ジョブIDまたはSQLファイルを入力として、ボトルネック分析・最適化・検証を自動実行します。
+
+```bash
+# インストール
+npx cccsc add syou6162/claude-code-commands/optimize_bq_query
+
+# 使用方法 (Claude Code内で)
+/project:optimize_bq_query query.sql  # ローカルインストール時
+/user:optimize_bq_query query.sql     # グローバルインストール時
+```
+
 ## Adding New Commands
 
 新しいカスタムコマンドを追加する手順：
