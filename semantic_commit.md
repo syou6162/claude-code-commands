@@ -89,7 +89,7 @@ git ls-files --others --exclude-standard | xargs git add -N
 
 # コンテキスト付きの差分を取得（より安定した位置特定のため）
 # 新規ファイルも含めて取得される
-git diff HEAD > .claude/tmp/current_changes.patch
+git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
 ```
 
 ### Step 2: LLM分析
@@ -317,7 +317,7 @@ fi
 ```bash
 # パッチファイルが古くなった場合は再生成
 rm .claude/tmp/current_changes.patch
-git diff HEAD > .claude/tmp/current_changes.patch
+git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
 
 # hunk番号を再確認して続行
 git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
