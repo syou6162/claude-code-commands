@@ -10,10 +10,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### コマンド構成
 - `semantic_commit.md` - 大きな変更を論理的単位に分割してコミット
-- `triage_pr_comments.md` - Pull Requestコメントの対応要否判断  
+- `triage_pr_comments.md` - Pull Requestコメントの対応要否判断
 - `self_review_pr.md` - Pull Request提出前の客観的セルフレビュー
 - `estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
 - `update_pr_title_and_description.md` - Pull Requestのタイトル・説明文自動更新
+- `optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
 
 ### 設定ファイル
 - `cccsc.json` - コマンド定義とメタデータ管理
@@ -52,10 +53,11 @@ npx cccsc add syou6162/claude-code-commands
 - **引数受け渡し**: Claude Codeから`$ARGUMENTS`変数で引数を受け取る
 
 ### 外部依存関係
-全コマンドで以下のツールを使用：
-- **GitHub CLI (`gh`)** - Pull Request操作
+コマンドごとに以下のツールを使用：
+- **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, self_review_pr, update_pr_title_and_description）
 - **git-sequential-stage** - semantic_commitで使用する専用ツール
-- **patchutils (filterdiff)** - パッチ解析用
+- **patchutils (filterdiff)** - パッチ解析用（semantic_commit）
+- **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 
 ### ファイル更新時の注意
 - `cccsc.json`とREADMEの整合性を保つ
