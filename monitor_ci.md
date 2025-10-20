@@ -1,4 +1,7 @@
-GitHub ActionsのCI実行状態を監視し、失敗したジョブの原因分析と修正案を提案します
+---
+allowed-tools: Bash(gh:*), Bash(git:*)
+description: "GitHub ActionsのCI実行状態を監視し、失敗したジョブの原因分析と修正案を提案します。"
+---
 
 ## 監視対象
 Pull RequestのURL、ブランチ名、またはコミットハッシュ: $ARGUMENTS
