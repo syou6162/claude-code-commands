@@ -104,6 +104,18 @@ npx cccsc add syou6162/claude-code-commands/optimize_bq_query
 /user:optimize_bq_query query.sql     # グローバルインストール時
 ```
 
+### fortune
+今日のあなたの運勢を占います。総合運、仕事運、ラッキーアイテム、ラッキーカラー、今日のアドバイスを提供します。気分転換やモチベーションアップに活用できます。
+
+```bash
+# インストール
+npx cccsc add syou6162/claude-code-commands/fortune
+
+# 使用方法 (Claude Code内で)
+/project:fortune  # ローカルインストール時
+/user:fortune     # グローバルインストール時
+```
+
 ## Adding New Commands
 
 新しいカスタムコマンドを追加する手順：
