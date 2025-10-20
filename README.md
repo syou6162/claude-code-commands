@@ -104,6 +104,20 @@ npx cccsc add syou6162/claude-code-commands/optimize_bq_query
 /user:optimize_bq_query query.sql     # グローバルインストール時
 ```
 
+### monitor_ci
+GitHub ActionsのCI実行状態を監視し、失敗したジョブのエラーログを分析して原因と修正案を提案します。Pull RequestのURL、ブランチ名、またはコミットハッシュを指定できます。
+
+```bash
+# インストール
+npx cccsc add syou6162/claude-code-commands/monitor_ci
+
+# 使用方法 (Claude Code内で)
+/project:monitor_ci  # 現在のブランチのCIを監視（ローカルインストール時）
+/project:monitor_ci https://github.com/owner/repo/pull/123  # PRを指定
+/project:monitor_ci feature-branch  # ブランチを指定
+/user:monitor_ci  # グローバルインストール時
+```
+
 ## Adding New Commands
 
 新しいカスタムコマンドを追加する手順：
