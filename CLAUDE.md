@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### サブエージェント構成
 - `agents/semantic-commit.md` - 大きな変更を論理的単位に分割してコミット（サブエージェント）
 - `agents/update-pr-title-and-description.md` - Pull Requestのタイトル・説明文自動更新（サブエージェント）
+- `agents/monitor-ci.md` - CI/CDチェック監視と失敗原因分析（サブエージェント）
 
 ### コマンド構成
 - `commands/triage_pr_comments.md` - Pull Requestコメントの対応要否判断
@@ -67,7 +68,7 @@ claude plugin validate .
 
 ### 外部依存関係
 サブエージェント・コマンドごとに以下のツールを使用：
-- **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, self_review_pr, update-pr-title-and-description）
+- **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, self_review_pr, update-pr-title-and-description, monitor-ci）
 - **git-sequential-stage** - semantic-commit（サブエージェント）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 
