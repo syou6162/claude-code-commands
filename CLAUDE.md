@@ -15,7 +15,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### コマンド構成
 - `commands/triage_pr_comments.md` - Pull Requestコメントの対応要否判断
-- `commands/self_review_pr.md` - Pull Request提出前の客観的セルフレビュー
 - `commands/estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
 - `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
 - `commands/validate_bq_query.md` - BigQueryクエリの構文と実行可能性の検証
@@ -68,7 +67,7 @@ claude plugin validate .
 
 ### 外部依存関係
 サブエージェント・コマンドごとに以下のツールを使用：
-- **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, self_review_pr, update-pr-title-and-description, monitor-ci）
+- **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, update-pr-title-and-description, monitor-ci）
 - **git-sequential-stage** - semantic-commit（サブエージェント）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 
