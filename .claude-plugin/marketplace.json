@@ -1,5 +1,8 @@
 {
   "name": "syou6162-marketplace",
+  "metadata": {
+    "description": "Yasuhisa Yoshida's personal marketplace for Claude Code custom slash commands"
+  },
   "owner": {
     "name": "Yasuhisa Yoshida"
   },
