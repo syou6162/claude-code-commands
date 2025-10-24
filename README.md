@@ -44,6 +44,18 @@ npx cccsc add syou6162/claude-code-commands/semantic_commit
 /user:semantic_commit     # グローバルインストール時
 ```
 
+### rewrite_claude_commits
+Claude Codeが作成したコミットのAuthor情報と署名を本来のユーザー情報に書き換えます。ブランチ内のClaude製コミット（`Claude <noreply@anthropic.com>`）を検出し、`git config`で設定されたユーザー情報に修正します。コミットメッセージからは`Generated with Claude Code`と`Co-Authored-By`の署名のみを削除し、本来のメッセージ内容は一切変更しません。
+
+```bash
+# インストール
+npx cccsc add syou6162/claude-code-commands/rewrite_claude_commits
+
+# 使用方法 (Claude Code内で)
+/project:rewrite_claude_commits  # ローカルインストール時
+/user:rewrite_claude_commits     # グローバルインストール時
+```
+
 ### triage_pr_comments
 Pull Requestのコメントに対する対応要否をコードベース分析に基づいて判断します。
 
