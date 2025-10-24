@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "syou6162-plugin",
-      "source": ".",
+      "source": "./",
       "description": "Yasuhisa Yoshida's personal custom slash commands for Claude Code"
     }
   ]
