@@ -43,6 +43,23 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
    gh pr edit --title "修正内容を考慮したタイトル" --body-file .claude/tmp/pr_body_${PR_NUMBER}.md
    ```
 
+7. **更新後の確認**
+
+   更新されたPull Requestの内容を確認：
+   ```bash
+   gh pr view --json title,body --jq '{title: .title, body: .body}'
+   ```
+
+   確認内容：
+   - タイトルが正しく設定されているか
+   - 説明文が文字化けしていないか
+   - 意図した内容が正しく反映されているか
+   - 日本語が含まれる場合、文字化けが発生していないか
+
+   **問題が見つかった場合**：
+   - 文字化けや意図しない変更があれば、ユーザーに報告
+   - 必要に応じて`.claude/tmp/pr_body_${PR_NUMBER}.md`を再編集して再度`gh pr edit`を実行
+
 ## 説明文の生成ルール
 
 - `.github/PULL_REQUEST_TEMPLATE.md`が存在する場合：
