@@ -1,0 +1,38 @@
+{
+  "name": "claude-code-commands",
+  "version": "1.0.0",
+  "description": "Yasuhisa Yoshida's personal custom slash commands for Claude Code",
+  "author": "Yasuhisa Yoshida",
+  "repository": "https://github.com/syou6162/claude-code-commands",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "semantic_commit",
+      "path": "commands/semantic_commit.md"
+    },
+    {
+      "name": "triage_pr_comments",
+      "path": "commands/triage_pr_comments.md"
+    },
+    {
+      "name": "self_review_pr",
+      "path": "commands/self_review_pr.md"
+    },
+    {
+      "name": "estimate_pr_size",
+      "path": "commands/estimate_pr_size.md"
+    },
+    {
+      "name": "update_pr_title_and_description",
+      "path": "commands/update_pr_title_and_description.md"
+    },
+    {
+      "name": "optimize_bq_query",
+      "path": "commands/optimize_bq_query.md"
+    },
+    {
+      "name": "validate_bq_query",
+      "path": "commands/validate_bq_query.md"
+    }
+  ]
+}
