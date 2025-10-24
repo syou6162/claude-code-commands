@@ -10,8 +10,8 @@ model: haiku
 大きな変更を論理的な単位に分割してコミットしてください。git diffを分析して意味のある最小単位を特定し、`git-sequential-stage`ツールで段階的にステージングします。
 
 **禁止事項：**
+- 以下の手順を勝手に解釈して改変することは禁止です。記載された手順を正確に実行してください
 - `git add .` / `git add -A` の使用は禁止です
-- ファイル全体の`git add <file>`も禁止です（例外：`git add -N`のみ許可）
 - 必ず`git-sequential-stage`を使用してhunk単位でステージングすること
 
 ## 実行手順
@@ -27,7 +27,7 @@ model: haiku
 
 2. **差分を取得**
 
-   新規ファイル（untracked files）がある場合は、intent-to-addで追加してください：
+   最初に必ずintent-to-addで新規ファイルを追加してください：
    ```bash
    git ls-files --others --exclude-standard | xargs git add -N
    ```
