@@ -45,14 +45,14 @@ claude-code-commands/
 ├── agents/
 │   ├── semantic-commit.md                   # サブエージェント
 │   ├── update-pr-title-and-description.md   # サブエージェント
-│   ├── monitor-ci.md                        # サブエージェント
-│   └── codex-review.md                      # サブエージェント
+│   └── monitor-ci.md                        # サブエージェント
 ├── commands/
 │   ├── triage_pr_comments.md
 │   ├── self_review_pr.md
 │   ├── estimate_pr_size.md
 │   ├── optimize_bq_query.md
-│   └── validate_bq_query.md
+│   ├── validate_bq_query.md
+│   └── codex_review.md
 └── README.md
 ```
 
@@ -79,12 +79,15 @@ Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析
 
 独立したコンテキストで実行されるため、メイン会話を汚染せずにCI状態の確認とログ分析作業を行えます。
 
-### codex-review (サブエージェント)
-コードの変更に対してcodex mcpを使って客観的なレビューを実施するエージェント。バグや潜在的な問題、パフォーマンス、セキュリティ上の懸念などを分析し、具体的な改善提案をメインエージェントに報告します。
-
-独立したコンテキストで実行されるため、メイン会話を汚染せずにコード差分の取得とcodex mcpによるレビュー作業を行えます。
-
 ## Available Commands
+
+### codex_review
+Codex MCPを使ってコードの変更を客観的にレビューします。現在作業中のspec workflowがある場合は仕様に沿ったレビューを実施します。
+
+```bash
+# 使用方法 (Claude Code内で)
+/syou6162-plugin:codex_review
+```
 
 ### triage_pr_comments
 Pull Requestのコメントに対する対応要否をコードベース分析に基づいて判断します。
