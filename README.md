@@ -22,16 +22,16 @@ Claude Code内で以下のコマンドを実行してプラグインをインス
 
 ## Usage
 
-プラグインをインストール後、Claude Code内でコマンドを直接呼び出すことができます：
+プラグインをインストール後、Claude Code内でコマンドを呼び出すことができます：
 
 ```bash
-/command-name
+/syou6162-plugin:command-name
 ```
 
 引数が必要なコマンドの場合：
 
 ```bash
-/command-name argument
+/syou6162-plugin:command-name argument
 ```
 
 ## Plugin Structure
@@ -65,7 +65,7 @@ Claude Codeは`plugin.json`を読み込んでプラグインを認識し、`comm
 
 ```bash
 # 使用方法 (Claude Code内で)
-/semantic_commit
+/syou6162-plugin:semantic_commit
 ```
 
 ### triage_pr_comments
@@ -73,7 +73,7 @@ Pull Requestのコメントに対する対応要否をコードベース分析�
 
 ```bash
 # 使用方法 (Claude Code内で)
-/triage_pr_comments https://github.com/owner/repo/pull/123
+/syou6162-plugin:triage_pr_comments https://github.com/owner/repo/pull/123
 ```
 
 ### self_review_pr
@@ -81,7 +81,7 @@ Pull Requestのコメントに対する対応要否をコードベース分析�
 
 ```bash
 # 使用方法 (Claude Code内で)
-/self_review_pr https://github.com/owner/repo/pull/123
+/syou6162-plugin:self_review_pr https://github.com/owner/repo/pull/123
 ```
 
 ### estimate_pr_size
@@ -89,7 +89,7 @@ Pull Requestのコメントに対する対応要否をコードベース分析�
 
 ```bash
 # 使用方法 (Claude Code内で)
-/estimate_pr_size
+/syou6162-plugin:estimate_pr_size
 ```
 
 ### update_pr_title_and_description
@@ -97,7 +97,7 @@ Pull Requestのタイトルと説明文を修正内容とコミットメッセ�
 
 ```bash
 # 使用方法 (Claude Code内で)
-/update_pr_title_and_description
+/syou6162-plugin:update_pr_title_and_description
 ```
 
 ### optimize_bq_query
@@ -105,7 +105,7 @@ BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改�
 
 ```bash
 # 使用方法 (Claude Code内で)
-/optimize_bq_query query.sql
+/syou6162-plugin:optimize_bq_query query.sql
 ```
 
 ## Adding New Commands

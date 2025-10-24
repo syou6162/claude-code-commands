@@ -26,22 +26,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 新しいコマンドを追加する際：
 
 1. `commands/` ディレクトリに `command-name.md` ファイルを作成
-2. `.claude-plugin/plugin.json` の `commands` 配列に新しいエントリを追加：
-```json
-{
-  "name": "command-name",
-  "path": "commands/command-name.md"
-}
-```
-3. `README.md` の Available Commands セクションを更新
+2. `README.md` の Available Commands セクションを更新
+3. コミット＆プッシュ
+
+注：`commands/` ディレクトリ内のファイルは自動的に検出されるため、`plugin.json` への追加は不要
 
 ### テスト・検証
 ```bash
-# ローカルプラグインのインストールとテスト
-/plugin install .
+# GitHubリポジトリからインストール
+/plugin install syou6162/claude-code-commands
 
 # コマンドの呼び出しテスト
-/command-name
+/syou6162-plugin:command-name
 ```
 
 ## 重要な設計原則
