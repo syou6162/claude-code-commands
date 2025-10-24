@@ -1,9 +1,13 @@
 {
-  "name": "Local Development Marketplace",
+  "name": "local-dev-marketplace",
+  "owner": {
+    "name": "Yasuhisa Yoshida"
+  },
   "plugins": [
     {
       "name": "claude-code-commands",
-      "path": ".."
+      "source": "..",
+      "description": "Yasuhisa Yoshida's personal custom slash commands for Claude Code"
     }
   ]
 }
