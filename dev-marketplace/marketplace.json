@@ -1,0 +1,9 @@
+{
+  "name": "Local Development Marketplace",
+  "plugins": [
+    {
+      "name": "claude-code-commands",
+      "path": ".."
+    }
+  ]
+}
