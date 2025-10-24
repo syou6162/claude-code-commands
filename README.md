@@ -36,7 +36,7 @@ Claude Code内で以下のコマンドを実行してプラグインをインス
 
 ## Plugin Structure
 
-このリポジトリはClaude Codeのプラグインとして構成されており、以下のディレクトリ構造を持ちます：
+このリポジトリは[Claude Codeのプラグイン](https://docs.claude.com/ja/docs/claude-code/plugins)として構成されており、以下のディレクトリ構造を持ちます：
 
 ```
 claude-code-commands/
