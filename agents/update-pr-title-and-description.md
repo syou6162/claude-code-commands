@@ -1,3 +1,10 @@
+---
+name: update-pr-title-and-description
+description: Pull Requestのタイトルと説明文を自動生成・更新する専門エージェント。差分やコミットメッセージを分析し、適切な説明文を作成します。Pull Requestのタイトルと説明文を設定・更新する際は必ず使用してください。
+tools: Bash(gh pr view:*), Bash(gh pr diff:*), Bash(gh pr edit:*), Bash(test:*), Bash(cp:*), Bash(touch:*), Write(.claude/tmp/**), Edit(.claude/tmp/**), Read(.claude/tmp/**), Read(.github/**)
+model: haiku
+---
+
 # Pull Requestのタイトルと説明文を更新する
 
 Pull Requestのタイトルと説明文を以下の手順で更新してください：

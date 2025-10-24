@@ -43,12 +43,12 @@ claude-code-commands/
 ├── .claude-plugin/
 │   └── plugin.json              # プラグインマニフェスト（メタデータとコマンド定義）
 ├── agents/
-│   └── semantic-commit.md       # サブエージェント
+│   ├── semantic-commit.md       # サブエージェント
+│   └── update-pr-title-and-description.md  # サブエージェント
 ├── commands/
 │   ├── triage_pr_comments.md
 │   ├── self_review_pr.md
 │   ├── estimate_pr_size.md
-│   ├── update_pr_title_and_description.md
 │   ├── optimize_bq_query.md
 │   └── validate_bq_query.md
 └── README.md
@@ -66,6 +66,11 @@ Claude Codeは`plugin.json`を読み込んでプラグインを認識し、`comm
 変更を意味のある最小単位に分割してコミットするエージェント。git diffを分析してhunk単位で論理的にグループ化し、git-sequential-stageで段階的にコミットします。大きな変更を複数の意味のあるコミットに分けたい時に、Claude Codeが自動的にこのサブエージェントに委譲します。
 
 独立したコンテキストで実行されるため、メイン会話を汚染せずに複雑なhunk分析とコミット作業を行えます。
+
+### update-pr-title-and-description (サブエージェント)
+Pull Requestのタイトルと説明文を自動生成・更新する専門エージェント。差分やコミットメッセージを分析し、適切な説明文を作成します。Pull Requestを作成または更新する際に、Claude Codeが自動的にこのサブエージェントに委譲します。
+
+独立したコンテキストで実行されるため、メイン会話を汚染せずにPR情報の取得と説明文の生成作業を行えます。
 
 ## Available Commands
 
@@ -91,14 +96,6 @@ Pull Requestのコメントに対する対応要否をコードベース分析�
 ```bash
 # 使用方法 (Claude Code内で)
 /syou6162-plugin:estimate_pr_size
-```
-
-### update_pr_title_and_description
-Pull Requestのタイトルと説明文を修正内容とコミットメッセージに基づいて更新します。`.github/PULL_REQUEST_TEMPLATE.md`テンプレートに対応しています。
-
-```bash
-# 使用方法 (Claude Code内で)
-/syou6162-plugin:update_pr_title_and_description
 ```
 
 ### optimize_bq_query
