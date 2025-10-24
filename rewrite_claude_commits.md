@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git *), Bash(perl *), Bash(echo *), Bash(which *), Bash([ *), Bash(test *)
+allowed-tools: Bash(git config *), Bash(git rev-parse *), Bash(git log *), Bash(git filter-branch *), Bash(git push *), Bash(git branch *), Bash(git reset *), Bash(perl *), Bash(echo *), Bash(which *), Bash([ *), Bash(test *)
 description: "Claude Codeが作成したコミットのAuthor情報と署名を本来のユーザー情報に書き換えます。"
 ---
 
