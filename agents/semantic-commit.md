@@ -5,319 +5,119 @@ tools: Bash(git status), Bash(git ls-files:*), Bash(git diff:*), Bash(git commit
 model: haiku
 ---
 
-# 意味のある最小の単位でcommitする
+# 意味のある最小単位でコミットする
 
-大きな変更を論理的な単位に分割してコミットします。LLMがgit diffを分析して意味のある最小単位を提案し、`git-sequential-stage`ツールによる自動化された逐次ステージングでコミットします。
+大きな変更を論理的な単位に分割してコミットしてください。git diffを分析して意味のある最小単位を特定し、`git-sequential-stage`ツールで段階的にステージングします。
 
-## 使い方
-
-```
-/semantic-commit
-```
-
-## 概要
-
-このコマンドは、LLM Agentが大規模な変更を意味のある最小単位に分割してコミットするためのツールです。**専用ツール`git-sequential-stage`**により、1つのファイル内の異なる意味的変更も安全かつ確実に分割できます。
-
-### 主な特徴
-
-- **完璧な意味的分割**: ファイル内の異なる変更を確実に分離
-- **複数ファイルのサポート**: 複数ファイルにまたがる変更を一度に処理
-- **シンプルな実行**: 複雑なループロジックは`git-sequential-stage`が内部で処理
-- **堅牢性**: Go言語で実装された専用ツールによる安定動作
-
-## 動作原理
-
-### 基本フロー
-
-1. **変更の取得**: すべての変更をhunk単位で取得（新規ファイルも含む）
-2. **意味的分析**: LLMが各hunkの内容を理解し、論理的なグループに分類
-3. **段階的コミット**: `git-sequential-stage`により選択したhunkのみを安全にステージング
-4. **反復処理**: 残りの変更に対して同じプロセスを繰り返し、意味のある単位でコミット
-
-### 技術的詳細
-
-#### git-sequential-stageツール
-
-`git-sequential-stage`は、hunk単位の部分的なステージングを自動化するためのGoで実装された専用ツールです（[GitHub: syou6162/git-sequential-stage](https://github.com/syou6162/git-sequential-stage)）。
-
-使用方法：
-```bash
-# hunk番号を指定して部分的にステージング
-git-sequential-stage -patch="path/to/changes.patch" -hunk="src/main.go:1,3,5"
-
-# ファイル全体をステージング（ワイルドカード使用）
-git-sequential-stage -patch="path/to/changes.patch" -hunk="src/logger.go:*"
-
-# 複数ファイルの場合（ワイルドカードと番号指定の混在も可能）
-git-sequential-stage -patch="path/to/changes.patch" \
-  -hunk="src/main.go:1,3" \
-  -hunk="src/utils.go:*" \
-  -hunk="docs/README.md:*"
-```
-
-#### ワイルドカード使用の判断基準
-
-**ワイルドカード（`*`）を使用すべきケース：**
-- ファイル内のすべての変更が**意味的に一体**である場合
-- 新規ファイルの追加
-- ファイル全体のリファクタリング（すべての変更が同じ目的）
-- ドキュメントファイルの更新
-
-**hunk番号で分割すべきケース：**
-- 異なる目的の変更が混在している場合
-- バグ修正とリファクタリングが同じファイルに混在
-- 機能追加と既存コードの改善が混在
-
-**⚠️ 重要な警告：**
-「hunkを数えるのが面倒」という理由でワイルドカードを使用することは厳禁。意味のある最小単位でのコミットという本来の目的を必ず守ること。
+**⚠️ 禁止事項：**
+- `git add .` / `git add -A` の使用は禁止です
+- ファイル全体の`git add <file>`も禁止です（例外：`git add -N`のみ許可）
+- 必ず`git-sequential-stage`を使用してhunk単位でステージングすること
 
 ## 実行手順
 
-### Step 1: 差分を取得
+以下の手順で変更を意味のある最小単位に分割してコミットしてください：
 
-```bash
-# .claude/tmpディレクトリは既に存在するため、直接ファイルを作成可能
+1. **pre-commitの事前実行**
 
-# 新規ファイル（untracked files）をintent-to-addで追加
-git ls-files --others --exclude-standard | xargs git add -N
+   `.pre-commit-config.yaml`が存在する場合は、事前に実行してください：
+   ```bash
+   pre-commit run --all-files
+   ```
 
-# コンテキスト付きの差分を取得（より安定した位置特定のため）
-# 新規ファイルも含めて取得される
-git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
-```
+2. **差分を取得**
 
-### Step 2: LLM分析
+   新規ファイル（untracked files）がある場合は、intent-to-addで追加してください：
+   ```bash
+   git ls-files --others --exclude-standard | xargs git add -N
+   ```
 
-LLMが**hunk単位**で変更を分析し、最初のコミットに含めるhunkを決定：
+   差分を取得してください：
+   ```bash
+   git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
+   ```
 
-- **hunkの内容を読み取る**: 各hunkが何を変更しているか理解
-- **意味的グループ化**: 同じ目的の変更（バグ修正、リファクタリング等）をグループ化
-- **コミット計画**: どのhunkをどのコミットに含めるか決定
+3. **変更内容を分析**
 
-必要に応じて、hunk数を確認：
-```bash
-# 全体のhunk数
-grep -c "^@@" .claude/tmp/current_changes.patch
+   **hunk単位**で変更を分析し、最初のコミットに含めるhunkを決定してください：
 
-# 各ファイルのhunk数
-git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
-```
+   - **hunkの内容を読み取る**: 各hunkが何を変更しているか理解する
+   - **意味的グループ化**: 同じ目的の変更（バグ修正、リファクタリング等）をグループ化する
+   - **コミット計画**: どのhunkをどのコミットに含めるか決定する
 
-例：
-```bash
-# LLMの分析結果
-# - コミット1（fix）: 
-#   - src/calculator.py: hunk 1, 3, 5（ゼロ除算エラーの修正）
-#   - src/utils.py: hunk 2（関連するユーティリティ関数の修正）
-# - コミット2（refactor）: 
-#   - src/calculator.py: hunk 2, 4（計算ロジックの最適化）
+   必要に応じて、hunk数を確認してください：
+   ```bash
+   # 全体のhunk数
+   grep -c "^@@" .claude/tmp/current_changes.patch
 
-# 最初のコミット用の設定
-COMMIT_MSG="fix: ゼロ除算エラーを修正
+   # 各ファイルのhunk数
+   git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
+   ```
 
-計算処理で分母が0の場合の適切なエラーハンドリングを追加"
-```
+   分析例：
+   ```bash
+   # 分析結果例
+   # - コミット1（fix）:
+   #   - src/calculator.py: hunk 1, 3, 5（ゼロ除算エラーの修正）
+   #   - src/utils.py: hunk 2（関連するユーティリティ関数の修正）
+   # - コミット2（refactor）:
+   #   - src/calculator.py: hunk 2, 4（計算ロジックの最適化）
 
-### Step 3: 自動ステージング
+   # 最初のコミット用のメッセージを準備（Conventional Commits形式）
+   # feat: 新機能 / fix: バグ修正 / refactor: リファクタリング
+   # docs: ドキュメント / test: テスト / style: フォーマット / chore: その他
+   COMMIT_MSG="fix: ゼロ除算エラーを修正
 
-選択したhunkを`git-sequential-stage`で自動的にステージング：
+   計算処理で分母が0の場合の適切なエラーハンドリングを追加"
+   ```
 
-```bash
-# git-sequential-stageを実行（内部で逐次ステージングを安全に処理）
-# 部分的な変更をステージング（hunk番号指定）
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5"
+4. **ステージングとコミット**
 
-# ファイル全体をステージング（意味的に一体の変更の場合）
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_calculator.py:*"
+   選択したhunkを`git-sequential-stage`でステージングし、コミットしてください：
 
-# 複数ファイルの場合（混在使用）
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
-  -hunk="src/calculator.py:1,3,5" \
-  -hunk="src/utils.py:2" \
-  -hunk="docs/CHANGELOG.md:*"
-
-# コミット実行
-git commit -m "$COMMIT_MSG"
-```
-
-### Step 4: 繰り返し
-
-残りの変更に対して同じプロセスを繰り返し：
-
-```bash
-# 残りの差分を確認
-if [ $(git diff HEAD | wc -l) -gt 0 ]; then
-  echo "残りの変更を処理します..."
-  # Step 1（差分取得）から再開
-fi
-```
+   **ワイルドカード（`*`）の使用判断：**
+   - 使用すべき：ファイル内のすべての変更が意味的に一体、新規ファイル、ドキュメント
+   - 分割すべき：異なる目的の変更が混在（バグ修正とリファクタリング等）
+   - ⚠️「hunkを数えるのが面倒」という理由での使用は厳禁
 
-### Step 5: 最終確認
+   ```bash
+   # git-sequential-stageを実行（内部で逐次ステージングを安全に処理）
+   # 部分的な変更をステージング（hunk番号指定）
+   git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5"
 
-```bash
-# すべての変更がコミットされたか確認
-if [ $(git diff HEAD | wc -l) -eq 0 ]; then
-  echo "すべての変更がコミットされました"
-else
-  echo "警告: まだコミットされていない変更があります"
-  git status
-fi
-```
+   # ファイル全体をステージング（意味的に一体の変更の場合）
+   git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_calculator.py:*"
 
-## 環境要件
+   # 複数ファイルの場合（混在使用）
+   git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
+     -hunk="src/calculator.py:1,3,5" \
+     -hunk="src/utils.py:2" \
+     -hunk="docs/CHANGELOG.md:*"
 
-```bash
-# 必要なツールの確認
-which git-sequential-stage  # 専用ツール
-```
+   # コミット実行
+   git commit -m "$COMMIT_MSG"
+   ```
 
-インストールが必要な場合：
-- `git-sequential-stage`: [GitHub: syou6162/git-sequential-stage](https://github.com/syou6162/git-sequential-stage)のREADMEを参照
+5. **残りの変更を処理**
 
-## 使用例
+   残りの変更があるかを確認してください：
+   ```bash
+   git diff HEAD
+   ```
 
-### ファイル内の意味的分割（最重要例）
+   残りの変更がある場合は、パッチファイルを再生成してください：
+   ```bash
+   git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
+   ```
 
-```
-変更内容: src/calculator.py
-- hunk 1: 10行目のゼロ除算チェック追加
-- hunk 2: 25-30行目の計算アルゴリズム最適化
-- hunk 3: 45行目の別のゼロ除算エラー修正
-- hunk 4: 60-80行目の内部構造リファクタリング
-- hunk 5: 95行目のゼロ除算時のログ出力追加
+   **注意：** pre-commitでファイルが自動修正された可能性がある場合は、手順1から再実行してください。
 
-↓ 分割結果
+   その後、手順3（変更内容を分析）から再開してください。
 
-コミット1: fix: ゼロ除算エラーを修正
-# バグ修正のhunkのみを選択（他の変更と混在しているため番号指定）
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5"
+6. **最終確認**
 
-コミット2: refactor: 計算ロジックの最適化
-# リファクタリングのhunkのみを選択
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:2,4"
-```
-
-### 複雑な変更パターン
-
-```
-変更内容:
-- src/auth.py: 認証ロジックの修正（hunk 1,3,5）とリファクタリング（hunk 2,4）
-- src/models.py: ユーザーモデルの拡張（hunk 1,2）
-- tests/test_auth.py: 新規テスト（hunk 1,2,3）
-
-↓ 分割結果
-
-コミット1: fix: 既存認証のセキュリティ脆弱性修正
-# セキュリティ修正のhunkのみを選択（他の変更と混在）
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/auth.py:1,3,5"
-
-コミット2: feat: JWT認証機能の実装
-# 新機能実装に関連する変更を選択
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
-  -hunk="src/auth.py:2,4" \
-  -hunk="src/models.py:*"  # モデルの変更はすべてJWT関連のため*を使用
-
-コミット3: test: 認証機能のテスト追加
-# 新規テストファイルは意味的に一体のため*を使用
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_auth.py:*"
-```
-
-## ベストプラクティス
-
-1. **事前確認**: `git status`で現在の状態を確認
-2. **適切な指定方法の選択**:
-   - 部分的な変更: `file.go:1,3,5` （hunk番号を指定）
-   - ファイル全体: `file.go:*` （意味的に一体の場合のみ）
-3. **意味的一貫性**: 同じ目的の変更は同じコミットに
-4. **Conventional Commits**: 適切なプレフィックスを使用
-   - `feat:` 新機能
-   - `fix:` バグ修正
-   - `refactor:` リファクタリング
-   - `docs:` ドキュメント
-   - `test:` テスト
-   - `style:` フォーマット
-   - `chore:` その他
-
-## トラブルシューティング
-
-### 新規ファイルがgit diffで表示されない場合
-
-新規作成したファイルが`git diff`で表示されない場合、以下の設定が原因の可能性があります：
-
-```bash
-# .gitignoreファイルで除外されていないか確認
-git check-ignore -v path/to/new_file.ext
-
-# グローバルのgitignore設定を確認
-git config --get core.excludesfile
-
-# グローバル除外ファイルの内容を確認（存在する場合）
-cat "$(git config --get core.excludesfile)"
-
-# リポジトリの.git/info/excludeファイルを確認
-cat .git/info/exclude
-```
-
-対処法：
-1. `.gitignore`から該当パターンを削除または修正
-2. グローバル設定を確認・修正（`~/.config/git/ignore`など）
-3. `.git/info/exclude`の設定を確認・修正
-
-### git-sequential-stageが失敗する場合
-
-```bash
-# エラーメッセージを確認
-git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="file.go:1,2,3" 2>&1
-
-# パッチファイルの内容を確認
-cat .claude/tmp/current_changes.patch | head -50
-
-# 特定ファイルのhunk数を確認
-git diff HEAD "path/to/file.go" | grep -c '^@@'
-```
-
-### 大きすぎるhunkの扱い
-
-大きなhunkは意味的に分割できない可能性があります。この場合：
-1. 一度全体をコミット
-2. `git reset HEAD~1`で取り消し
-3. より小さな変更単位で再実装
-
-### pre-commitによるコミット間の自動修正への対応
-
-pre-commitフックが設定されている環境では、コミット時に自動的にファイルが修正されることがあります。これにより、semantic_commitで複数コミットを作成する際に問題が発生する場合があります。
-
-**問題の症状**：
-- 1つ目のコミット後、pre-commitがファイルを自動修正
-- 2つ目以降のコミットで、パッチファイルのhunk番号がずれる
-- `git-sequential-stage`がhunkを正しく特定できなくなる
-
-**対処法**：
-
-#### 1. 事前にpre-commitを実行（推奨）
-
-```bash
-# pre-commitの有無を確認し、設定されている場合は実行
-if [ -f .pre-commit-config.yaml ]; then
-  pre-commit run --all-files
-  echo "pre-commitの修正を適用しました。semantic_commitを実行できます。"
-else
-  echo "pre-commitは設定されていません。そのまま実行できます。"
-fi
-```
-
-#### 2. エラー発生時の復旧
-
-```bash
-# パッチファイルが古くなった場合は再生成
-rm .claude/tmp/current_changes.patch
-git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
-
-# hunk番号を再確認して続行
-git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
-```
-
-## 背景と設計思想
-
-LLM Agentは複数の論理的な変更を1つのコミットにまとめてしまう傾向があります。`git-sequential-stage`ツールは、人間が`git add -p`で行う作業を、**シンプルなコマンド実行だけで**実現できるようにします。
+   すべての変更がコミットされたか確認してください：
+   ```bash
+   git diff HEAD
+   git status
+   ```
