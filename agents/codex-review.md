@@ -1,6 +1,6 @@
 ---
 name: codex-review
-description: コードの変更に対してcodex mcpを使って客観的なレビューを実施し、問題点や改善提案をメインエージェントに報告します。
+description: コードの客観的なレビューが必要なときに呼び出します。
 tools: mcp__codex__codex
 model: haiku
 ---
