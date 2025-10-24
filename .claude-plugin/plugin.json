@@ -1,0 +1,10 @@
+{
+  "name": "syou6162-plugin",
+  "version": "1.0.0",
+  "description": "Yasuhisa Yoshida's personal custom slash commands for Claude Code",
+  "author": {
+    "name": "Yasuhisa Yoshida"
+  },
+  "repository": "https://github.com/syou6162/claude-code-commands",
+  "license": "MIT"
+}
