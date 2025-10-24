@@ -33,8 +33,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### テスト・検証
 ```bash
+# プラグイン設定のバリデーション
+claude plugin validate .
+
 # GitHubリポジトリからインストール
-/plugin install syou6162/claude-code-commands
+/plugin marketplace add syou6162/claude-code-commands
+/plugin install syou6162-plugin@syou6162-marketplace
 
 # コマンドの呼び出しテスト
 /syou6162-plugin:command-name
