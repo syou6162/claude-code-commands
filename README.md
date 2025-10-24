@@ -41,10 +41,12 @@ Claude Code内で以下のコマンドを実行してプラグインをインス
 ```
 claude-code-commands/
 ├── .claude-plugin/
-│   └── plugin.json              # プラグインマニフェスト（メタデータとコマンド定義）
+│   └── plugin.json                          # プラグインマニフェスト（メタデータとコマンド定義）
 ├── agents/
-│   ├── semantic-commit.md       # サブエージェント
-│   └── update-pr-title-and-description.md  # サブエージェント
+│   ├── semantic-commit.md                   # サブエージェント
+│   ├── update-pr-title-and-description.md   # サブエージェント
+│   ├── monitor-ci.md                        # サブエージェント
+│   └── codex-review.md                      # サブエージェント
 ├── commands/
 │   ├── triage_pr_comments.md
 │   ├── self_review_pr.md
@@ -76,6 +78,11 @@ Pull Requestのタイトルと説明文を自動生成・更新する専門エ�
 Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析して原因を特定するエージェント。失敗内容をメインエージェントに報告します。CI失敗時の原因調査と対応方針の提案を自動化します。
 
 独立したコンテキストで実行されるため、メイン会話を汚染せずにCI状態の確認とログ分析作業を行えます。
+
+### codex-review (サブエージェント)
+コードの変更に対してcodex mcpを使って客観的なレビューを実施するエージェント。バグや潜在的な問題、パフォーマンス、セキュリティ上の懸念などを分析し、具体的な改善提案をメインエージェントに報告します。
+
+独立したコンテキストで実行されるため、メイン会話を汚染せずにコード差分の取得とcodex mcpによるレビュー作業を行えます。
 
 ## Available Commands
 
