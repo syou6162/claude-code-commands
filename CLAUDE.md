@@ -12,7 +12,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `agents/semantic-commit.md` - 大きな変更を論理的単位に分割してコミット（サブエージェント）
 - `agents/update-pr-title-and-description.md` - Pull Requestのタイトル・説明文自動更新（サブエージェント）
 - `agents/monitor-ci.md` - CI/CDチェック監視と失敗原因分析（サブエージェント）
-- `agents/codex-review.md` - Codex MCPを使った客観的コードレビュー（サブエージェント）
 
 ### コマンド構成
 - `commands/triage_pr_comments.md` - Pull Requestコメントの対応要否判断
@@ -20,6 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `commands/estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
 - `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
 - `commands/validate_bq_query.md` - BigQueryクエリの構文と実行可能性の検証
+- `commands/codex_review.md` - Codex MCPを使った客観的コードレビュー
 
 ### プラグイン設定
 - `.claude-plugin/plugin.json` - プラグインマニフェスト（メタデータとコマンド定義）
@@ -72,7 +72,7 @@ claude plugin validate .
 - **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, self_review_pr, update-pr-title-and-description, monitor-ci）
 - **git-sequential-stage** - semantic-commit（サブエージェント）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
-- **Codex MCP (`mcp__codex__codex`)** - コードレビュー（codex-review サブエージェント）
+- **Codex MCP (`mcp__codex__codex`)** - コードレビュー（codex_review コマンド）
 
 ### ファイル更新時の注意
 - `.claude-plugin/plugin.json`とREADMEの整合性を保つ
