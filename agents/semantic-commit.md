@@ -1,3 +1,10 @@
+---
+name: semantic-commit
+description: 変更を意味のある最小単位に分割してコミットするエージェント。git diffを分析してhunk単位で論理的にグループ化し、git-sequential-stageで段階的にコミットします。git addやgit commitを行う際は常に使用してください。
+tools: Bash(git status), Bash(git ls-files:*), Bash(git diff:*), Bash(git commit:*), Bash(git-sequential-stage:*), Bash(xargs git add -N), Bash(grep:*), Bash(cat:*), Bash(tee .claude/tmp/*), Bash(test:*), Bash(pre-commit:*), Write(.claude/tmp/**), Edit(.claude/tmp/**), Read(.claude/tmp/**)
+model: haiku
+---
+
 # 意味のある最小の単位でcommitする
 
 大きな変更を論理的な単位に分割してコミットします。LLMがgit diffを分析して意味のある最小単位を提案し、`git-sequential-stage`ツールによる自動化された逐次ステージングでコミットします。

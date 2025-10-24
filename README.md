@@ -41,9 +41,10 @@ Claude Code内で以下のコマンドを実行してプラグインをインス
 ```
 claude-code-commands/
 ├── .claude-plugin/
-│   └── plugin.json          # プラグインマニフェスト（メタデータとコマンド定義）
+│   └── plugin.json              # プラグインマニフェスト（メタデータとコマンド定義）
+├── agents/
+│   └── semantic-commit.md       # サブエージェント
 ├── commands/
-│   ├── semantic_commit.md
 │   ├── triage_pr_comments.md
 │   ├── self_review_pr.md
 │   ├── estimate_pr_size.md
@@ -54,19 +55,19 @@ claude-code-commands/
 ```
 
 - **`.claude-plugin/plugin.json`**: プラグインのメタデータ（名前、バージョン、作者など）とコマンドリストを定義
+- **`agents/`**: サブエージェント定義（専門的なタスクを独立したコンテキストで実行）
 - **`commands/`**: 各カスタムスラッシュコマンドのマークダウンファイルを格納
 
-Claude Codeは`plugin.json`を読み込んでプラグインを認識し、`commands/`ディレクトリ内のコマンドを自動的に利用可能にします。
+Claude Codeは`plugin.json`を読み込んでプラグインを認識し、`commands/`ディレクトリ内のコマンドと`agents/`内のサブエージェントを自動的に利用可能にします。
+
+## Available Sub-Agents
+
+### semantic-commit (サブエージェント)
+変更を意味のある最小単位に分割してコミットするエージェント。git diffを分析してhunk単位で論理的にグループ化し、git-sequential-stageで段階的にコミットします。大きな変更を複数の意味のあるコミットに分けたい時に、Claude Codeが自動的にこのサブエージェントに委譲します。
+
+独立したコンテキストで実行されるため、メイン会話を汚染せずに複雑なhunk分析とコミット作業を行えます。
 
 ## Available Commands
-
-### semantic_commit
-意味のある最小の単位でcommitする。大きな変更を論理的な単位に分割してコミットします。LLMがgit diffを分析して意味のある最小単位を提案し、`git-sequential-stage`ツールによる自動化された逐次ステージングでコミットします。
-
-```bash
-# 使用方法 (Claude Code内で)
-/syou6162-plugin:semantic_commit
-```
 
 ### triage_pr_comments
 Pull Requestのコメントに対する対応要否をコードベース分析に基づいて判断します。
