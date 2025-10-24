@@ -4,45 +4,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-このリポジトリは、Claude Code用のカスタムスラッシュコマンド集です。実行可能コードではなく、Claude Codeに対する指示書（マークダウンファイル）を管理しています。[cccsc](https://github.com/hiragram/cccsc)を使用してインストール・管理されます。
+このリポジトリは、Claude Code用のカスタムスラッシュコマンド集です。実行可能コードではなく、Claude Codeに対する指示書（マークダウンファイル）を管理しています。Claude Codeプラグインシステムで管理され、プラグインとしてインストールされます。
 
 ## アーキテクチャ
 
 ### コマンド構成
-- `semantic_commit.md` - 大きな変更を論理的単位に分割してコミット
-- `triage_pr_comments.md` - Pull Requestコメントの対応要否判断
-- `self_review_pr.md` - Pull Request提出前の客観的セルフレビュー
-- `estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
-- `update_pr_title_and_description.md` - Pull Requestのタイトル・説明文自動更新
-- `optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
+- `commands/semantic_commit.md` - 大きな変更を論理的単位に分割してコミット
+- `commands/triage_pr_comments.md` - Pull Requestコメントの対応要否判断
+- `commands/self_review_pr.md` - Pull Request提出前の客観的セルフレビュー
+- `commands/estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
+- `commands/update_pr_title_and_description.md` - Pull Requestのタイトル・説明文自動更新
+- `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
+- `commands/validate_bq_query.md` - BigQueryクエリの構文と実行可能性の検証
 
-### 設定ファイル
-- `cccsc.json` - コマンド定義とメタデータ管理
-- `cccsc-lock.json` - バージョン管理・ロックファイル
+### プラグイン設定
+- `.claude-plugin/plugin.json` - プラグインマニフェスト（メタデータとコマンド定義）
 
 ## 開発コマンド
 
 ### コマンドの追加
 新しいコマンドを追加する際：
 
-1. `command-name.md` ファイルを作成
-2. `cccsc.json` の `only` 配列に追加：
-```json
-{
-  "name": "command-name",
-  "path": "command-name.md", 
-  "alias": null
-}
-```
-3. `README.md` の Available Commands セクションを更新
+1. `commands/` ディレクトリに `command-name.md` ファイルを作成
+2. `README.md` の Available Commands セクションを更新
+3. コミット＆プッシュ
+
+注：`commands/` ディレクトリ内のファイルは自動的に検出されるため、`plugin.json` への追加は不要
 
 ### テスト・検証
 ```bash
-# 特定コマンドのローカルテスト
-npx cccsc add syou6162/claude-code-commands/command-name
+# GitHubリポジトリからインストール
+/plugin install syou6162/claude-code-commands
 
-# 全コマンドのテスト
-npx cccsc add syou6162/claude-code-commands
+# コマンドの呼び出しテスト
+/syou6162-plugin:command-name
 ```
 
 ## 重要な設計原則
@@ -60,6 +55,6 @@ npx cccsc add syou6162/claude-code-commands
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 
 ### ファイル更新時の注意
-- `cccsc.json`とREADMEの整合性を保つ
+- `.claude-plugin/plugin.json`とREADMEの整合性を保つ
 - コマンド名は一貫してアンダースコア区切りを使用
 - 各コマンドの説明は実際の機能と正確に一致させる
