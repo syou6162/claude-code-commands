@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### コマンド構成
 - `semantic_commit.md` - 大きな変更を論理的単位に分割してコミット
+- `rewrite_claude_commits.md` - Claude Code製コミットのメタデータ書き換え
 - `triage_pr_comments.md` - Pull Requestコメントの対応要否判断
 - `self_review_pr.md` - Pull Request提出前の客観的セルフレビュー
 - `estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
@@ -57,6 +58,8 @@ npx cccsc add syou6162/claude-code-commands
 - **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, self_review_pr, update_pr_title_and_description）
 - **git-sequential-stage** - semantic_commitで使用する専用ツール
 - **patchutils (filterdiff)** - パッチ解析用（semantic_commit）
+- **git filter-branch** - コミット履歴書き換え（rewrite_claude_commits）
+- **Perl** - コミットメッセージの正規表現処理（rewrite_claude_commits）
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 
 ### ファイル更新時の注意
