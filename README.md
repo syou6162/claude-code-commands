@@ -4,31 +4,59 @@ Yasuhisa Yoshida's personal custom slash commands for Claude Code.
 
 ## Overview
 
-このリポジトリは、Claude Code用のカスタムスラッシュコマンドを管理する個人用リポジトリです。[cccsc](https://github.com/hiragram/cccsc)を使用してコマンドをインストール・管理できます。
+このリポジトリは、Claude Code用のカスタムスラッシュコマンドを管理する個人用リポジトリです。Claude Codeのプラグインシステムを使用してコマンドをインストール・管理できます。
 
 ## Installation
 
-### 特定のコマンドをインストール
+Claude Code内で以下のコマンドを実行してプラグインをインストールします：
+
 ```bash
-npx cccsc add syou6162/claude-code-commands/command-name
+/plugin install syou6162/claude-code-commands
 ```
 
-### すべてのコマンドをインストール
-```bash
-npx cccsc add syou6162/claude-code-commands
-```
+ローカル開発の場合は、リポジトリをクローンして以下のコマンドでインストールできます：
 
-### グローバルにインストール
 ```bash
-npx cccsc add syou6162/claude-code-commands/command-name --global
+/plugin install .
 ```
 
 ## Usage
 
-インストール後、Claude Code内で以下のように使用できます：
+プラグインをインストール後、Claude Code内でコマンドを直接呼び出すことができます：
 
-- ローカルコマンド: `/project:command-name`
-- グローバルコマンド: `/user:command-name`
+```bash
+/command-name
+```
+
+引数が必要なコマンドの場合：
+
+```bash
+/command-name argument
+```
+
+## Plugin Structure
+
+このリポジトリはClaude Codeのプラグインとして構成されており、以下のディレクトリ構造を持ちます：
+
+```
+claude-code-commands/
+├── .claude-plugin/
+│   └── plugin.json          # プラグインマニフェスト（メタデータとコマンド定義）
+├── commands/
+│   ├── semantic_commit.md
+│   ├── triage_pr_comments.md
+│   ├── self_review_pr.md
+│   ├── estimate_pr_size.md
+│   ├── update_pr_title_and_description.md
+│   ├── optimize_bq_query.md
+│   └── validate_bq_query.md
+└── README.md
+```
+
+- **`.claude-plugin/plugin.json`**: プラグインのメタデータ（名前、バージョン、作者など）とコマンドリストを定義
+- **`commands/`**: 各カスタムスラッシュコマンドのマークダウンファイルを格納
+
+Claude Codeは`plugin.json`を読み込んでプラグインを認識し、`commands/`ディレクトリ内のコマンドを自動的に利用可能にします。
 
 ## Available Commands
 
@@ -36,72 +64,48 @@ npx cccsc add syou6162/claude-code-commands/command-name --global
 意味のある最小の単位でcommitする。大きな変更を論理的な単位に分割してコミットします。LLMがgit diffを分析して意味のある最小単位を提案し、`git-sequential-stage`ツールによる自動化された逐次ステージングでコミットします。
 
 ```bash
-# インストール
-npx cccsc add syou6162/claude-code-commands/semantic_commit
-
 # 使用方法 (Claude Code内で)
-/project:semantic_commit  # ローカルインストール時
-/user:semantic_commit     # グローバルインストール時
+/semantic_commit
 ```
 
 ### triage_pr_comments
 Pull Requestのコメントに対する対応要否をコードベース分析に基づいて判断します。
 
 ```bash
-# インストール
-npx cccsc add syou6162/claude-code-commands/triage_pr_comments
-
 # 使用方法 (Claude Code内で)
-/project:triage_pr_comments https://github.com/owner/repo/pull/123  # ローカルインストール時
-/user:triage_pr_comments https://github.com/owner/repo/pull/123     # グローバルインストール時
+/triage_pr_comments https://github.com/owner/repo/pull/123
 ```
 
 ### self_review_pr
 プルリクエストを提出する前に、自分の変更を客観的にレビューします。レビュアーに指摘されそうな問題点や改善案を提示します。
 
 ```bash
-# インストール
-npx cccsc add syou6162/claude-code-commands/self_review_pr
-
 # 使用方法 (Claude Code内で)
-/project:self_review_pr https://github.com/owner/repo/pull/123  # ローカルインストール時
-/user:self_review_pr https://github.com/owner/repo/pull/123     # グローバルインストール時
+/self_review_pr https://github.com/owner/repo/pull/123
 ```
 
 ### estimate_pr_size
 指定されたタスクに対してPull Requestのサイズを見積もり、必要に応じて分割の提案を行います。過去のPull Request履歴を分析し、作業量を予測して適切な実装順序を提案します。
 
 ```bash
-# インストール
-npx cccsc add syou6162/claude-code-commands/estimate_pr_size
-
 # 使用方法 (Claude Code内で)
-/project:estimate_pr_size  # ローカルインストール時
-/user:estimate_pr_size     # グローバルインストール時
+/estimate_pr_size
 ```
 
 ### update_pr_title_and_description
 Pull Requestのタイトルと説明文を修正内容とコミットメッセージに基づいて更新します。`.github/PULL_REQUEST_TEMPLATE.md`テンプレートに対応しています。
 
 ```bash
-# インストール
-npx cccsc add syou6162/claude-code-commands/update_pr_title_and_description
-
 # 使用方法 (Claude Code内で)
-/project:update_pr_title_and_description  # ローカルインストール時
-/user:update_pr_title_and_description     # グローバルインストール時
+/update_pr_title_and_description
 ```
 
 ### optimize_bq_query
 BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改善を目標とした最適化を提案します。ジョブIDまたはSQLファイルを入力として、ボトルネック分析・最適化・検証を自動実行します。
 
 ```bash
-# インストール
-npx cccsc add syou6162/claude-code-commands/optimize_bq_query
-
 # 使用方法 (Claude Code内で)
-/project:optimize_bq_query query.sql  # ローカルインストール時
-/user:optimize_bq_query query.sql     # グローバルインストール時
+/optimize_bq_query query.sql
 ```
 
 ## Adding New Commands
