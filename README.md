@@ -41,16 +41,17 @@ Claude Code内で以下のコマンドを実行してプラグインをインス
 ```
 claude-code-commands/
 ├── .claude-plugin/
-│   └── plugin.json              # プラグインマニフェスト（メタデータとコマンド定義）
+│   └── plugin.json                          # プラグインマニフェスト（メタデータとコマンド定義）
 ├── agents/
-│   ├── semantic-commit.md       # サブエージェント
-│   └── update-pr-title-and-description.md  # サブエージェント
+│   ├── semantic-commit.md                   # サブエージェント
+│   ├── update-pr-title-and-description.md   # サブエージェント
+│   └── monitor-ci.md                        # サブエージェント
 ├── commands/
 │   ├── triage_pr_comments.md
-│   ├── self_review_pr.md
 │   ├── estimate_pr_size.md
 │   ├── optimize_bq_query.md
-│   └── validate_bq_query.md
+│   ├── validate_bq_query.md
+│   └── codex_review.md
 └── README.md
 ```
 
@@ -79,20 +80,20 @@ Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析
 
 ## Available Commands
 
+### codex_review
+Codex MCPを使ってコードの変更を客観的にレビューします。現在作業中のspec workflowがある場合は仕様に沿ったレビューを実施します。
+
+```bash
+# 使用方法 (Claude Code内で)
+/syou6162-plugin:codex_review
+```
+
 ### triage_pr_comments
 Pull Requestのコメントに対する対応要否をコードベース分析に基づいて判断します。
 
 ```bash
 # 使用方法 (Claude Code内で)
 /syou6162-plugin:triage_pr_comments https://github.com/owner/repo/pull/123
-```
-
-### self_review_pr
-プルリクエストを提出する前に、自分の変更を客観的にレビューします。レビュアーに指摘されそうな問題点や改善案を提示します。
-
-```bash
-# 使用方法 (Claude Code内で)
-/syou6162-plugin:self_review_pr https://github.com/owner/repo/pull/123
 ```
 
 ### estimate_pr_size
