@@ -20,16 +20,18 @@ git symbolic-ref refs/remotes/origin/HEAD --short | cut -d/ -f2
 
 ### 2. spec-idの判定
 
-`syou6162-plugin:detect-spec-workflow`サブエージェントを使って、現在の作業に該当するspec-idを判定してください：
+Taskツールで `syou6162-plugin:detect-spec-workflow` サブエージェントを呼び出し、現在の作業に該当するspec-idを判定してください：
 
 ```
-Taskツールを使って`syou6162-plugin:detect-spec-workflow`サブエージェントを呼び出す。
-プロンプトには現在のブランチ名やコミットメッセージから推測されるタスク概要を渡す。
+Taskツールで以下のパラメータを指定：
+- subagent_type: "syou6162-plugin:detect-spec-workflow"
+- prompt: 現在のブランチ名やコミットメッセージから推測されるタスク概要
+  （例：「detect-spec-workflowサブエージェントの追加とドキュメント更新」）
 ```
 
 ### 3. Codex MCPでのレビュー実行
 
-`syou6162-plugin:detect-spec-workflow`サブエージェントの結果に応じて、以下のようにCodex MCPを呼び出してください：
+前述のステップで得たspec-idの有無に応じて、以下のようにCodex MCPを呼び出してください：
 
 **spec-idが取得できた場合：**
 
