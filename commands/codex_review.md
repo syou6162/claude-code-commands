@@ -25,6 +25,7 @@ Taskツールで `syou6162-plugin:detect-spec-workflow` サブエージェント
 ```
 Taskツールで以下のパラメータを指定：
 - subagent_type: "syou6162-plugin:detect-spec-workflow"
+- description: "spec-idの判定"
 - prompt: 現在のブランチ名やコミットメッセージから推測されるタスク概要
   （例：「detect-spec-workflowサブエージェントの追加とドキュメント更新」）
 ```
