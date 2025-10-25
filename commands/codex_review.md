@@ -8,16 +8,26 @@ description: Codex MCPを使ってコードの変更を客観的にレビュー�
 
 ## 実行手順
 
-### 1. spec-idの判定
+### 1. デフォルトブランチの取得
 
-まず、`syou6162-plugin:detect-spec-workflow`サブエージェントを使って、現在の作業に該当するspec-idを判定してください：
+まず、リポジトリのデフォルトブランチを取得してください：
+
+```bash
+git symbolic-ref refs/remotes/origin/HEAD --short | cut -d/ -f2
+```
+
+このコマンドでデフォルトブランチ名（main や master など）を取得し、後続のステップで使用します。
+
+### 2. spec-idの判定
+
+`syou6162-plugin:detect-spec-workflow`サブエージェントを使って、現在の作業に該当するspec-idを判定してください：
 
 ```
 Taskツールを使って`syou6162-plugin:detect-spec-workflow`サブエージェントを呼び出す。
 プロンプトには現在のブランチ名やコミットメッセージから推測されるタスク概要を渡す。
 ```
 
-### 2. Codex MCPでのレビュー実行
+### 3. Codex MCPでのレビュー実行
 
 `syou6162-plugin:detect-spec-workflow`サブエージェントの結果に応じて、以下のようにCodex MCPを呼び出してください：
 
@@ -26,7 +36,7 @@ Taskツールを使って`syou6162-plugin:detect-spec-workflow`サブエージ�
 ```
 mcp__codex__codex ツールを使って以下のプロンプトでレビューを実行：
 
-「main/masterブランチとの差分を日本語でレビューしてください。
+「<デフォルトブランチ名>ブランチとの差分を日本語でレビューしてください。
 
 このプロジェクトではspec workflowという仕様駆動開発のワークフローを使っています。
 
@@ -41,9 +51,9 @@ mcp__codex__codex ツールを使って以下のプロンプトでレビュー�
 ```
 mcp__codex__codex ツールを使って以下のプロンプトでレビューを実行：
 
-「main/masterブランチとの差分を日本語でレビューしてください。」
+「<デフォルトブランチ名>ブランチとの差分を日本語でレビューしてください。」
 ```
 
-### 3. レビュー結果の報告
+### 4. レビュー結果の報告
 
 Codex MCPからのレビュー結果をユーザーに報告してください。
