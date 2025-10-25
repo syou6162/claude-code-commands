@@ -12,16 +12,16 @@ model: haiku
 
 以下の手順でspec workflowを判定してください：
 
-### 1. 最新5つのspec候補を取得
+### 1. 最新3つのspec候補を取得
 
-最終更新日時が新しい順に最大5つのspec-idを取得してください：
+最終更新日時が新しい順に最大3つのspec-idを取得してください：
 
 ```bash
-# 最終更新日時が新しい順に最大5つのspecディレクトリを取得
-ls -t .spec-workflow/specs/ | head -5
+# 最終更新日時が新しい順に最大3つのspecディレクトリを取得
+ls -t .spec-workflow/specs/ | head -3
 ```
 
-これにより、`spec-workflow/specs/<spec-id>/`という構造のディレクトリが新しい順に最大5つ表示されます。
+これにより、`spec-workflow/specs/<spec-id>/`という構造のディレクトリが新しい順に最大3つ表示されます。
 
 ### 2. 各spec候補の内容を読み取り
 
