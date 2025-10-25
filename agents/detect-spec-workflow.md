@@ -1,7 +1,6 @@
 ---
 name: detect-spec-workflow
 description: spec workflowを使ったコードレビューやタスク管理を行う前に、現在の作業がどのspec-idに該当するかを判定する必要がある時に呼び出してください。タスクの概要を渡すと、.spec-workflow/specs/配下のspecを分析して該当するspec-idを返します。
-tools: Bash(ls:*), Bash(find:*), Bash(stat:*), Read, Bash(cat:*), Bash(grep:*)
 model: haiku
 ---
 
