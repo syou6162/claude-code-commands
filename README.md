@@ -45,7 +45,8 @@ claude-code-commands/
 ├── agents/
 │   ├── semantic-commit.md                   # サブエージェント
 │   ├── update-pr-title-and-description.md   # サブエージェント
-│   └── monitor-ci.md                        # サブエージェント
+│   ├── monitor-ci.md                        # サブエージェント
+│   └── detect-spec-workflow.md              # サブエージェント
 ├── commands/
 │   ├── triage_pr_comments.md
 │   ├── estimate_pr_size.md
@@ -77,6 +78,11 @@ Pull Requestのタイトルと説明文を自動生成・更新する専門エ�
 Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析して原因を特定するエージェント。失敗内容をメインエージェントに報告します。CI失敗時の原因調査と対応方針の提案を自動化します。
 
 独立したコンテキストで実行されるため、メイン会話を汚染せずにCI状態の確認とログ分析作業を行えます。
+
+### detect-spec-workflow (サブエージェント)
+現在のタスクや仕様の概要から、該当するspec workflowのspec-idを判定するエージェント。spec-workflow/specs/配下のspecを分析し、最も関連性の高いspec-idを返します。
+
+独立したコンテキストで実行されるため、メイン会話を汚染せずにspec-idの判定作業を行えます。
 
 ## Available Commands
 
