@@ -62,6 +62,18 @@ claude plugin validate .
 
 ## 重要な設計原則
 
+### 公式ドキュメント参照
+スラッシュコマンド、サブエージェント、プラグインの実装や修正が必要になった場合は、**必ず該当する公式ドキュメントを参照すること**：
+
+- [スラッシュコマンド](https://docs.claude.com/en/docs/claude-code/slash-commands)
+- [サブエージェント](https://docs.claude.com/en/docs/claude-code/sub-agents)
+- [プラグインリファレンス](https://docs.claude.com/en/docs/claude-code/plugins-reference)
+
+**特にサブエージェントのdescription記述について**：
+- サブエージェントの `description` は単純な機能説明ではなく、**「いつ呼び出すべきなのか」が分かるように書く**
+- メインエージェントが適切なタイミングでサブエージェントを呼び出せるよう、トリガー条件や使用シーンを明記すること
+- 例：「～する際に呼び出してください」「～の前に使用してください」といった表現を含める
+
 ### コマンド設計
 - **分析・提案重視**: 実際のコード修正は行わず、判断材料を提供
 - **GitHub CLI活用**: `gh`コマンドを使った効率的なワークフロー
