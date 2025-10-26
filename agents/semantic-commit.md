@@ -2,7 +2,7 @@
 name: semantic-commit
 description: git addやgit commitを行う際に呼び出してください。変更を適切な粒度に分割してコミットします。
 tools: Bash(git status), Bash(git ls-files:*), Bash(git diff:*), Bash(git commit:*), Bash(git-sequential-stage:*), Bash(xargs -r git add -N), Bash(grep:*), Bash(cat:*), Bash(tee .claude/tmp/*), Bash(test:*), Bash(pre-commit:*), Write(.claude/tmp/**), Edit(.claude/tmp/**), Read(.claude/tmp/**)
-model: opus
+model: haiku
 ---
 
 # 意味のある最小単位でコミットする
