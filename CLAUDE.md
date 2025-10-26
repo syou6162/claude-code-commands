@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `agents/update-pr-title-and-description.md` - Pull Requestのタイトル・説明文自動更新（サブエージェント）
 - `agents/monitor-ci.md` - CI/CDチェック監視と失敗原因分析（サブエージェント）
 - `agents/detect-spec-workflow.md` - spec workflowのspec-id判定（サブエージェント）
+- `agents/record-current-status.md` - 現在の作業状況と本音を記録（サブエージェント）
 
 ### コマンド構成
 - `commands/triage_pr_comments.md` - Pull Requestコメントの対応要否判断
