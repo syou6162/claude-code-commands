@@ -1,6 +1,6 @@
 ---
 name: monitor-ci
-description: Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析して原因を特定するエージェント。失敗内容をメインエージェントに報告します。
+description: Pull RequestのCI/CDチェック結果を確認する際に呼び出してください。失敗原因を分析して報告します。
 tools: Bash(gh pr checks:*), Bash(gh run view:*), Bash(gh run list:*), Bash(gh pr view:*), Write(.claude/tmp/**), Read(.claude/tmp/**), Bash(grep:*), Bash(cat:*)
 model: haiku
 ---
