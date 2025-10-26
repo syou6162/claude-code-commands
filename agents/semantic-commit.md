@@ -55,7 +55,6 @@ model: haiku
 
    必要に応じて、各ファイルのhunk数を確認してください：
    ```bash
-   # 各ファイルのhunk数
    git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
    ```
 
