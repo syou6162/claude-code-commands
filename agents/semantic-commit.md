@@ -63,14 +63,20 @@ model: haiku
    #   - src/utils.py: hunk 2（関連するユーティリティ関数の修正）
    # - コミット2（refactor）:
    #   - src/calculator.py: hunk 2, 4（計算ロジックの最適化）
-
-   # 最初のコミット用のメッセージを準備（Conventional Commits形式）
-   # feat: 新機能 / fix: バグ修正 / refactor: リファクタリング
-   # docs: ドキュメント / test: テスト / style: フォーマット / chore: その他
-   COMMIT_MSG="fix: ゼロ除算エラーを修正
-
-   計算処理で分母が0の場合の適切なエラーハンドリングを追加"
    ```
+
+   コミットメッセージの形式（Conventional Commits形式）：
+   - `feat`: 新機能
+   - `fix`: バグ修正
+   - `refactor`: リファクタリング
+   - `docs`: ドキュメント
+   - `test`: テスト
+   - `style`: フォーマット
+   - `perf`: パフォーマンス改善
+   - `build`: ビルドシステムや外部依存関係の変更
+   - `ci`: CI設定ファイルやスクリプトの変更
+   - `revert`: コミットの取り消し
+   - `chore`: その他
 
 4. **ステージングとコミット**
 
@@ -95,8 +101,10 @@ model: haiku
      -hunk="src/utils.py:2" \
      -hunk="docs/CHANGELOG.md:*"
 
-   # コミット実行
-   git commit -m "$COMMIT_MSG"
+   # コミット実行（-mの引用符内で改行して詳細を記述可能）
+   git commit -m "fix: ゼロ除算エラーを修正
+
+   計算処理で分母が0の場合の適切なエラーハンドリングを追加"
    ```
 
 5. **残りの変更を処理**
