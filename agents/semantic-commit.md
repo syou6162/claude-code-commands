@@ -53,6 +53,12 @@ model: haiku
    - **意味的グループ化**: 同じ目的の変更（バグ修正、リファクタリング等）をグループ化する
    - **コミット計画**: どのhunkをどのコミットに含めるか決定する
 
+   必要に応じて、各ファイルのhunk数を確認してください：
+   ```bash
+   # 各ファイルのhunk数
+   git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
+   ```
+
    分析例：
    ```bash
    # 分析結果例
