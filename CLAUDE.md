@@ -62,6 +62,21 @@ claude plugin validate .
 
 ## 重要な設計原則
 
+### 公式ドキュメント参照
+スラッシュコマンド、サブエージェント、プラグインの実装や修正が必要になった場合は、**必ず該当する公式ドキュメントを参照すること**：
+
+- [スラッシュコマンド](https://docs.claude.com/en/docs/claude-code/slash-commands)
+- [サブエージェント](https://docs.claude.com/en/docs/claude-code/sub-agents)
+- [プラグインリファレンス](https://docs.claude.com/en/docs/claude-code/plugins-reference)
+
+**特にサブエージェントのdescription記述について**：
+- サブエージェントの `description` は **when（いつ呼び出すか）+ what（何をするか）** で構成する
+- **how（どうやるか）の実装詳細は隠蔽する** - メインエージェントは内部実装を知る必要がない
+- 記述パターン：`[いつ呼び出すか]に呼び出してください。[何をするか]します。`
+- 例：
+  - ✅ `git addやgit commitを行う際に呼び出してください。変更を適切な粒度に分割してコミットします。`
+  - ❌ `変更を意味のある最小単位に分割してコミットするエージェント。git diffを分析してhunk単位で論理的にグループ化し、git-sequential-stageで段階的にコミットします。git addやgit commitを行う際は常に使用してください。`（whenが後回し、howの詳細が多すぎる）
+
 ### コマンド設計
 - **分析・提案重視**: 実際のコード修正は行わず、判断材料を提供
 - **GitHub CLI活用**: `gh`コマンドを使った効率的なワークフロー

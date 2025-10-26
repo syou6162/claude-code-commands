@@ -1,7 +1,7 @@
 ---
 name: semantic-commit
-description: 変更を意味のある最小単位に分割してコミットするエージェント。git diffを分析してhunk単位で論理的にグループ化し、git-sequential-stageで段階的にコミットします。git addやgit commitを行う際は常に使用してください。
-tools: Bash(git status), Bash(git ls-files:*), Bash(git diff:*), Bash(git commit:*), Bash(git-sequential-stage:*), Bash(xargs git add -N), Bash(grep:*), Bash(cat:*), Bash(tee .claude/tmp/*), Bash(test:*), Bash(pre-commit:*), Write(.claude/tmp/**), Edit(.claude/tmp/**), Read(.claude/tmp/**)
+description: git addやgit commitを行う際に呼び出してください。変更を適切な粒度に分割してコミットします。
+tools: Bash(git status), Bash(git ls-files:*), Bash(git diff:*), Bash(git commit:*), Bash(git-sequential-stage:*), Bash(xargs -r git add -N), Bash(grep:*), Bash(cat:*), Bash(tee .claude/tmp/*), Bash(test:*), Bash(pre-commit:*), Write(.claude/tmp/**), Edit(.claude/tmp/**), Read(.claude/tmp/**)
 model: opus
 ---
 
@@ -30,7 +30,7 @@ model: opus
 
    最初に必ずintent-to-addで新規ファイルを追加してください：
    ```bash
-   git ls-files --others --exclude-standard | xargs git add -N
+   git ls-files --others --exclude-standard | xargs -r git add -N
    ```
 
    差分を取得してください：
