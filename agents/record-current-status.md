@@ -11,10 +11,13 @@ model: haiku
 
 ## 出力先
 
-- **ファイルパス**: リポジトリルート以下の `.claude/tmp/current_status`
-  - 注意: `~/.claude/tmp/current_status` ではありません
-- **使用ツール**: `Write` ツールまたは `Edit` ツール
-  - `echo` コマンドは使わないでください
+**ファイルパス**: リポジトリルート以下の `.claude/tmp/current_status`
+- 注意: `~/.claude/tmp/current_status` ではありません
+
+**ファイル編集について**：
+- ファイルの作成・編集には必ず`Write`ツールまたは`Edit`ツールを使用すること
+- bashコマンド（`cat <<EOF > file`、`cat << 'EOF' > file`、`echo "..." > file`など）でファイルを書き込まないこと
+- 理由：専用ツールの方が安全で確実、かつ文字エンコーディングの問題を回避できる
 
 ## フォーマット
 
