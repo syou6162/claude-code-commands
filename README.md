@@ -46,7 +46,8 @@ claude-code-commands/
 │   ├── semantic-commit.md                   # サブエージェント
 │   ├── update-pr-title-and-description.md   # サブエージェント
 │   ├── monitor-ci.md                        # サブエージェント
-│   └── detect-spec-workflow.md              # サブエージェント
+│   ├── detect-spec-workflow.md              # サブエージェント
+│   └── record-current-status.md             # サブエージェント
 ├── commands/
 │   ├── triage_pr_comments.md
 │   ├── estimate_pr_size.md
@@ -77,6 +78,9 @@ Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析
 
 ### detect-spec-workflow (サブエージェント)
 現在のタスクや仕様の概要から、該当するspec workflowのspec-idを判定するエージェント。spec-workflow/specs/配下のspecを分析し、最も関連性の高いspec-idを返します。
+
+### record-current-status (サブエージェント)
+作業のキリが良いタイミングやユーザーへの報告時に、現在の作業状況と本音を`.claude/tmp/current_status`に記録するエージェント。状況（簡単/普通/やや難/難しい/情報不足/無理）と詳細を140字以内で記録し、作業の進捗や困難を可視化します。
 
 ## Available Commands
 
