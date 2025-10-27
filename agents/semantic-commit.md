@@ -1,7 +1,7 @@
 ---
 name: semantic-commit
 description: git addやgit commitを行う際に呼び出してください。変更を適切な粒度に分割してコミットします。
-tools: Bash(git status), Bash(git ls-files:*), Bash(git diff:*), Bash(git commit:*), Bash(git-sequential-stage:*), Bash(xargs -r git add -N), Bash(grep:*), Bash(cat:*), Bash(tee .claude/tmp/*), Bash(test:*), Bash(pre-commit:*), Write(.claude/tmp/**), Edit(.claude/tmp/**), Read(.claude/tmp/**)
+tools: Bash(git status), Bash(git ls-files:*), Bash(git diff:*), Bash(git commit:*), Bash(git-sequential-stage stage:*), Bash(git-sequential-stage count-hunks:*), Bash(xargs -r git add -N), Bash(grep:*), Bash(cat:*), Bash(tee .claude/tmp/*), Bash(test:*), Bash(pre-commit:*), Write(.claude/tmp/**), Edit(.claude/tmp/**), Read(.claude/tmp/**)
 model: haiku
 ---
 
@@ -29,6 +29,7 @@ model: haiku
 1. **pre-commitの事前実行**
 
    `.pre-commit-config.yaml`が存在する場合は、事前に実行してください：
+
    ```bash
    pre-commit run --all-files
    ```
@@ -36,11 +37,13 @@ model: haiku
 2. **差分を取得**
 
    最初に必ずintent-to-addで新規ファイルを追加してください：
+
    ```bash
    git ls-files --others --exclude-standard | xargs -r git add -N
    ```
 
    差分を取得してください：
+
    ```bash
    git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
    ```
@@ -53,12 +56,14 @@ model: haiku
    - **意味的グループ化**: 同じ目的の変更（バグ修正、リファクタリング等）をグループ化する
    - **コミット計画**: どのhunkをどのコミットに含めるか決定する
 
-   必要に応じて、各ファイルのhunk数を確認してください：
+   各ファイルのhunk数を確認してください：
+
    ```bash
-   git diff HEAD --name-only | xargs -I {} sh -c 'printf "%s: " "{}"; git diff HEAD {} | grep -c "^@@"'
+   git-sequential-stage count-hunks
    ```
 
    分析例：
+
    ```bash
    # 分析結果例
    # - コミット1（fix）:
@@ -93,13 +98,13 @@ model: haiku
    ```bash
    # git-sequential-stageを実行（内部で逐次ステージングを安全に処理）
    # 部分的な変更をステージング（hunk番号指定）
-   git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5"
+   git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5"
 
    # ファイル全体をステージング（意味的に一体の変更の場合）
-   git-sequential-stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_calculator.py:*"
+   git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_calculator.py:*"
 
    # 複数ファイルの場合（混在使用）
-   git-sequential-stage -patch=".claude/tmp/current_changes.patch" \
+   git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" \
      -hunk="src/calculator.py:1,3,5" \
      -hunk="src/utils.py:2" \
      -hunk="docs/CHANGELOG.md:*"
@@ -113,11 +118,13 @@ model: haiku
 5. **残りの変更を処理**
 
    残りの変更があるかを確認してください：
+
    ```bash
    git diff HEAD
    ```
 
    残りの変更がある場合は、パッチファイルを再生成してください：
+
    ```bash
    git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
    ```
@@ -129,6 +136,7 @@ model: haiku
 6. **最終確認**
 
    すべての変更がコミットされたか確認してください：
+
    ```bash
    git diff HEAD
    git status
