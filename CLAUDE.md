@@ -16,6 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `agents/record-current-status.md` - 現在の作業状況と本音を記録（サブエージェント）
 
 ### コマンド構成
+- `commands/load_spec_tasks.md` - spec workflowのtasks.mdとToDoリストの同期
 - `commands/triage_pr_comments.md` - Pull Requestコメントの対応要否判断
 - `commands/estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
 - `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
@@ -44,7 +45,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. `commands/` ディレクトリに `command-name.md` ファイルを作成
 2. `README.md` の Available Commands セクションを更新
 3. `CLAUDE.md` のコマンド構成セクションを更新
-4. コミット＆プッシュ
+4. ローカルテスト：`/plugin install .` でプラグインをインストールして動作確認
+5. コミット＆プッシュ
 
 注：`commands/` ディレクトリ内のファイルは自動的に検出されるため、`plugin.json` への追加は不要
 
@@ -89,6 +91,8 @@ claude plugin validate .
 - **git-sequential-stage** - semantic-commit（サブエージェント）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 - **Codex MCP (`mcp__codex__codex`)** - コードレビュー（codex_review コマンド）
+- **spec-workflow MCP** - spec workflow連携（load_spec_tasks コマンド）
+- **detect-spec-workflow サブエージェント** - spec-id判定（load_spec_tasks コマンド）
 
 ### ファイル更新時の注意
 - `.claude-plugin/plugin.json`とREADMEの整合性を保つ
