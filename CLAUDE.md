@@ -45,7 +45,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. `commands/` ディレクトリに `command-name.md` ファイルを作成
 2. `README.md` の Available Commands セクションを更新
 3. `CLAUDE.md` のコマンド構成セクションを更新
-4. コミット＆プッシュ
+4. ローカルテスト：`/plugin install .` でプラグインをインストールして動作確認
+5. コミット＆プッシュ
 
 注：`commands/` ディレクトリ内のファイルは自動的に検出されるため、`plugin.json` への追加は不要
 
