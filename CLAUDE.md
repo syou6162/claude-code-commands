@@ -16,6 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `agents/record-current-status.md` - 現在の作業状況と本音を記録（サブエージェント）
 
 ### コマンド構成
+- `commands/load_spec_tasks.md` - spec workflowのtasks.mdとToDoリストの同期
 - `commands/triage_pr_comments.md` - Pull Requestコメントの対応要否判断
 - `commands/estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
 - `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案

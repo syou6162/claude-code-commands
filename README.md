@@ -84,6 +84,14 @@ Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析
 
 ## Available Commands
 
+### load_spec_tasks
+spec workflowのtasks.mdから次にやるべきタスクを読み込み、Claude CodeのToDoリストに自己再生産的なタスクサイクルを設定します。最初に1回実行するだけで、以降は自動的にタスクサイクルが回り続けます。tasks.mdをシングルソースオブトゥルースとして扱い、Claudeがタスクの状態更新を忘れないようにします。
+
+```bash
+# 使用方法 (Claude Code内で)
+/syou6162-plugin:load_spec_tasks
+```
+
 ### codex_review
 Codex MCPを使ってコードの変更を客観的にレビューします。現在作業中のspec workflowがある場合は仕様に沿ったレビューを実施します。
 
