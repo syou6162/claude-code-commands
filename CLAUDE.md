@@ -91,6 +91,8 @@ claude plugin validate .
 - **git-sequential-stage** - semantic-commit（サブエージェント）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 - **Codex MCP (`mcp__codex__codex`)** - コードレビュー（codex_review コマンド）
+- **spec-workflow MCP** - spec workflow連携（load_spec_tasks コマンド）
+- **detect-spec-workflow サブエージェント** - spec-id判定（load_spec_tasks コマンド）
 
 ### ファイル更新時の注意
 - `.claude-plugin/plugin.json`とREADMEの整合性を保つ
