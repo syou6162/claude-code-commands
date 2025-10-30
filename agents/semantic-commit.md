@@ -45,7 +45,7 @@ model: haiku
    差分を取得してください：
 
    ```bash
-   git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
+   git diff HEAD | tee .claude/tmp/current_changes.patch
    ```
 
 3. **変更内容を分析**
@@ -86,9 +86,17 @@ model: haiku
    - `revert`: コミットの取り消し
    - `chore`: その他
 
-4. **ステージングとコミット**
+   分析が完了したら、コミット用のメッセージをWriteツールで作成してください：
 
-   選択したhunkを`git-sequential-stage`でステージングし、コミットしてください：
+   ```bash
+   # Writeツールで .claude/tmp/commit_message.txt にコミットメッセージを書く
+   # 例：
+   # fix: ゼロ除算エラーを修正
+   #
+   # 計算処理で分母が0の場合の適切なエラーハンドリングを追加
+   ```
+
+4. **ステージングとコミット**
 
    **ワイルドカード（`*`）の使用判断：**
    - 使用すべき：ファイル内のすべての変更が意味的に一体、新規ファイル、ドキュメント
@@ -104,15 +112,10 @@ model: haiku
    git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_calculator.py:*"
 
    # 複数ファイルの場合（混在使用）
-   git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" \
-     -hunk="src/calculator.py:1,3,5" \
-     -hunk="src/utils.py:2" \
-     -hunk="docs/CHANGELOG.md:*"
+   git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5" -hunk="src/utils.py:2" -hunk="docs/CHANGELOG.md:*"
 
-   # コミット実行（-mの引用符内で改行して詳細を記述可能）
-   git commit -m "fix: ゼロ除算エラーを修正
-
-   計算処理で分母が0の場合の適切なエラーハンドリングを追加"
+   # ステップ3で作成したコミットメッセージを使ってコミット実行
+   git commit -F .claude/tmp/commit_message.txt
    ```
 
 5. **残りの変更を処理**
@@ -126,7 +129,7 @@ model: haiku
    残りの変更がある場合は、パッチファイルを再生成してください：
 
    ```bash
-   git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
+   git diff HEAD | tee .claude/tmp/current_changes.patch
    ```
 
    **注意：** pre-commitでファイルが自動修正された可能性がある場合は、手順1から再実行してください。
