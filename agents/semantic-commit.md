@@ -120,6 +120,7 @@ model: haiku
    </decision-criteria>
 
    <example name="staging-patterns">
+
    ```bash
    # パターン1: 部分的な変更をステージング（hunk番号指定）
    git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5"
@@ -133,6 +134,7 @@ model: haiku
    # コミット実行（ステップ3で作成したコミットメッセージを使用）
    git commit -F .claude/tmp/commit_message.txt
    ```
+
    </example>
 
 5. **残りの変更を処理**
