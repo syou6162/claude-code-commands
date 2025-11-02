@@ -141,6 +141,14 @@ BigQueryクエリのパフォーマンスを分析し、2倍以上の性能改�
 /syou6162-plugin:optimize_bq_query query.sql
 ```
 
+### multi_perspective_review
+複数の視点（アーキテクチャ・設計、パフォーマンス、保守性、テスタビリティ、UX、プロジェクトフェーズ適合性、既存コードとの整合性）から客観的にレビューし、方針の妥当性を検証します。7つの視点からのレビュー結果を整理し、さらに7名の検証者による妥当性確認を実施します。
+
+```bash
+# 使用方法 (Claude Code内で)
+/syou6162-plugin:multi_perspective_review
+```
+
 ## Adding New Commands
 
 新しいカスタムコマンドを追加する手順：

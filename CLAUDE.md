@@ -27,6 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
 - `commands/validate_bq_query.md` - BigQueryクエリの構文と実行可能性の検証
 - `commands/codex_review.md` - Codex MCPを使った客観的コードレビュー
+- `commands/multi_perspective_review.md` - 複数視点からの客観的レビューと妥当性検証
 
 ### スキル構成
 - `skills/ask-user-choice/SKILL.md` - ユーザーに質問する際に選択式で答えやすくするスキル（自動発動）
