@@ -102,7 +102,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <name>アーキテクチャ・設計</name>:
 
 <perspective-details>
+
 システム全体の構造、モジュール分割、依存関係、拡張性、設計原則の遵守
+
 </perspective-details>
 
 </example>
@@ -111,7 +113,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <name>パフォーマンス・効率性</name>:
 
 <perspective-details>
+
 実行速度、メモリ使用量、スケーラビリティ、アルゴリズムの計算量
+
 </perspective-details>
 
 </example>
@@ -120,7 +124,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <name>保守性・可読性</name>:
 
 <perspective-details>
+
 コードの理解しやすさ、変更のしやすさ、命名規則、コメント、複雑度
+
 </perspective-details>
 
 </example>
@@ -129,7 +135,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <name>テスタビリティ</name>:
 
 <perspective-details>
+
 テストのしやすさ、依存性の注入、モック可能性、テストケースの網羅性
+
 </perspective-details>
 
 </example>
@@ -138,7 +146,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <name>ユーザー体験・利便性</name>:
 
 <perspective-details>
+
 エンドユーザーやAPI利用者の視点、UIの使いやすさ、APIの直感性
+
 </perspective-details>
 
 </example>
@@ -147,7 +157,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <name>プロジェクトフェーズ適合性</name>:
 
 <perspective-details>
+
 早すぎる最適化の回避、MVP としての妥当性、技術的負債とのバランス
+
 </perspective-details>
 
 </example>
@@ -156,7 +168,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <name>既存コードとの整合性</name>:
 
 <perspective-details>
+
 プロジェクト内のパターン・スタイルとの一貫性、コーディング規約の遵守
+
 </perspective-details>
 
 </example>
@@ -165,7 +179,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <name>ベストプラクティス・標準準拠</name>:
 
 <perspective-details>
+
 公式ドキュメント、コミュニティのベストプラクティス、言語固有のイディオム、業界標準への準拠
+
 </perspective-details>
 
 </example>
