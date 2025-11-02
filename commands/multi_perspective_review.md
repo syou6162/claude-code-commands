@@ -104,7 +104,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 ## 保存先
 
-あなたの視点に対応する`<round1-*>`タグで定義されたファイルパスに保存してください。
+<round1-filename>タグで定義されたファイルパスに保存してください。
 
 ## レビュー対象
 
@@ -128,16 +128,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 マークダウン形式で保存後、以下の形式で報告：
 
 ```
-レビュー結果を保存しました: <round1-architecture>
+レビュー結果を保存しました: <round1-filename>
 ```
-
-（上記は`<round1-architecture>`の例。あなたの視点に対応するタグを使用）
 
 <examples>
 
 <example>
 <name>アーキテクチャ・設計</name>
-<round1-architecture>.claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md</round1-architecture>
+<round1-filename>.claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md</round1-filename>
 
 <perspective-details>
 
@@ -153,7 +151,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>パフォーマンス・効率性</name>
-<round1-performance>.claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md</round1-performance>
+<round1-filename>.claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md</round1-filename>
 
 <perspective-details>
 
@@ -168,7 +166,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>保守性・可読性</name>
-<round1-maintainability>.claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md</round1-maintainability>
+<round1-filename>.claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md</round1-filename>
 
 <perspective-details>
 
@@ -187,7 +185,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>テスタビリティ</name>
-<round1-testability>.claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md</round1-testability>
+<round1-filename>.claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md</round1-filename>
 
 <perspective-details>
 
@@ -202,7 +200,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>ユーザー体験・利便性</name>
-<round1-user-experience>.claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md</round1-user-experience>
+<round1-filename>.claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md</round1-filename>
 
 <perspective-details>
 
@@ -216,7 +214,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>プロジェクトフェーズ適合性</name>
-<round1-project-phase>.claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md</round1-project-phase>
+<round1-filename>.claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md</round1-filename>
 
 <perspective-details>
 
@@ -230,7 +228,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>既存コードとの整合性</name>
-<round1-consistency>.claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md</round1-consistency>
+<round1-filename>.claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md</round1-filename>
 
 <perspective-details>
 
@@ -243,7 +241,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>ベストプラクティス・標準準拠</name>
-<round1-best-practices>.claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md</round1-best-practices>
+<round1-filename>.claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md</round1-filename>
 
 <perspective-details>
 
@@ -300,7 +298,7 @@ Task(
 <round2-meta-4>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_4.md</round2-meta-4>
 <round2-meta-5>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_5.md</round2-meta-5>
 
-まず、8つの視点の`<round1-*>`タグで定義されたファイルパス（`<round1-architecture>`, `<round1-performance>`, `<round1-maintainability>`, `<round1-testability>`, `<round1-user-experience>`, `<round1-project-phase>`, `<round1-consistency>`, `<round1-best-practices>`）を収集してください。
+まず、8つの視点の<round1-filename>タグで定義されたファイルパスを収集してください。
 
 次に、各general-purpose subagentには以下のプロンプトを渡します（<meta-reviewer-number>タグに1～5を指定し、[ログファイルパス一覧]の部分には収集した8つのパスを列挙）：
 
@@ -548,7 +546,7 @@ Task(
 
 ### 第1ラウンド（8視点のレビュー）
 
-各視点の`<round1-*>`タグで定義されたファイル（8ファイル）
+各視点の<round1-filename>タグで定義されたファイル（8ファイル）
 
 ### 第2ラウンド（5メタレビュアーの評価）
 
@@ -587,9 +585,9 @@ Task(
    - コンテキスト情報は `<context-file>` に保存
 
 5. **ファイル命名規則**
-   - 第1ラウンド: 各視点の`<round1-*>`タグで定義
-   - 第2ラウンド: `round2/meta_reviewer_N.md`（Nは1-5）
-   - 最終レポート: `final_report.md`
-   - コンテキスト: `<context-file>`
+   - 第1ラウンド: 各視点の<round1-filename>タグで定義
+   - 第2ラウンド: 各メタレビュアーの`<round2-meta-*>`タグで定義
+   - 最終レポート: <final-report>タグで定義
+   - コンテキスト: <context-file>タグで定義
 
 </important>
