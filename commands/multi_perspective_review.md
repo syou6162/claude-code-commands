@@ -315,6 +315,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 ## 出力形式
 
 マークダウン形式で保存後、以下の形式で報告: `レビュー結果を保存しました: <round1-filename>`
+```
 
 **Taskツールの呼び出し例（8つ並列）:**
 
