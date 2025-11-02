@@ -1,6 +1,6 @@
 ---
 description: "複数の視点から客観的にレビューし、方針の妥当性を検証します。"
-allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/remotes/origin/HEAD --short)
+allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/remotes/origin/HEAD --short), Bash(date:+%Y%m%d_%H%M%S), Bash(mkdir -p .claude/tmp/multi_perspective_review:*), Write(.claude/tmp/**), Read(.claude/tmp/**)
 ---
 
 # 複数視点レビューコマンド
@@ -66,6 +66,29 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 </context>
 
+**1-2. ログ保存用ディレクトリの作成とコンテキスト情報の保存**
+
+レビュー結果を記録するために、タイムスタンプ付きのディレクトリを作成します：
+
+```bash
+# タイムスタンプを取得（YYYYMMDD_HHMMSS形式）
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# ディレクトリ構造を作成
+mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round1
+mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
+```
+
+取得したタイムスタンプを以下のように定義します：
+
+<timestamp>20250311_143022</timestamp>
+
+（上記は例です。実際には取得した値を記載します）
+
+以降のすべてのサブエージェントへのプロンプトでは、<timestamp>タグで定義した値を参照します。
+
+次に、<context>タグで収集した内容を `.claude/tmp/multi_perspective_review/<timestamp>/context.md` に保存します。
+
 **2. 第1ラウンド: 8つの視点からのレビュー**
 
 収集したコンテキストを基に、8つの異なる視点からレビューを実施します。
@@ -94,12 +117,28 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <perspective-details>タグで定義された内容を参照してください。
 
 詳細に網羅的に報告してください。具体的なコード箇所、懸念される影響、改善の必要性について、十分な情報を含めて分析してください。
+
+## 出力形式
+
+**重要**: レビュー結果は以下のファイルに保存し、ファイルパスのみを返してください：
+
+保存先: `.claude/tmp/multi_perspective_review/<timestamp>/round1/<filename>.md`
+
+- `<timestamp>` は <timestamp>タグで定義された値を使用
+- `<filename>` は <filename>タグで定義されたファイル名を使用
+
+レビュー結果をマークダウン形式でファイルに保存した後、以下の形式で応答してください：
+
+```
+レビュー結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md
+```
 ```
 
 <examples>
 
 <example>
-<name>アーキテクチャ・設計</name>:
+<name>アーキテクチャ・設計</name>
+<filename>architecture</filename>
 
 <perspective-details>
 
@@ -114,7 +153,8 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>パフォーマンス・効率性</name>:
+<name>パフォーマンス・効率性</name>
+<filename>performance</filename>
 
 <perspective-details>
 
@@ -237,58 +277,21 @@ Task(
 
 </example>
 
-**3. 第1ラウンドの結果を整理**
+**3. 第1ラウンドの結果を収集**
 
-8つのsubagentから返ってきた意見を整理します：
+8つのsubagentから返ってきたログファイルパスを収集します。
 
-- **同じ意見をマージ**
-   - 複数のsubagentが同じ指摘をしている場合は、1つにまとめる
-   - 「アーキテクチャとテスタビリティの両方から同じ懸念が指摘されました」のように明記
+各subagentは以下の形式でパスを返します：
 
-- **過度な一般化を排除**
-   - 「ベストプラクティスに従うべき」のような抽象的な指摘は除外
-   - 具体的なコードや状況に即した指摘のみを残す
-
-- **整理した結果をマークダウン形式でまとめる**
-
-<example>
-
-```markdown
-## 第1ラウンド: 多角的レビュー結果
-
-### 共通指摘事項
-- エラーハンドリングの不足: アーキテクチャとテスタビリティの両方から、外部API呼び出し時のエラーハンドリングが不十分との指摘
-
-### アーキテクチャ・設計
-- 新しいvalidateInput関数が既存のvalidationUtilsモジュールと重複している
-- 依存性注入パターンが一貫していない（一部は直接インポート、一部はコンストラクタ注入）
-
-### パフォーマンス・効率性
-- データベースクエリがN+1問題を引き起こす可能性がある
-- 大量データの処理時にメモリ使用量が増加する懸念
-
-### 保守性・可読性
-- 関数の責務が多すぎる（SRP違反）
-- 変数名が曖昧（例：data, result など）
-
-### テスタビリティ
-- 外部依存が直接インポートされており、モック化が困難
-
-### ユーザー体験・利便性
-- 指摘なし（この変更はバックエンドのみでUI影響なし）
-
-### プロジェクトフェーズ適合性
-- 現時点では妥当な実装（早すぎる最適化なし）
-
-### 既存コードとの整合性
-- 既存のコーディング規約（eslint設定）に準拠している
+```
+レビュー結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md
 ```
 
-</example>
+これらのパスを収集し、第2ラウンドで使用します。
 
 **4. 第2ラウンド: 妥当性検証**
 
-第1ラウンドで整理した結果を、再度5つのsubagentに渡して妥当性を検証します。
+第1ラウンドのログファイルを読み込み、5つのsubagentに妥当性検証を依頼します。
 
 **並列実行**: 5つのTaskツール（`subagent_type: "general-purpose"`）を同時に呼び出してください。
 
@@ -297,9 +300,20 @@ Task(
 ```
 あなたは妥当性検証者として、第1ラウンドのレビュー結果を検証してください。
 
-## 第1ラウンドの結果
+## 第1ラウンドのレビューログ
 
-[整理されたレビュー結果]
+以下のファイルに第1ラウンドの8つの視点からのレビュー結果が保存されています：
+
+- .claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md
+- .claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md
+- .claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md
+- .claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md
+- .claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md
+- .claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md
+- .claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md
+- .claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md
+
+これらのファイルを読み込み、内容を確認してください。
 
 ## 元のコンテキスト（検証の裏付け用）
 
@@ -469,30 +483,100 @@ Task(
 
 </example>
 
+</template>
+
+**4. 最終レポートをファイルに保存**
+
+生成した最終レポートを以下のパスに保存します：
+
+保存先: `.claude/tmp/multi_perspective_review/<timestamp>/final_report.md`
+
+**5. ユーザーへの表示**
+
+最終レポートをファイルに保存した後、ユーザーには以下の情報を表示します：
+
+```markdown
+# 複数視点レビュー完了
+
+## レビュー結果
+
+最終レポートを保存しました:
+`.claude/tmp/multi_perspective_review/<timestamp>/final_report.md`
+
+## サマリー
+
+### 妥当性が確認された主要な指摘（優先対処）
+1. [指摘事項1]
+2. [指摘事項2]
+3. [指摘事項3]
+
+### 検討が必要な指摘
+- [指摘事項A]
+- [指摘事項B]
+
+### 不適切と判断された指摘
+- [指摘事項X]
+
+詳細については、上記ファイルを参照してください。
+
+## ログファイル一覧
+
+### コンテキスト情報
+- `.claude/tmp/multi_perspective_review/<timestamp>/context.md`
+
+### 第1ラウンド（8視点のレビュー）
+- `.claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md`
+
+### 第2ラウンド（5メタレビュアーの評価）
+- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_1.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_2.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_3.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_4.md`
+- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_5.md`
+```
+
 </procedure>
 
 ## 重要な注意事項
 
 <important>
 
-1. **subagentへの指示**
+1. **ログ保存の流れ**
+   - タイムスタンプ付きディレクトリを最初に作成
+   - 取得したタイムスタンプを `<timestamp>` タグで定義
+   - 各subagentへのプロンプトでは `<timestamp>` タグを参照
+   - 各subagentは結果をログファイルに保存し、**パスのみ**を返す
+   - メインエージェントは全ログファイルを読み込んで統合処理を実行
+   - 最終レポートもファイルに保存し、ユーザーにはパスとサマリーを表示
+
+2. **subagentへの指示**
    - 修正を行わない（分析と意見のみ）
    - 客観的な視点を保つ
    - 具体的なコードに言及する
    - 過度に一般化しない
+   - **結果はログファイルに保存し、ファイルパスのみを返す**
 
-2. **並列実行**
+3. **並列実行**
    - 第1ラウンドの8つのsubagentは必ず並列で起動
    - 第2ラウンドの5つのsubagentも必ず並列で起動
    - 合計13個のsubagentを使用
 
-3. **コンテキストの重要性**
+4. **コンテキストの重要性**
    - git diff, git log, 会話履歴を必ず収集
    - 不足している場合は、その旨を明記
+   - コンテキスト情報は `context.md` に保存
 
-4. **出力形式**
-   - 必ずマークダウン形式
-   - 見出し、箇条書き、引用を活用
-   - 読みやすさを重視
+5. **ファイル命名規則**
+   - 第1ラウンド: `round1/<filename>.md`（<filename>はXMLタグで定義）
+   - 第2ラウンド: `round2/meta_reviewer_N.md`（Nは1-5）
+   - 最終レポート: `final_report.md`
+   - コンテキスト: `context.md`
 
 </important>
