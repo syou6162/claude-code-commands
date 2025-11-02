@@ -53,6 +53,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 注：`commands/` ディレクトリ内のファイルは自動的に検出されるため、`plugin.json` への追加は不要
 
+### スキルの追加
+新しいスキルを追加する際：
+
+1. `skills/skill-name/` ディレクトリを作成
+2. `skills/skill-name/SKILL.md` ファイルを作成
+3. YAMLフロントマターを追加（name, description）
+   - `name`: 小文字・ハイフン区切り（最大64文字）
+   - `description`: いつ使うか + 何をするか（最大1024文字）
+4. `README.md` の Available Skills セクションを更新
+5. `CLAUDE.md` のスキル構成セクションを更新
+6. コミット＆プッシュ
+
+注：スキルはClaude Codeが自動的に判断して発動するため、明示的な呼び出しは不要
+
 ### テスト・検証
 ```bash
 # プラグイン設定のバリデーション
