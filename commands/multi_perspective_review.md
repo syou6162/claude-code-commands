@@ -168,7 +168,8 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 </example>
 
 <example>
-<name>保守性・可読性</name>:
+<name>保守性・可読性</name>
+<filename>maintainability</filename>
 
 <perspective-details>
 
@@ -186,7 +187,8 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 </example>
 
 <example>
-<name>テスタビリティ</name>:
+<name>テスタビリティ</name>
+<filename>testability</filename>
 
 <perspective-details>
 
