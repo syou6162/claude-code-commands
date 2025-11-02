@@ -202,7 +202,8 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 </example>
 
 <example>
-<name>ユーザー体験・利便性</name>:
+<name>ユーザー体験・利便性</name>
+<filename>user_experience</filename>
 
 <perspective-details>
 
@@ -215,7 +216,8 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 </example>
 
 <example>
-<name>プロジェクトフェーズ適合性</name>:
+<name>プロジェクトフェーズ適合性</name>
+<filename>project_phase</filename>
 
 <perspective-details>
 
@@ -228,7 +230,8 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 </example>
 
 <example>
-<name>既存コードとの整合性</name>:
+<name>既存コードとの整合性</name>
+<filename>consistency</filename>
 
 <perspective-details>
 
@@ -240,7 +243,8 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 </example>
 
 <example>
-<name>ベストプラクティス・標準準拠</name>:
+<name>ベストプラクティス・標準準拠</name>
+<filename>best_practices</filename>
 
 <perspective-details>
 
@@ -343,11 +347,42 @@ Task(
 - 不適切な指摘: 「❌ [理由]」
 
 全ての観点に対して客観的かつ詳細に評価してください。各指摘について、コンテキストとの整合性、プロジェクトフェーズとの適合性、具体性の程度を十分に検証し、判断の根拠を明確に示してください。
+
+## 出力形式
+
+**重要**: 検証結果は以下のファイルに保存し、ファイルパスのみを返してください：
+
+保存先: `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_N.md`
+
+- `<timestamp>` は <timestamp>タグで定義された値を使用
+- `N` は検証者番号（1-5）
+
+検証結果をマークダウン形式でファイルに保存した後、以下の形式で応答してください：
+
+```
+検証結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_1.md
+```
 ```
 
 **5. 最終レポートの生成**
 
-第1ラウンドと第2ラウンドの結果を統合し、以下の形式でマークダウンレポートをユーザーに報告します：
+第2ラウンドの5つのsubagentから返ってきたログファイルパスを収集した後、メインエージェントが以下の処理を実行します：
+
+1. **全ログファイルを読み込む**
+   - `.claude/tmp/multi_perspective_review/<timestamp>/round1/` 配下の8ファイル
+   - `.claude/tmp/multi_perspective_review/<timestamp>/round2/` 配下の5ファイル
+
+2. **統合処理を実行**
+   - 第1ラウンドの8つの視点から、共通指摘をマージ
+   - 第2ラウンドの5つの検証結果から、妥当性評価を統合
+   - 主要な指摘事項を以下に分類：
+     - 妥当性が確認された指摘
+     - 検討が必要な指摘
+     - 不適切と判断された指摘
+
+3. **最終レポートを生成してファイルに保存**
+
+最終レポートを以下の形式で生成し、ファイルに保存します：
 
 <template>
 
