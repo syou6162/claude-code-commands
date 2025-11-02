@@ -1,6 +1,6 @@
 ---
 description: "複数の視点から客観的にレビューし、方針の妥当性を検証します。"
-allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/remotes/origin/HEAD --short | cut -d/ -f2)
+allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/remotes/origin/HEAD --short)
 ---
 
 # 複数視点レビューコマンド
@@ -26,13 +26,19 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 1. **デフォルトブランチの取得**
    ```bash
-   git symbolic-ref refs/remotes/origin/HEAD --short | cut -d/ -f2
+   git symbolic-ref refs/remotes/origin/HEAD --short
    ```
 
+   結果は `origin/main` のような形式なので、後続の処理で使用します
+
 2. **現在の変更差分を取得（あれば）**
+
+   デフォルトブランチとの差分を取得：
    ```bash
-   git diff
+   git diff <デフォルトブランチ名>
    ```
+
+   例: `git diff origin/main`
 
    ※ 変更がない場合も問題なし。これから実装する方針のレビューなど、コード差分がない場合もある
 
@@ -162,6 +168,14 @@ Task(
 <round1-results>
 整理されたレビュー結果
 </round1-results>
+
+## 元のコンテキスト（検証の裏付け用）
+
+<context>
+- git diff の結果
+- 最近のコミット履歴
+- 会話履歴から読み取れる意図
+</context>
 
 ## 検証観点
 
