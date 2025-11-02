@@ -46,11 +46,17 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
    ※ 変更がない場合も問題なし。これから実装する方針のレビューなど、コード差分がない場合もある
 
-3. **最近のコミット履歴を取得（あれば）**
+3. **デフォルトブランチからの差分コミット履歴を取得**
+
+   現在のブランチがデフォルトブランチと異なる場合、差分コミットを取得：
 
    ```bash
-   git log -5 --oneline
+   git log <デフォルトブランチ名>..HEAD --oneline
    ```
+
+   例: `git log origin/main..HEAD --oneline`
+
+   ※ 現在のブランチがデフォルトブランチと同じ場合は、このステップはスキップ
 
 4. **会話履歴の確認（重要）**
 
@@ -73,21 +79,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 ## レビュー対象
 
-以下は、上記「1. コンテキストの収集」セクションで定義した手順に従って収集したデータです。
-
-<context-data>
-<git-diff>
-[git diff の実際の出力]
-</git-diff>
-
-<git-log>
-[git log の実際の出力]
-</git-log>
-
-<conversation>
-[会話履歴から読み取れる意図やユーザーの要求]
-</conversation>
-</context-data>
+<context>
 
 ## レビューの指針
 - 客観的な視点から意見を述べてください
@@ -263,21 +255,7 @@ Task(
 
 ## 元のコンテキスト（検証の裏付け用）
 
-以下は、上記「1. コンテキストの収集」セクションで定義した手順に従って収集したデータです。
-
-<context-data>
-<git-diff>
-[git diff の実際の出力]
-</git-diff>
-
-<git-log>
-[git log の実際の出力]
-</git-log>
-
-<conversation>
-[会話履歴から読み取れる意図やユーザーの要求]
-</conversation>
-</context-data>
+<context>
 
 ## 検証観点
 
