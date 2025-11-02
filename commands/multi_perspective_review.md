@@ -238,9 +238,9 @@ Task(
 
 **4. 第2ラウンド: 妥当性検証**
 
-第1ラウンドで整理した結果を、再度7つのsubagentに渡して妥当性を検証します。
+第1ラウンドで整理した結果を、再度8つのsubagentに渡して妥当性を検証します。
 
-**並列実行**: 7つのTaskツール（`subagent_type: "general-purpose"`）を同時に呼び出してください。
+**並列実行**: 8つのTaskツール（`subagent_type: "general-purpose"`）を同時に呼び出してください。
 
 各general-purpose subagentには以下のプロンプトを渡します：
 
