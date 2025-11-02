@@ -232,7 +232,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>既存コードとの整合性</name>
-<filename>consistency</filename>
+<round1-consistency>.claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md</round1-consistency>
 
 <perspective-details>
 
@@ -245,7 +245,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>ベストプラクティス・標準準拠</name>
-<filename>best_practices</filename>
+<round1-best-practices>.claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md</round1-best-practices>
 
 <perspective-details>
 
@@ -268,14 +268,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 Task(
   subagent_type: "general-purpose",
   description: "アーキテクチャ・設計の観点からレビュー",
-  prompt: "あなたは <name>アーキテクチャ・設計</name> の観点から...",
+  prompt: "あなたは<name>タグで定義された視点から...",
   model: "sonnet"
 )
 
 Task(
   subagent_type: "general-purpose",
   description: "パフォーマンス・効率性の観点からレビュー",
-  prompt: "あなたは <name>パフォーマンス・効率性</name> の観点から...",
+  prompt: "あなたは<name>タグで定義された視点から...",
   model: "sonnet"
 )
 
@@ -284,47 +284,38 @@ Task(
 
 </example>
 
-**3. 第1ラウンドの結果を収集**
-
-8つのsubagentから返ってきたログファイルパスを収集します。
-
-各subagentは以下の形式でパスを返します：
-
-```
-レビュー結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md
-```
-
-これらのパスを収集し、第2ラウンドで使用します。
-
-**4. 第2ラウンド: 妥当性検証**
+**3. 第2ラウンド: 妥当性検証**
 
 第1ラウンドのログファイルを読み込み、5つのsubagentに妥当性検証を依頼します。
 
 **並列実行**: 5つのTaskツール（`subagent_type: "general-purpose"`）を同時に呼び出してください。
 
-**重要**: 各subagentには固有の番号（1, 2, 3, 4, 5）を割り当て、プロンプト内で明示してください。これにより、各subagentが異なるファイル（meta_reviewer_1.md, meta_reviewer_2.md, ...）に出力し、ログの上書きを防ぎます。
+**重要**: 各subagentには固有の番号（1, 2, 3, 4, 5）を割り当て、プロンプト内で明示してください。これにより、各subagentが異なるファイルに出力し、ログの上書きを防ぎます。
 
-各general-purpose subagentには以下のプロンプトを渡します（**検証者番号Nの部分を1～5に置き換えて5つのプロンプトを作成**）：
+メタレビュアーの出力ファイルパスを以下のように定義します：
+
+<round2-meta-1>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_1.md</round2-meta-1>
+<round2-meta-2>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_2.md</round2-meta-2>
+<round2-meta-3>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_3.md</round2-meta-3>
+<round2-meta-4>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_4.md</round2-meta-4>
+<round2-meta-5>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_5.md</round2-meta-5>
+
+まず、8つの視点の`<round1-*>`タグで定義されたファイルパス（`<round1-architecture>`, `<round1-performance>`, `<round1-maintainability>`, `<round1-testability>`, `<round1-user-experience>`, `<round1-project-phase>`, `<round1-consistency>`, `<round1-best-practices>`）を収集してください。
+
+次に、各general-purpose subagentには以下のプロンプトを渡します（Nの部分を1～5に置き換えて5つのプロンプトを作成し、[ログファイルパス一覧]の部分には収集した8つのパスを列挙）：
 
 ```
-あなたは**検証者N番**として、第1ラウンドのレビュー結果を検証してください。
+あなたは**メタレビュアーN**として、第1ラウンドのレビュー結果を検証してください。
 
-（メインエージェントは、上記「検証者N番」の N を 1～5 の具体的な数値に置き換えて各サブエージェントに渡します）
+## 保存先
+
+あなたの番号に対応する`<round2-meta-N>`タグで定義されたファイルパスに保存してください。
 
 ## 第1ラウンドのレビューログ
 
-以下のファイルに第1ラウンドの8つの視点からのレビュー結果が保存されています：
+以下の8つのファイルに第1ラウンドの視点別レビュー結果が保存されています。すべて読み込んで内容を確認してください：
 
-- .claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md
-- .claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md
-- .claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md
-- .claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md
-- .claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md
-- .claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md
-- .claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md
-- .claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md
-
-これらのファイルを読み込み、内容を確認してください。
+[ログファイルパス一覧]
 
 ## 元のコンテキスト（検証の裏付け用）
 
@@ -355,25 +346,19 @@ Task(
 
 ## 出力形式
 
-**重要**: 検証結果は以下のファイルに保存してください：
-
-保存先: `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_N.md`
-
-- `<timestamp>` は <timestamp>タグで定義された値を使用
-- `N` はあなたに割り当てられた検証者番号（1, 2, 3, 4, 5のいずれか）
-
-例：検証者1番の場合 → `meta_reviewer_1.md`
-
-検証結果をマークダウン形式でファイルに保存した後、以下の形式で応答してください：
+マークダウン形式で保存後、以下の形式で報告：
 
 ```
-検証結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_N.md
+検証結果を保存しました: <round2-meta-1>
 ```
 
-（上記の N は、あなたに割り当てられた具体的な数値に置き換えてください）
-```
+（上記は`<round2-meta-1>`の例。あなたの番号に対応するタグを使用）
 
-**5. 最終レポートの生成**
+**4. 最終レポートの生成**
+
+最終レポートの保存先を定義します：
+
+<final-report>.claude/tmp/multi_perspective_review/<timestamp>/final_report.md</final-report>
 
 第2ラウンドの5つのsubagentから返ってきたログファイルパスを収集した後、メインエージェントが以下の処理を実行します：
 
@@ -389,9 +374,9 @@ Task(
      - 検討が必要な指摘
      - 不適切と判断された指摘
 
-3. **最終レポートを生成してファイルに保存**
+3. **最終レポートを生成**
 
-最終レポートを以下の形式で生成し、ファイルに保存します：
+最終レポートを以下の形式で生成します：
 
 <template>
 
@@ -400,7 +385,7 @@ Task(
 
 ## レビューサマリー
 - 第1ラウンド: 8つの視点からレビュー
-- 第2ラウンド: 5名の検証者による妥当性確認
+- 第2ラウンド: 5つのメタレビュアーによる妥当性確認
 
 ## 主要な指摘事項
 
@@ -430,8 +415,8 @@ Task(
 
 ### 第2ラウンド: 妥当性検証
 
-**検証者の評価:**
-[各検証者の評価結果を箇条書きで列挙]
+**メタレビュアーの評価:**
+[各メタレビュアーの評価結果を箇条書きで列挙]
 
 ## 総合評価
 
@@ -456,7 +441,7 @@ Task(
 
 ## レビューサマリー
 - 第1ラウンド: 8つの視点からレビュー
-- 第2ラウンド: 5名の検証者による妥当性確認
+- 第2ラウンド: 5つのメタレビュアーによる妥当性確認
 
 ## 主要な指摘事項
 
@@ -498,17 +483,17 @@ Task(
 
 ### 第2ラウンド: 妥当性検証
 
-**検証者1の評価:**
+**メタレビュアー1の評価:**
 - エラーハンドリング不足は妥当な指摘（実装に直接影響）
 - N+1問題は現時点では過剰かもしれないが、将来的には対処が必要
 - DI パターンの徹底は早すぎる最適化
 
-**検証者2の評価:**
+**メタレビュアー2の評価:**
 - テスタビリティの問題は具体的で改善価値が高い
 - validationUtils との重複は明確な問題
 - 変数名の指摘はプロジェクト規約次第
 
-（以下、検証者3-7の評価を同様に列挙）
+（以下、メタレビュアー3-5の評価を同様に列挙）
 
 ## 総合評価
 
@@ -531,23 +516,18 @@ Task(
 
 </template>
 
-**4. 最終レポートをファイルに保存**
+**4. 最終レポートの保存とユーザーへの表示**
 
-生成した最終レポートを以下のパスに保存します：
+生成した最終レポートを<final-report>タグで定義されたファイルパスに保存してください。
 
-保存先: `.claude/tmp/multi_perspective_review/<timestamp>/final_report.md`
-
-**5. ユーザーへの表示**
-
-最終レポートをファイルに保存した後、ユーザーには以下の情報を表示します：
+保存後、ユーザーには以下の情報を表示：
 
 ```markdown
 # 複数視点レビュー完了
 
 ## レビュー結果
 
-最終レポートを保存しました:
-`.claude/tmp/multi_perspective_review/<timestamp>/final_report.md`
+最終レポートを保存しました: <final-report>
 
 ## サマリー
 
@@ -568,17 +548,11 @@ Task(
 ## ログファイル一覧
 
 ### コンテキスト情報
-- `.claude/tmp/multi_perspective_review/<timestamp>/context.md`
+- `<context-file>`
 
 ### 第1ラウンド（8視点のレビュー）
-- `.claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md`
+
+各視点の`<round1-*>`タグで定義されたファイル（8ファイル）
 
 ### 第2ラウンド（5メタレビュアーの評価）
 - `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_1.md`
@@ -617,12 +591,12 @@ Task(
 4. **コンテキストの重要性**
    - git diff, git log, 会話履歴を必ず収集
    - 不足している場合は、その旨を明記
-   - コンテキスト情報は `context.md` に保存
+   - コンテキスト情報は `<context-file>` に保存
 
 5. **ファイル命名規則**
-   - 第1ラウンド: `round1/<filename>.md`（<filename>はXMLタグで定義）
+   - 第1ラウンド: 各視点の`<round1-*>`タグで定義
    - 第2ラウンド: `round2/meta_reviewer_N.md`（Nは1-5）
    - 最終レポート: `final_report.md`
-   - コンテキスト: `context.md`
+   - コンテキスト: `<context-file>`
 
 </important>
