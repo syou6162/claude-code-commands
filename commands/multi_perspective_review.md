@@ -75,7 +75,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 各general-purpose subagentには以下の情報を含めたプロンプトを渡します：
 
 ```
-あなたは <name>視点名</name> の観点から、以下の内容をレビューしてください。
+あなたは <name>タグで定義された視点 の観点から、以下の内容をレビューしてください。
 
 ## レビュー対象
 
@@ -92,7 +92,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 ## あなたの視点
 
 <perspective-details>
-[<examples>から取得した該当視点の詳細説明]
+[<examples>タグ内の該当<example>の<perspective-details>タグで定義された内容]
 </perspective-details>
 
 1文から3文程度で、要点を簡潔に述べてください。
