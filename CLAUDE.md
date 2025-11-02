@@ -8,6 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## アーキテクチャ
 
+### ステアリングドキュメント構成
+- `.spec-workflow/steering/product.md` - プロダクト方針と目的
+- `.spec-workflow/steering/tech.md` - 技術標準とツールチェーン
+- `.spec-workflow/steering/structure.md` - プロジェクト構造と組織化原則
+
 ### サブエージェント構成
 - `agents/semantic-commit.md` - 大きな変更を論理的単位に分割してコミット（サブエージェント）
 - `agents/update-pr-title-and-description.md` - Pull Requestのタイトル・説明文自動更新（サブエージェント）
@@ -22,6 +27,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
 - `commands/validate_bq_query.md` - BigQueryクエリの構文と実行可能性の検証
 - `commands/codex_review.md` - Codex MCPを使った客観的コードレビュー
+
+### スキル構成
+- `skills/ask-user-choice/SKILL.md` - ユーザーに質問する際に選択式で答えやすくするスキル（自動発動）
 
 ### プラグイン設定
 - `.claude-plugin/plugin.json` - プラグインマニフェスト（メタデータとコマンド定義）
@@ -50,6 +58,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 注：`commands/` ディレクトリ内のファイルは自動的に検出されるため、`plugin.json` への追加は不要
 
+### スキルの追加
+新しいスキルを追加する際：
+
+1. `skills/skill-name/` ディレクトリを作成
+2. `skills/skill-name/SKILL.md` ファイルを作成
+3. YAMLフロントマターを追加（name, description）
+   - `name`: 小文字・ハイフン区切り（最大64文字）
+   - `description`: いつ使うか + 何をするか（最大1024文字）
+4. `README.md` の Available Skills セクションを更新
+5. `CLAUDE.md` のスキル構成セクションを更新
+6. コミット＆プッシュ
+
+注：スキルはClaude Codeが自動的に判断して発動するため、明示的な呼び出しは不要
+
 ### テスト・検証
 ```bash
 # プラグイン設定のバリデーション
@@ -66,10 +88,11 @@ claude plugin validate .
 ## 重要な設計原則
 
 ### 公式ドキュメント参照
-スラッシュコマンド、サブエージェント、プラグインの実装や修正が必要になった場合は、**必ず該当する公式ドキュメントを参照すること**：
+スラッシュコマンド、サブエージェント、スキル、プラグインの実装や修正が必要になった場合は、**必ず該当する公式ドキュメントを参照すること**：
 
 - [スラッシュコマンド](https://docs.claude.com/en/docs/claude-code/slash-commands)
 - [サブエージェント](https://docs.claude.com/en/docs/claude-code/sub-agents)
+- [スキル](https://docs.claude.com/en/docs/claude-code/skills)
 - [プラグインリファレンス](https://docs.claude.com/en/docs/claude-code/plugins-reference)
 
 **特にサブエージェントのdescription記述について**：
@@ -82,16 +105,20 @@ claude plugin validate .
 
 ### XMLタグ構造化の実験（パイロット）
 
-**実験対象**: `agents/semantic-commit.md`
+**実験対象**:
+- `agents/semantic-commit.md` - サブエージェント
+- `skills/ask-user-choice/SKILL.md` - スキル
 
-Claude AIのシステムプロンプトおよび公式ドキュメントでは、XMLタグによるプロンプト構造化が推奨されています。このリポジトリでは、semantic-commit.mdをパイロットケースとしてXMLタグ化を試験的に導入しています。
+Claude AIのシステムプロンプトおよび公式ドキュメントでは、XMLタグによるプロンプト構造化が推奨されています。このリポジトリでは、上記ファイルでXMLタグ化を試験的に導入しています。
 
 **使用するXMLタグ**:
 ```markdown
-<important>     - 禁止事項や絶対に守るべきルール
-<procedure>     - 重要な実行手順
-<example>       - コマンド実行例
-<decision-criteria> - 判断基準（表形式など）
+<important>          - 禁止事項や絶対に守るべきルール
+<trigger>            - スキル/サブエージェントの起動条件（いつ使うか）
+<procedure>          - 重要な実行手順
+<example>            - コマンド実行例
+<examples>           - 複数の例を含むコンテナ（個別の<example>をネスト）
+<decision-criteria>  - 判断基準（表形式など）
 ```
 
 **XMLタグ使用の原則**:
@@ -107,8 +134,8 @@ Claude AIのシステムプロンプトおよび公式ドキュメントでは�
 効果が不明確な場合や問題が発生した場合は `git revert` で元に戻すことができます。
 
 **今後の展開**:
-- パイロット結果が良好であれば、他のサブエージェント（monitor-ci.md、update-pr-title-and-description.md等）にも適用を検討
-- タグ語彙を標準化し、CLAUDE.mdに追記
+- パイロット結果が良好であれば、他のサブエージェント（monitor-ci.md、update-pr-title-and-description.md等）やコマンドにも適用を検討
+- タグ語彙は既にCLAUDE.mdに標準化済み
 
 ### コマンド設計
 - **分析・提案重視**: 実際のコード修正は行わず、判断材料を提供

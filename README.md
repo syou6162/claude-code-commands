@@ -42,6 +42,11 @@ Claude Code内で以下のコマンドを実行してプラグインをインス
 claude-code-commands/
 ├── .claude-plugin/
 │   └── plugin.json                          # プラグインマニフェスト（メタデータとコマンド定義）
+├── .spec-workflow/
+│   └── steering/
+│       ├── product.md                       # プロダクト方針
+│       ├── tech.md                          # 技術標準
+│       └── structure.md                     # プロジェクト構造
 ├── agents/
 │   ├── semantic-commit.md                   # サブエージェント
 │   ├── update-pr-title-and-description.md   # サブエージェント
@@ -54,12 +59,17 @@ claude-code-commands/
 │   ├── optimize_bq_query.md
 │   ├── validate_bq_query.md
 │   └── codex_review.md
+├── skills/
+│   └── ask-user-choice/
+│       └── SKILL.md                         # スキル定義
 └── README.md
 ```
 
 - **`.claude-plugin/plugin.json`**: プラグインのメタデータ（名前、バージョン、作者など）とコマンドリストを定義
+- **`.spec-workflow/steering/`**: プロジェクト全体の方向性を定義するステアリングドキュメント（spec workflow統合）
 - **`agents/`**: サブエージェント定義（専門的なタスクを独立したコンテキストで実行）
 - **`commands/`**: 各カスタムスラッシュコマンドのマークダウンファイルを格納
+- **`skills/`**: スキル定義（Claudeが自動的に判断して発動する拡張機能）
 
 Claude Codeは`plugin.json`を読み込んでプラグインを認識し、`commands/`ディレクトリ内のコマンドと`agents/`内のサブエージェントを自動的に利用可能にします。
 
@@ -81,6 +91,13 @@ Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析
 
 ### record-current-status (サブエージェント)
 作業のキリが良いタイミングやユーザーへの報告時に、現在の作業状況と本音を`.claude/tmp/current_status`に記録するエージェント。状況（簡単/普通/やや難/難しい/情報不足/無理）と詳細を140字以内で記録し、作業の進捗や困難を可視化します。
+
+## Available Skills
+
+スキルは、Claudeが自動的に判断して発動する拡張機能です。明示的に呼び出す必要はなく、Claudeが状況に応じて適切に使用します。
+
+### ask-user-choice
+ユーザーに質問や相談をする際に自動的に発動するスキル。テキスト入力ではなく、明確な選択肢（2-4個）を提示することで、ユーザーの入力負担を軽減し、より迅速な意思決定を支援します。multiSelectオプションを活用することで、複数選択が適切な場面にも対応します。
 
 ## Available Commands
 
