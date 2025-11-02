@@ -155,7 +155,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>パフォーマンス・効率性</name>
-<filename>performance</filename>
+<round1-performance>.claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md</round1-performance>
 
 <perspective-details>
 
@@ -170,7 +170,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>保守性・可読性</name>
-<filename>maintainability</filename>
+<round1-maintainability>.claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md</round1-maintainability>
 
 <perspective-details>
 
@@ -189,7 +189,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>テスタビリティ</name>
-<filename>testability</filename>
+<round1-testability>.claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md</round1-testability>
 
 <perspective-details>
 
@@ -204,7 +204,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>ユーザー体験・利便性</name>
-<filename>user_experience</filename>
+<round1-user-experience>.claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md</round1-user-experience>
 
 <perspective-details>
 
@@ -218,7 +218,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>プロジェクトフェーズ適合性</name>
-<filename>project_phase</filename>
+<round1-project-phase>.claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md</round1-project-phase>
 
 <perspective-details>
 
