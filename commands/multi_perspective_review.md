@@ -314,12 +314,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 ## 出力形式
 
-マークダウン形式で保存後、以下の形式で報告：
-
-```
-レビュー結果を保存しました: <round1-filename>
-```
-```
+マークダウン形式で保存後、以下の形式で報告: `レビュー結果を保存しました: <round1-filename>`
 
 **Taskツールの呼び出し例（8つ並列）:**
 
@@ -409,17 +404,19 @@ Task(
 
 ## 出力形式
 
-マークダウン形式で保存後、以下の形式で報告：
-
-```
-検証結果を保存しました: <round2-filename>
-```
+マークダウン形式で保存後、以下の形式で報告: `検証結果を保存しました: <round2-filename>`
 
 **4. 最終レポートの生成**
 
 最終レポートの保存先を定義します：
 
-<final-report>`.claude/tmp/multi_perspective_review/<timestamp>/final_report.md`</final-report>
+<final-report>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/final_report.md
+```
+
+</final-report>
 
 第2ラウンドの5つのsubagentから返ってきたログファイルパスを収集した後、メインエージェントが以下の処理を実行します：
 
