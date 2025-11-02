@@ -1,6 +1,6 @@
 ---
 description: "複数の視点から客観的にレビューし、方針の妥当性を検証します。"
-allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/remotes/origin/HEAD --short)
+allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/remotes/origin/HEAD --short), Bash(date:+%Y%m%d_%H%M%S), Bash(mkdir -p .claude/tmp/multi_perspective_review:*), Write(.claude/tmp/**), Read(.claude/tmp/**)
 ---
 
 # 複数視点レビューコマンド
@@ -66,40 +66,57 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 </context>
 
+**1-2. ログ保存用ディレクトリの作成とコンテキスト情報の保存**
+
+タイムスタンプを取得して定義：
+
+<timestamp>
+
+```bash
+date +%Y%m%d_%H%M%S
+```
+
+</timestamp>
+
+次に、ディレクトリ構造を作成します：
+
+```bash
+mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round1
+mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
+```
+
+次に、コンテキストファイルのパスを定義します：
+
+<context-file>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/context.md
+```
+
+</context-file>
+
+<context>タグで収集した内容を<context-file>タグのパスに保存します。
+
 **2. 第1ラウンド: 8つの視点からのレビュー**
 
 収集したコンテキストを基に、8つの異なる視点からレビューを実施します。
 
 **並列実行**: 8つのTaskツール（`subagent_type: "general-purpose"`）を同時に呼び出し、効率的にレビューを実施してください。
 
-各general-purpose subagentには以下の情報を含めたプロンプトを渡します：
-
-```
-あなたは <name>テスタビリティ</name> の観点から、以下の内容をレビューしてください。
-
-## レビュー対象
-
-以下は<context>タグで定義した手順に従って収集したデータです。
-
-[git diff、git log、会話履歴などのデータをここに記載]
-
-## レビューの指針
-- 客観的な視点から意見を述べてください
-- 修正案の提示は不要です（分析と意見のみ）
-- 具体的なコードや状況に即した指摘をしてください
-- 抽象的すぎる指摘は避けてください
-
-## あなたの視点
-
-<perspective-details>タグで定義された内容を参照してください。
-
-詳細に網羅的に報告してください。具体的なコード箇所、懸念される影響、改善の必要性について、十分な情報を含めて分析してください。
-```
+以下の8つの視点を定義します：
 
 <examples>
 
 <example>
-<name>アーキテクチャ・設計</name>:
+<name>アーキテクチャ・設計</name>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -114,7 +131,15 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>パフォーマンス・効率性</name>:
+<name>パフォーマンス・効率性</name>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -128,7 +153,15 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>保守性・可読性</name>:
+<name>保守性・可読性</name>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -146,7 +179,15 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>テスタビリティ</name>:
+<name>テスタビリティ</name>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -160,7 +201,15 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>ユーザー体験・利便性</name>:
+<name>ユーザー体験・利便性</name>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -173,7 +222,15 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>プロジェクトフェーズ適合性</name>:
+<name>プロジェクトフェーズ適合性</name>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -186,7 +243,15 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>既存コードとの整合性</name>:
+<name>既存コードとの整合性</name>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -198,7 +263,15 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>ベストプラクティス・標準準拠</name>:
+<name>ベストプラクティス・標準準拠</name>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -213,6 +286,37 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 </examples>
 
+各general-purpose subagentには以下の情報を含めたプロンプトを渡します：
+
+```
+あなたは<name>タグで定義された視点から、以下の内容をレビューしてください。
+
+## 保存先
+
+<round1-filename>タグで定義されたファイルパスに保存してください。
+
+## レビュー対象
+
+<context-file>タグで定義されたファイルに保存されたコンテキスト情報を参照してください。
+
+## レビューの指針
+
+- 客観的な視点から意見を述べてください
+- 修正案の提示は不要です（分析と意見のみ）
+- 具体的なコードや状況に即した指摘をしてください
+- 抽象的すぎる指摘は避けてください
+
+## あなたの視点
+
+<perspective-details>タグで定義された内容を参照してください。
+
+詳細に網羅的に報告してください。具体的なコード箇所、懸念される影響、改善の必要性について、十分な情報を含めて分析してください。
+
+## 出力形式
+
+マークダウン形式で保存後、以下の形式で報告: `レビュー結果を保存しました: <round1-filename>`
+```
+
 **Taskツールの呼び出し例（8つ並列）:**
 
 <example>
@@ -221,14 +325,14 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 Task(
   subagent_type: "general-purpose",
   description: "アーキテクチャ・設計の観点からレビュー",
-  prompt: "あなたは <name>アーキテクチャ・設計</name> の観点から...",
+  prompt: "あなたは<name>タグで定義された視点から...",
   model: "sonnet"
 )
 
 Task(
   subagent_type: "general-purpose",
   description: "パフォーマンス・効率性の観点からレビュー",
-  prompt: "あなたは <name>パフォーマンス・効率性</name> の観点から...",
+  prompt: "あなたは<name>タグで定義された視点から...",
   model: "sonnet"
 )
 
@@ -237,75 +341,46 @@ Task(
 
 </example>
 
-**3. 第1ラウンドの結果を整理**
+**3. 第2ラウンド: 妥当性検証**
 
-8つのsubagentから返ってきた意見を整理します：
-
-- **同じ意見をマージ**
-   - 複数のsubagentが同じ指摘をしている場合は、1つにまとめる
-   - 「アーキテクチャとテスタビリティの両方から同じ懸念が指摘されました」のように明記
-
-- **過度な一般化を排除**
-   - 「ベストプラクティスに従うべき」のような抽象的な指摘は除外
-   - 具体的なコードや状況に即した指摘のみを残す
-
-- **整理した結果をマークダウン形式でまとめる**
-
-<example>
-
-```markdown
-## 第1ラウンド: 多角的レビュー結果
-
-### 共通指摘事項
-- エラーハンドリングの不足: アーキテクチャとテスタビリティの両方から、外部API呼び出し時のエラーハンドリングが不十分との指摘
-
-### アーキテクチャ・設計
-- 新しいvalidateInput関数が既存のvalidationUtilsモジュールと重複している
-- 依存性注入パターンが一貫していない（一部は直接インポート、一部はコンストラクタ注入）
-
-### パフォーマンス・効率性
-- データベースクエリがN+1問題を引き起こす可能性がある
-- 大量データの処理時にメモリ使用量が増加する懸念
-
-### 保守性・可読性
-- 関数の責務が多すぎる（SRP違反）
-- 変数名が曖昧（例：data, result など）
-
-### テスタビリティ
-- 外部依存が直接インポートされており、モック化が困難
-
-### ユーザー体験・利便性
-- 指摘なし（この変更はバックエンドのみでUI影響なし）
-
-### プロジェクトフェーズ適合性
-- 現時点では妥当な実装（早すぎる最適化なし）
-
-### 既存コードとの整合性
-- 既存のコーディング規約（eslint設定）に準拠している
-```
-
-</example>
-
-**4. 第2ラウンド: 妥当性検証**
-
-第1ラウンドで整理した結果を、再度5つのsubagentに渡して妥当性を検証します。
+第1ラウンドのログファイルを読み込み、5つのsubagentに妥当性検証を依頼します。
 
 **並列実行**: 5つのTaskツール（`subagent_type: "general-purpose"`）を同時に呼び出してください。
 
-各general-purpose subagentには以下のプロンプトを渡します：
+メタレビュアー番号を定義：
+
+<meta-reviewer-number>固有の番号</meta-reviewer-number>
+
+各メタレビュアーの出力ファイルパスを定義：
+
+<round2-filename>
 
 ```
-あなたは妥当性検証者として、第1ラウンドのレビュー結果を検証してください。
+.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_<meta-reviewer-number>.md
+```
 
-## 第1ラウンドの結果
+</round2-filename>
 
-[整理されたレビュー結果]
+まず、8つの視点の<round1-filename>タグで定義されたファイルパスを収集してください。
+
+次に、各general-purpose subagentには以下のプロンプトを渡します（<meta-reviewer-number>タグに1～5を指定し、[ログファイルパス一覧]の部分には収集した8つのパスを列挙）：
+
+```
+あなたは**メタレビュアー<meta-reviewer-number>**として、第1ラウンドのレビュー結果を検証してください。
+
+## 保存先
+
+`<round2-filename>`タグで定義されたファイルパスに保存してください。
+
+## 第1ラウンドのレビューログ
+
+以下の8つのファイルに第1ラウンドの視点別レビュー結果が保存されています。すべて読み込んで内容を確認してください：
+
+[ログファイルパス一覧]
 
 ## 元のコンテキスト（検証の裏付け用）
 
-以下は<context>タグで定義した手順に従って収集したデータです。
-
-[git diff、git log、会話履歴などのデータをここに記載]
+<context-file>タグで定義されたファイルに保存されたコンテキスト情報を参照してください。
 
 ## 検証観点
 
@@ -327,11 +402,41 @@ Task(
 - 不適切な指摘: 「❌ [理由]」
 
 全ての観点に対して客観的かつ詳細に評価してください。各指摘について、コンテキストとの整合性、プロジェクトフェーズとの適合性、具体性の程度を十分に検証し、判断の根拠を明確に示してください。
+
+## 出力形式
+
+マークダウン形式で保存後、以下の形式で報告: `検証結果を保存しました: <round2-filename>`
 ```
 
-**5. 最終レポートの生成**
+**4. 最終レポートの生成**
 
-第1ラウンドと第2ラウンドの結果を統合し、以下の形式でマークダウンレポートをユーザーに報告します：
+最終レポートの保存先を定義します：
+
+<final-report>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/final_report.md
+```
+
+</final-report>
+
+第2ラウンドの5つのsubagentから返ってきたログファイルパスを収集した後、メインエージェントが以下の処理を実行します：
+
+1. **全ログファイルを読み込む**
+   - `.claude/tmp/multi_perspective_review/<timestamp>/round1/` 配下の8ファイル
+   - `.claude/tmp/multi_perspective_review/<timestamp>/round2/` 配下の5ファイル
+
+2. **統合処理を実行**
+   - 第1ラウンドの8つの視点から、共通指摘をマージ
+   - 第2ラウンドの5つの検証結果から、妥当性評価を統合
+   - 主要な指摘事項を以下に分類：
+     - 妥当性が確認された指摘
+     - 検討が必要な指摘
+     - 不適切と判断された指摘
+
+3. **最終レポートを生成**
+
+最終レポートを以下の形式で生成します：
 
 <template>
 
@@ -340,7 +445,7 @@ Task(
 
 ## レビューサマリー
 - 第1ラウンド: 8つの視点からレビュー
-- 第2ラウンド: 5名の検証者による妥当性確認
+- 第2ラウンド: 5つのメタレビュアーによる妥当性確認
 
 ## 主要な指摘事項
 
@@ -370,8 +475,8 @@ Task(
 
 ### 第2ラウンド: 妥当性検証
 
-**検証者の評価:**
-[各検証者の評価結果を箇条書きで列挙]
+**メタレビュアーの評価:**
+[各メタレビュアーの評価結果を箇条書きで列挙]
 
 ## 総合評価
 
@@ -396,7 +501,7 @@ Task(
 
 ## レビューサマリー
 - 第1ラウンド: 8つの視点からレビュー
-- 第2ラウンド: 5名の検証者による妥当性確認
+- 第2ラウンド: 5つのメタレビュアーによる妥当性確認
 
 ## 主要な指摘事項
 
@@ -438,17 +543,17 @@ Task(
 
 ### 第2ラウンド: 妥当性検証
 
-**検証者1の評価:**
+**メタレビュアー1の評価:**
 - エラーハンドリング不足は妥当な指摘（実装に直接影響）
 - N+1問題は現時点では過剰かもしれないが、将来的には対処が必要
 - DI パターンの徹底は早すぎる最適化
 
-**検証者2の評価:**
+**メタレビュアー2の評価:**
 - テスタビリティの問題は具体的で改善価値が高い
 - validationUtils との重複は明確な問題
 - 変数名の指摘はプロジェクト規約次第
 
-（以下、検証者3-7の評価を同様に列挙）
+（以下、メタレビュアー3-5の評価を同様に列挙）
 
 ## 総合評価
 
@@ -469,30 +574,49 @@ Task(
 
 </example>
 
+</template>
+
+**4. 最終レポートの保存とユーザーへの表示**
+
+生成した最終レポートを<final-report>タグで定義されたファイルパスに保存してください。
+
+保存後、ユーザーには以下の情報を表示：
+
+```markdown
+# 複数視点レビュー完了
+
+## レビュー結果
+
+最終レポートを保存しました: <final-report>
+
+## サマリー
+
+### 妥当性が確認された主要な指摘（優先対処）
+1. [指摘事項1]
+2. [指摘事項2]
+3. [指摘事項3]
+
+### 検討が必要な指摘
+- [指摘事項A]
+- [指摘事項B]
+
+### 不適切と判断された指摘
+- [指摘事項X]
+
+詳細については、上記ファイルを参照してください。
+
+## ログファイル一覧
+
+### コンテキスト情報
+- `<context-file>`
+
+### 第1ラウンド（8視点のレビュー）
+
+各視点の<round1-filename>タグで定義されたファイル（8ファイル）
+
+### 第2ラウンド（5メタレビュアーの評価）
+
+各メタレビュアーの`<round2-filename>`タグで定義されたファイル（5ファイル）
+```
+
 </procedure>
-
-## 重要な注意事項
-
-<important>
-
-1. **subagentへの指示**
-   - 修正を行わない（分析と意見のみ）
-   - 客観的な視点を保つ
-   - 具体的なコードに言及する
-   - 過度に一般化しない
-
-2. **並列実行**
-   - 第1ラウンドの8つのsubagentは必ず並列で起動
-   - 第2ラウンドの5つのsubagentも必ず並列で起動
-   - 合計13個のsubagentを使用
-
-3. **コンテキストの重要性**
-   - git diff, git log, 会話履歴を必ず収集
-   - 不足している場合は、その旨を明記
-
-4. **出力形式**
-   - 必ずマークダウン形式
-   - 見出し、箇条書き、引用を活用
-   - 読みやすさを重視
-
-</important>
