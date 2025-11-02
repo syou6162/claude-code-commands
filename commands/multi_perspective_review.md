@@ -120,7 +120,7 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 
 ## 出力形式
 
-**重要**: レビュー結果は以下のファイルに保存し、ファイルパスのみを返してください：
+**重要**: レビュー結果は以下のファイルに保存し、保存完了を報告してください：
 
 保存先: `.claude/tmp/multi_perspective_review/<timestamp>/round1/<filename>.md`
 
@@ -130,8 +130,10 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 レビュー結果をマークダウン形式でファイルに保存した後、以下の形式で応答してください：
 
 ```
-レビュー結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md
+レビュー結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round1/<filename>.md
 ```
+
+（<filename> の部分は、あなたの視点に対応するファイル名に置き換えてください）
 ```
 
 <examples>
