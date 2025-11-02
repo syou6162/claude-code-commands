@@ -235,7 +235,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 ## レビュー対象
 
-<context-file>に保存されたコンテキスト情報を参照してください。
+<context-file>タグで定義されたファイルに保存されたコンテキスト情報を参照してください。
 
 ## レビューの指針
 
@@ -295,11 +295,7 @@ Task(
 
 各メタレビュアーの出力ファイルパスを定義：
 
-<round2-meta-1>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_1.md</round2-meta-1>
-<round2-meta-2>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_2.md</round2-meta-2>
-<round2-meta-3>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_3.md</round2-meta-3>
-<round2-meta-4>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_4.md</round2-meta-4>
-<round2-meta-5>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_5.md</round2-meta-5>
+<round2-filename>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_<meta-reviewer-number>.md</round2-filename>
 
 まず、8つの視点の<round1-filename>タグで定義されたファイルパスを収集してください。
 
@@ -310,7 +306,7 @@ Task(
 
 ## 保存先
 
-`<round2-meta-<meta-reviewer-number>>`タグで定義されたファイルパスに保存してください。
+`<round2-filename>`タグで定義されたファイルパスに保存してください。
 
 ## 第1ラウンドのレビューログ
 
@@ -320,7 +316,7 @@ Task(
 
 ## 元のコンテキスト（検証の裏付け用）
 
-<context-file>に保存されたコンテキスト情報を参照してください。
+<context-file>タグで定義されたファイルに保存されたコンテキスト情報を参照してください。
 
 ## 検証観点
 
@@ -348,7 +344,7 @@ Task(
 マークダウン形式で保存後、以下の形式で報告：
 
 ```
-検証結果を保存しました: <round2-meta-<meta-reviewer-number>>
+検証結果を保存しました: <round2-filename>
 ```
 
 **4. 最終レポートの生成**
@@ -553,7 +549,7 @@ Task(
 
 ### 第2ラウンド（5メタレビュアーの評価）
 
-各メタレビュアーの`<round2-meta-*>`タグで定義されたファイル（5ファイル）
+各メタレビュアーの`<round2-filename>`タグで定義されたファイル（5ファイル）
 ```
 
 </procedure>
@@ -589,7 +585,7 @@ Task(
 
 5. **ファイル命名規則**
    - 第1ラウンド: 各視点の<round1-filename>タグで定義
-   - 第2ラウンド: 各メタレビュアーの`<round2-meta-*>`タグで定義
+   - 第2ラウンド: 各メタレビュアーの<round2-filename>タグで定義
    - 最終レポート: <final-report>タグで定義
    - コンテキスト: <context-file>タグで定義
 
