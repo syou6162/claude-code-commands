@@ -93,7 +93,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 <perspective-details>タグで定義された内容を参照してください。
 
-1文から3文程度で、要点を簡潔に述べてください。
+詳細に網羅的に報告してください。具体的なコード箇所、懸念される影響、改善の必要性について、十分な情報を含めて分析してください。
 ```
 
 <examples>
