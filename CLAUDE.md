@@ -23,6 +23,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `commands/validate_bq_query.md` - BigQueryクエリの構文と実行可能性の検証
 - `commands/codex_review.md` - Codex MCPを使った客観的コードレビュー
 
+### スキル構成
+- `skills/ask-user-choice/SKILL.md` - ユーザーに質問する際に選択式で答えやすくするスキル（自動発動）
+
 ### プラグイン設定
 - `.claude-plugin/plugin.json` - プラグインマニフェスト（メタデータとコマンド定義）
 
