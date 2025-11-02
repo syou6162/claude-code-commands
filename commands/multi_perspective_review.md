@@ -103,7 +103,11 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 <perspective-details>
 
-システム全体の構造、モジュール分割、依存関係、拡張性、設計原則の遵守
+- システム全体の構造が適切か
+- モジュール分割が適切か
+- 依存関係が適切に管理されているか
+- 拡張性が考慮されているか
+- 設計原則が遵守されているか
 
 </perspective-details>
 
@@ -114,7 +118,10 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 <perspective-details>
 
-実行速度、メモリ使用量、スケーラビリティ、アルゴリズムの計算量
+- 実行速度に問題がないか
+- メモリ使用量が適切か
+- スケーラビリティが考慮されているか
+- アルゴリズムの計算量が適切か
 
 </perspective-details>
 
@@ -125,7 +132,11 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 <perspective-details>
 
-コードの理解しやすさ、変更のしやすさ、命名規則、コメント、複雑度
+- コードが理解しやすいか
+- 変更がしやすい構造になっているか
+- 命名規則が適切か
+- コメントが適切に記述されているか
+- 複雑度が適切に管理されているか
 
 </perspective-details>
 
@@ -136,7 +147,10 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 <perspective-details>
 
-テストのしやすさ、依存性の注入、モック可能性、テストケースの網羅性
+- テストがしやすい設計になっているか
+- 依存性の注入が適切に行われているか
+- モック化が容易な構造になっているか
+- テストケースの網羅性が確保されているか
 
 </perspective-details>
 
@@ -147,7 +161,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 <perspective-details>
 
-エンドユーザーやAPI利用者の視点、UIの使いやすさ、APIの直感性
+- エンドユーザーやAPI利用者の視点で使いやすいか
+- UIが使いやすいか
+- APIが直感的か
 
 </perspective-details>
 
@@ -158,7 +174,9 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 <perspective-details>
 
-早すぎる最適化の回避、MVP としての妥当性、技術的負債とのバランス
+- 早すぎる最適化になっていないか
+- MVP として妥当な範囲か
+- 技術的負債とのバランスが適切か
 
 </perspective-details>
 
@@ -169,7 +187,8 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 <perspective-details>
 
-プロジェクト内のパターン・スタイルとの一貫性、コーディング規約の遵守
+- プロジェクト内のパターン・スタイルと一貫性があるか
+- コーディング規約が遵守されているか
 
 </perspective-details>
 
@@ -180,7 +199,10 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 <perspective-details>
 
-公式ドキュメント、コミュニティのベストプラクティス、言語固有のイディオム、業界標準への準拠
+- 公式ドキュメントに沿っているか
+- コミュニティのベストプラクティスに従っているか
+- 言語固有のイディオムが適切に使われているか
+- 業界標準に準拠しているか
 
 </perspective-details>
 
