@@ -551,11 +551,8 @@ Task(
 各視点の`<round1-*>`タグで定義されたファイル（8ファイル）
 
 ### 第2ラウンド（5メタレビュアーの評価）
-- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_1.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_2.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_3.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_4.md`
-- `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_5.md`
+
+各メタレビュアーの`<round2-meta-*>`タグで定義されたファイル（5ファイル）
 ```
 
 </procedure>
