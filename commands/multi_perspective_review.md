@@ -22,9 +22,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 ### 1. コンテキストの収集
 
-以下は<context>で定義した手順に従って収集したデータです。
-
-[git diff、git log、会話履歴などのデータをここに記載]
+<context>
 
 まず、レビューに必要なコンテキストを収集します：
 
@@ -66,6 +64,8 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
    - 「この方針で良いか確認したい」「この設計をレビューして」などの説明
    - git diffがない場合は、会話履歴が主なコンテキストになる
 
+</context>
+
 ### 2. 第1ラウンド: 7つの視点からのレビュー
 
 収集したコンテキストを基に、7つの異なる視点からレビューを実施します。
@@ -79,7 +79,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 ## レビュー対象
 
-以下は<context>で定義した手順に従って収集したデータです。
+以下は<context>タグで定義した手順に従って収集したデータです。
 
 [git diff、git log、会話履歴などのデータをここに記載]
 
@@ -257,7 +257,7 @@ Task(
 
 ## 元のコンテキスト（検証の裏付け用）
 
-以下は<context>で定義した手順に従って収集したデータです。
+以下は<context>タグで定義した手順に従って収集したデータです。
 
 [git diff、git log、会話履歴などのデータをここに記載]
 
