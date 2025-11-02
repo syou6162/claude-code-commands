@@ -302,14 +302,14 @@ Task(
 
 まず、8つの視点の`<round1-*>`タグで定義されたファイルパス（`<round1-architecture>`, `<round1-performance>`, `<round1-maintainability>`, `<round1-testability>`, `<round1-user-experience>`, `<round1-project-phase>`, `<round1-consistency>`, `<round1-best-practices>`）を収集してください。
 
-次に、各general-purpose subagentには以下のプロンプトを渡します（Nの部分を1～5に置き換えて5つのプロンプトを作成し、[ログファイルパス一覧]の部分には収集した8つのパスを列挙）：
+次に、各general-purpose subagentには以下のプロンプトを渡します（<meta-reviewer-number>タグに1～5を指定し、[ログファイルパス一覧]の部分には収集した8つのパスを列挙）：
 
 ```
-あなたは**メタレビュアーN**として、第1ラウンドのレビュー結果を検証してください。
+あなたは**メタレビュアー<meta-reviewer-number>**として、第1ラウンドのレビュー結果を検証してください。
 
 ## 保存先
 
-あなたの番号に対応する`<round2-meta-N>`タグで定義されたファイルパスに保存してください。
+`<round2-meta-<meta-reviewer-number>>`タグで定義されたファイルパスに保存してください。
 
 ## 第1ラウンドのレビューログ
 
@@ -319,9 +319,7 @@ Task(
 
 ## 元のコンテキスト（検証の裏付け用）
 
-以下は<context>タグで定義した手順に従って収集したデータです。
-
-[git diff、git log、会話履歴などのデータをここに記載]
+<context-file>に保存されたコンテキスト情報を参照してください。
 
 ## 検証観点
 
@@ -349,10 +347,8 @@ Task(
 マークダウン形式で保存後、以下の形式で報告：
 
 ```
-検証結果を保存しました: <round2-meta-1>
+検証結果を保存しました: <round2-meta-<meta-reviewer-number>>
 ```
-
-（上記は`<round2-meta-1>`の例。あなたの番号に対応するタグを使用）
 
 **4. 最終レポートの生成**
 
