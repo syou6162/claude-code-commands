@@ -303,10 +303,14 @@ Task(
 
 **並列実行**: 5つのTaskツール（`subagent_type: "general-purpose"`）を同時に呼び出してください。
 
-各general-purpose subagentには以下のプロンプトを渡します：
+**重要**: 各subagentには固有の番号（1, 2, 3, 4, 5）を割り当て、プロンプト内で明示してください。これにより、各subagentが異なるファイル（meta_reviewer_1.md, meta_reviewer_2.md, ...）に出力し、ログの上書きを防ぎます。
+
+各general-purpose subagentには以下のプロンプトを渡します（**検証者番号Nの部分を1～5に置き換えて5つのプロンプトを作成**）：
 
 ```
-あなたは妥当性検証者として、第1ラウンドのレビュー結果を検証してください。
+あなたは**検証者N番**として、第1ラウンドのレビュー結果を検証してください。
+
+（メインエージェントは、上記「検証者N番」の N を 1～5 の具体的な数値に置き換えて各サブエージェントに渡します）
 
 ## 第1ラウンドのレビューログ
 
@@ -352,18 +356,22 @@ Task(
 
 ## 出力形式
 
-**重要**: 検証結果は以下のファイルに保存し、ファイルパスのみを返してください：
+**重要**: 検証結果は以下のファイルに保存してください：
 
 保存先: `.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_N.md`
 
 - `<timestamp>` は <timestamp>タグで定義された値を使用
-- `N` は検証者番号（1-5）
+- `N` はあなたに割り当てられた検証者番号（1, 2, 3, 4, 5のいずれか）
+
+例：検証者1番の場合 → `meta_reviewer_1.md`
 
 検証結果をマークダウン形式でファイルに保存した後、以下の形式で応答してください：
 
 ```
-検証結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_1.md
+検証結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_N.md
 ```
+
+（上記の N は、あなたに割り当てられた具体的な数値に置き換えてください）
 ```
 
 **5. 最終レポートの生成**
