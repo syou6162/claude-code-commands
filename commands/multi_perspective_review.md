@@ -108,9 +108,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 ## レビュー対象
 
-以下は<context>タグで定義した手順に従って収集したデータです。
-
-[git diff、git log、会話履歴などのデータをここに記載]
+<context-file>に保存されたコンテキスト情報を参照してください。
 
 ## レビューの指針
 
@@ -290,9 +288,11 @@ Task(
 
 **並列実行**: 5つのTaskツール（`subagent_type: "general-purpose"`）を同時に呼び出してください。
 
-**重要**: 各subagentには固有の番号（1, 2, 3, 4, 5）を割り当て、プロンプト内で明示してください。これにより、各subagentが異なるファイルに出力し、ログの上書きを防ぎます。
+メタレビュアー番号を定義：
 
-メタレビュアーの出力ファイルパスを以下のように定義します：
+<meta-reviewer-number>固有の番号</meta-reviewer-number>
+
+各メタレビュアーの出力ファイルパスを定義：
 
 <round2-meta-1>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_1.md</round2-meta-1>
 <round2-meta-2>.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_2.md</round2-meta-2>
