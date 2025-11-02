@@ -83,10 +83,11 @@ claude plugin validate .
 ## 重要な設計原則
 
 ### 公式ドキュメント参照
-スラッシュコマンド、サブエージェント、プラグインの実装や修正が必要になった場合は、**必ず該当する公式ドキュメントを参照すること**：
+スラッシュコマンド、サブエージェント、スキル、プラグインの実装や修正が必要になった場合は、**必ず該当する公式ドキュメントを参照すること**：
 
 - [スラッシュコマンド](https://docs.claude.com/en/docs/claude-code/slash-commands)
 - [サブエージェント](https://docs.claude.com/en/docs/claude-code/sub-agents)
+- [スキル](https://docs.claude.com/en/docs/claude-code/skills)
 - [プラグインリファレンス](https://docs.claude.com/en/docs/claude-code/plugins-reference)
 
 **特にサブエージェントのdescription記述について**：
@@ -105,10 +106,11 @@ Claude AIのシステムプロンプトおよび公式ドキュメントでは�
 
 **使用するXMLタグ**:
 ```markdown
-<important>     - 禁止事項や絶対に守るべきルール
-<procedure>     - 重要な実行手順
-<example>       - コマンド実行例
-<decision-criteria> - 判断基準（表形式など）
+<important>          - 禁止事項や絶対に守るべきルール
+<trigger>            - スキル/サブエージェントの起動条件（いつ使うか）
+<procedure>          - 重要な実行手順
+<example>            - コマンド実行例
+<decision-criteria>  - 判断基準（表形式など）
 ```
 
 **XMLタグ使用の原則**:
