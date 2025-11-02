@@ -68,26 +68,28 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 
 **1-2. ログ保存用ディレクトリの作成とコンテキスト情報の保存**
 
-レビュー結果を記録するために、タイムスタンプ付きのディレクトリを作成します：
+タイムスタンプを取得して定義：
+
+<timestamp>
 
 ```bash
-# タイムスタンプを取得（YYYYMMDD_HHMMSS形式）
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-
-# ディレクトリ構造を作成
-mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round1
-mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
+date +%Y%m%d_%H%M%S
 ```
 
-取得したタイムスタンプを以下のように定義します：
+</timestamp>
 
-<timestamp>20250311_143022</timestamp>
+次に、ディレクトリ構造を作成します：
 
-（上記は例です。実際には取得した値を記載します）
+```bash
+mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round1
+mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
+```
 
-以降のすべてのサブエージェントへのプロンプトでは、<timestamp>タグで定義した値を参照します。
+次に、コンテキストファイルのパスを定義します：
 
-次に、<context>タグで収集した内容を `.claude/tmp/multi_perspective_review/<timestamp>/context.md` に保存します。
+<context-file>.claude/tmp/multi_perspective_review/<timestamp>/context.md</context-file>
+
+<context>タグで収集した内容を<context-file>タグのパスに保存します。
 
 **2. 第1ラウンド: 8つの視点からのレビュー**
 
@@ -98,7 +100,11 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 各general-purpose subagentには以下の情報を含めたプロンプトを渡します：
 
 ```
-あなたは <name>テスタビリティ</name> の観点から、以下の内容をレビューしてください。
+あなたは<name>タグで定義された視点から、以下の内容をレビューしてください。
+
+## 保存先
+
+あなたの視点に対応する`<round1-*>`タグで定義されたファイルパスに保存してください。
 
 ## レビュー対象
 
@@ -107,6 +113,7 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 [git diff、git log、会話履歴などのデータをここに記載]
 
 ## レビューの指針
+
 - 客観的な視点から意見を述べてください
 - 修正案の提示は不要です（分析と意見のみ）
 - 具体的なコードや状況に即した指摘をしてください
@@ -120,27 +127,19 @@ mkdir -p .claude/tmp/multi_perspective_review/$TIMESTAMP/round2
 
 ## 出力形式
 
-**重要**: レビュー結果は以下のファイルに保存し、保存完了を報告してください：
-
-保存先: `.claude/tmp/multi_perspective_review/<timestamp>/round1/<filename>.md`
-
-- `<timestamp>` は <timestamp>タグで定義された値を使用
-- `<filename>` は <filename>タグで定義されたファイル名を使用
-
-レビュー結果をマークダウン形式でファイルに保存した後、以下の形式で応答してください：
+マークダウン形式で保存後、以下の形式で報告：
 
 ```
-レビュー結果を保存しました: .claude/tmp/multi_perspective_review/<timestamp>/round1/<filename>.md
+レビュー結果を保存しました: <round1-architecture>
 ```
 
-（<filename> の部分は、あなたの視点に対応するファイル名に置き換えてください）
-```
+（上記は`<round1-architecture>`の例。あなたの視点に対応するタグを使用）
 
 <examples>
 
 <example>
 <name>アーキテクチャ・設計</name>
-<filename>architecture</filename>
+<round1-architecture>.claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md</round1-architecture>
 
 <perspective-details>
 
