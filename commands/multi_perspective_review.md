@@ -109,7 +109,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>アーキテクチャ・設計</name>
-<round1-filename>`.claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md`</round1-filename>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -125,7 +132,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>パフォーマンス・効率性</name>
-<round1-filename>`.claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md`</round1-filename>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -140,7 +154,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>保守性・可読性</name>
-<round1-filename>`.claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md`</round1-filename>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -159,7 +180,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>テスタビリティ</name>
-<round1-filename>`.claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md`</round1-filename>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -174,7 +202,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>ユーザー体験・利便性</name>
-<round1-filename>`.claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md`</round1-filename>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -188,7 +223,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>プロジェクトフェーズ適合性</name>
-<round1-filename>`.claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md`</round1-filename>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -202,7 +244,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>既存コードとの整合性</name>
-<round1-filename>`.claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md`</round1-filename>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -215,7 +264,14 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 
 <example>
 <name>ベストプラクティス・標準準拠</name>
-<round1-filename>`.claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md`</round1-filename>
+
+<round1-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md
+```
+
+</round1-filename>
 
 <perspective-details>
 
@@ -301,7 +357,13 @@ Task(
 
 各メタレビュアーの出力ファイルパスを定義：
 
-<round2-filename>`.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_<meta-reviewer-number>.md`</round2-filename>
+<round2-filename>
+
+```
+.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_<meta-reviewer-number>.md
+```
+
+</round2-filename>
 
 まず、8つの視点の<round1-filename>タグで定義されたファイルパスを収集してください。
 
