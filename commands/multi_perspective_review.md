@@ -99,7 +99,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 <examples>
 
 <example>
-<name>アーキテクチャ・設計</name>
+<name>アーキテクチャ・設計</name>:
 
 <perspective-details>
 システム全体の構造、モジュール分割、依存関係、拡張性、設計原則の遵守
@@ -108,7 +108,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>パフォーマンス・効率性</name>
+<name>パフォーマンス・効率性</name>:
 
 <perspective-details>
 実行速度、メモリ使用量、スケーラビリティ、アルゴリズムの計算量
@@ -117,7 +117,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>保守性・可読性</name>
+<name>保守性・可読性</name>:
 
 <perspective-details>
 コードの理解しやすさ、変更のしやすさ、命名規則、コメント、複雑度
@@ -126,7 +126,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>テスタビリティ</name>
+<name>テスタビリティ</name>:
 
 <perspective-details>
 テストのしやすさ、依存性の注入、モック可能性、テストケースの網羅性
@@ -135,7 +135,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>ユーザー体験・利便性</name>
+<name>ユーザー体験・利便性</name>:
 
 <perspective-details>
 エンドユーザーやAPI利用者の視点、UIの使いやすさ、APIの直感性
@@ -144,7 +144,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>プロジェクトフェーズ適合性</name>
+<name>プロジェクトフェーズ適合性</name>:
 
 <perspective-details>
 早すぎる最適化の回避、MVP としての妥当性、技術的負債とのバランス
@@ -153,7 +153,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>既存コードとの整合性</name>
+<name>既存コードとの整合性</name>:
 
 <perspective-details>
 プロジェクト内のパターン・スタイルとの一貫性、コーディング規約の遵守
@@ -162,7 +162,7 @@ allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/rem
 </example>
 
 <example>
-<name>ベストプラクティス・標準準拠</name>
+<name>ベストプラクティス・標準準拠</name>:
 
 <perspective-details>
 公式ドキュメント、コミュニティのベストプラクティス、言語固有のイディオム、業界標準への準拠
