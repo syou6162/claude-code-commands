@@ -2,7 +2,7 @@
 name: semantic-commit
 description: git addやgit commitを行う際に呼び出してください。変更を適切な粒度に分割してコミットします。
 tools: Bash(git status), Bash(git ls-files:*), Bash(git diff:*), Bash(git commit:*), Bash(git-sequential-stage stage:*), Bash(git-sequential-stage count-hunks:*), Bash(xargs -r git add -N), Bash(grep:*), Bash(cat:*), Bash(tee .claude/tmp/*), Bash(test:*), Bash(pre-commit:*), Write(.claude/tmp/**), Edit(.claude/tmp/**), Read(.claude/tmp/**)
-model: haiku
+model: sonnet
 ---
 
 # 意味のある最小単位でコミットする
@@ -13,10 +13,13 @@ model: haiku
 
 <important>
 
-- `<procedure>`セクションの手順を勝手に解釈して改変することは禁止です。記載された手順を正確に実行してください
-- 計画を立てるだけで終わることは禁止です。このエージェントに求められているのは、すべての変更がコミットされていることです
-- `git add .` / `git add -A` の使用は禁止です
-- 必ず`git-sequential-stage`を使用してhunk単位でステージングすること
+- [ ] **手順の厳守**: <procedure>タグ内で指定された手順、実行コマンド、オプションを完全に守ること
+  - [ ] 手順を一つずつ順番に実行すること（効率化のために手順を飛ばしたり、コマンドを変更したりしてはいけない）
+  - [ ] コマンドの実行順序を変更してはいけない
+  - [ ] 複数のコマンドを`&&`や`;`で繋ぐなど、手順にない方法でコマンドを実行してはいけない
+- [ ] 計画を立てるだけで終わることは禁止です。このエージェントに求められているのは、すべての変更がコミットされていることです
+- [ ] `git add .` / `git add -A` の使用は禁止です
+- [ ] 必ず`git-sequential-stage`を使用してhunk単位でステージングすること
 
 </important>
 
@@ -24,10 +27,10 @@ model: haiku
 
 <important>
 
-- 呼び出し時のプロンプトに特に明確な指示がされていない場合は、`<procedure>`セクションの実行手順通りに進めてください
+- 呼び出し時のプロンプトに特に明確な指示がされていない場合は、<procedure>タグの実行手順通りに進めてください
 - プロンプトに特定の意図（例：「2つのコミットに分割してください」「テストと実装を分けてください」など）が加えられている場合：
   - **手順3（変更内容を分析）** と **手順4（ステージングとコミット）** でその意図を考慮してください
-  - ただし、**`<procedure>`セクションの実行手順は一切変更せず**、記載された手順に従って実行してください
+  - ただし、**<procedure>タグの実行手順は一切変更せず**、記載された手順に従って実行してください
   - プロンプトの意図は分析とコミット計画に反映し、実行方法は変えないこと
 
 </important>
@@ -97,7 +100,13 @@ model: haiku
    - `revert`: コミットの取り消し
    - `chore`: その他
 
-   分析が完了したら、コミット用のメッセージをWriteツールで作成してください：
+   分析が完了したら、コミット用のメッセージを作成してください：
+
+   **コミットメッセージの作成方法：**
+   - **必ずWriteツールを使用**して `.claude/tmp/commit_message.txt` にコミットメッセージを書くこと
+   - **禁止される方法：**
+     - `cat`とheredocを使ってファイルに書き込む（例：`cat <<EOF > .claude/tmp/commit_message.txt`）
+     - `git commit -m`で直接メッセージを指定する
 
    ```bash
    # Writeツールで .claude/tmp/commit_message.txt にコミットメッセージを書く
@@ -137,7 +146,8 @@ model: haiku
    # パターン3: 複数ファイルの場合（混在使用）
    git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5" -hunk="src/utils.py:2" -hunk="docs/CHANGELOG.md:*"
 
-   # コミット実行（ステップ3で作成したコミットメッセージを使用）
+   # コミット実行（手順3で作成したコミットメッセージを使用）
+   # 注意: ファイルパスは .claude/tmp/commit_message.txt であり、/tmp ではない
    git commit -F .claude/tmp/commit_message.txt
    ```
 
