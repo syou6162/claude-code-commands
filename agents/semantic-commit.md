@@ -100,7 +100,13 @@ model: sonnet
    - `revert`: コミットの取り消し
    - `chore`: その他
 
-   分析が完了したら、コミット用のメッセージをWriteツールで作成してください：
+   分析が完了したら、コミット用のメッセージを作成してください：
+
+   **コミットメッセージの作成方法：**
+   - **必ずWriteツールを使用**して `.claude/tmp/commit_message.txt` にコミットメッセージを書くこと
+   - **禁止される方法：**
+     - `cat`とheredocを使ってファイルに書き込む（例：`cat <<EOF > .claude/tmp/commit_message.txt`）
+     - `git commit -m`で直接メッセージを指定する
 
    ```bash
    # Writeツールで .claude/tmp/commit_message.txt にコミットメッセージを書く
@@ -140,7 +146,8 @@ model: sonnet
    # パターン3: 複数ファイルの場合（混在使用）
    git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5" -hunk="src/utils.py:2" -hunk="docs/CHANGELOG.md:*"
 
-   # コミット実行（ステップ3で作成したコミットメッセージを使用）
+   # コミット実行（手順3で作成したコミットメッセージを使用）
+   # 注意: ファイルパスは .claude/tmp/commit_message.txt であり、/tmp ではない
    git commit -F .claude/tmp/commit_message.txt
    ```
 
