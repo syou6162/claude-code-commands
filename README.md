@@ -102,6 +102,9 @@ Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析
 ### gha-sha-reference
 ユーザーがGitHub Actionsのタグ参照をSHA参照に変換するよう要求したときに自動的に発動するスキル。セキュリティのベストプラクティスに従い、`uses:`フィールドのタグ参照（例: `@v4`）を不変なSHA参照（例: `@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2`）に変換します。GitHub APIを使用してコミットSHAを自動取得し、サプライチェーン攻撃のリスクを軽減します。
 
+### reading-notion
+NotionページやドキュメントをキーワードまたはURLで検索・取得し、プロパティとブロック内容を読み込んで要約・説明するスキル。Notion MCP Serverは直接使用するとコンテキストを圧迫するため、[mcptools](https://github.com/f/mcptools)を利用してNotion APIをラップしています。Notion URLが会話に登場した時に自動的にページを取得して内容を説明し、キーワード検索時には検索結果から選択したページの内容を説明します。
+
 ## Available Commands
 
 ### load_spec_tasks
