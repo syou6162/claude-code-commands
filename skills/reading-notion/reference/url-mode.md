@@ -48,7 +48,7 @@ URL: https://www.notion.so/myorg/abc123def456ghi789jkl012mno34567
 - 作成日時
 
 ```bash
-mcptools call API-retrieve-a-page npx -y @notionhq/notion-mcp-server --params '{"page_id":"abc123def456ghi789jkl012mno34567"}' | jq '{title: (.properties | to_entries[] | select(.value.type == "title") | .value.title[0].plain_text), url: .url, last_edited: .last_edited_time, created: .created_time}'
+mcptools call API-retrieve-a-page npx -y @notionhq/notion-mcp-server --params '{"page_id":"abc123def456ghi789jkl012mno34567"}' | jq '{title: (.properties | to_entries[] | select(.value.type == "title") | .value.title[0].plain_text), url: .url, last_edited: .last_edited_time, created: .created_time}' | tee .claude/tmp/notion/{page_id}_properties.json > /dev/null
 ```
 
 <context>
@@ -85,7 +85,7 @@ mcptools call API-retrieve-a-page npx -y @notionhq/notion-mcp-server --params '{
 </important>
 
 ```bash
-mcptools call API-get-block-children npx -y @notionhq/notion-mcp-server --params '{"block_id":"abc123def456ghi789jkl012mno34567"}'
+mcptools call API-get-block-children npx -y @notionhq/notion-mcp-server --params '{"block_id":"abc123def456ghi789jkl012mno34567"}' | tee .claude/tmp/notion/{page_id}_blocks.json > /dev/null
 ```
 
 <context>
@@ -145,8 +145,8 @@ created: {作成日時}
 **手順**:
 
 1. 出力ディレクトリ作成: `mkdir -p .claude/tmp/notion`
-2. ステップ1で取得したプロパティをYAML front-matterとして出力
-3. ステップ2で取得したブロックをMarkdown形式に変換して本文として出力
+2. ステップ1で保存したJSONファイル (`.claude/tmp/notion/{page_id}_properties.json`) を読み込み、プロパティをYAML front-matterとして出力
+3. ステップ2で保存したJSONファイル (`.claude/tmp/notion/{page_id}_blocks.json`) を読み込み、ブロックをMarkdown形式に変換して本文として出力
 4. Writeツールで `.claude/tmp/notion/{page_id}.md` に書き込み
 
 **ブロックタイプの変換ルール**:
