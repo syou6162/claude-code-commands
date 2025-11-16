@@ -123,80 +123,71 @@ mcptools call API-get-block-children npx -y @notionhq/notion-mcp-server --params
 
 <important>
 
-**ファイル出力は要約ではなく本文を出力**: ブロック内容をAIが要約するのではなく、取得したブロックをそのままMarkdown形式に変換して出力してください。
+**サブエージェント委譲**: このステップはTaskツールでgeneral-purposeサブエージェントに委譲してください。
 
 </important>
 
-**出力先**: `.claude/tmp/notion/{page_id}.md`
+**Taskツール呼び出し**:
 
-**ファイル構成**:
-
-```markdown
----
-title: {タイトル}
-url: {URL}
-last_edited: {最終更新日時}
-created: {作成日時}
----
-
-{ブロック内容をMarkdown形式で出力}
 ```
+subagent_type: general-purpose
+description: "NotionページをMarkdownに変換"
+prompt: |
+  以下のタスクを実行してください：
 
-**手順**:
+  1. 出力ディレクトリ作成: `mkdir -p .claude/tmp/notion`
 
-1. 出力ディレクトリ作成: `mkdir -p .claude/tmp/notion`
-2. ステップ1で保存したJSONファイル (`.claude/tmp/notion/{page_id}_properties.json`) を読み込み、プロパティをYAML front-matterとして出力
-3. ステップ2で保存したJSONファイル (`.claude/tmp/notion/{page_id}_blocks.json`) を読み込み、ブロックをMarkdown形式に変換して本文として出力
-4. Writeツールで `.claude/tmp/notion/{page_id}.md` に書き込み
+  2. ステップ1で保存したJSONファイル (`.claude/tmp/notion/{page_id}_properties.json`) とステップ2で保存したJSONファイル (`.claude/tmp/notion/{page_id}_blocks.json`) を読み込み、`.claude/tmp/notion/{page_id}.md` ファイルを作成してください。
 
-**ブロックタイプの変換ルール**:
+  3. ファイル構成:
+     - YAML front-matter: propertiesからtitle, url, last_edited, createdを抽出
+     - 本文: blocksをMarkdown形式に変換
 
-- `paragraph`: 段落テキスト
-- `heading_1`: `# 見出し1`
-- `heading_2`: `## 見出し2`
-- `heading_3`: `### 見出し3`
-- `bulleted_list_item`: `- 箇条書き項目`
-- `numbered_list_item`: `1. 番号付きリスト項目`
-- `code`: ` ```言語名\nコード\n``` `
-- `quote`: `> 引用文`
+  4. ブロックタイプの変換ルール:
+     - paragraph: 段落テキスト
+     - heading_1: # 見出し1
+     - heading_2: ## 見出し2
+     - heading_3: ### 見出し3
+     - bulleted_list_item: - 箇条書き項目
+     - numbered_list_item: 1. 番号付きリスト項目
+     - code: ```言語名\nコード\n```
+     - quote: > 引用文
 
-<example>
+  5. 出力例:
+     ```markdown
+     ---
+     title: "プロジェクトXYZ概要"
+     url: "https://www.notion.so/abc123def456ghi789jkl012mno34567"
+     last_edited: "2025-11-15T10:30:00.000Z"
+     created: "2025-11-01T09:00:00.000Z"
+     ---
 
-**出力例** (`.claude/tmp/notion/abc123def456ghi789jkl012mno34567.md`):
+     # プロジェクトXYZ概要
 
-```markdown
----
-title: "プロジェクトXYZ概要"
-url: "https://www.notion.so/abc123def456ghi789jkl012mno34567"
-last_edited: "2025-11-15T10:30:00.000Z"
-created: "2025-11-01T09:00:00.000Z"
----
+     ## プロジェクトの目的
 
-# プロジェクトXYZ概要
+     このプロジェクトは、新しい機能XYZを開発し、ユーザー体験を向上させることを目的としています。
 
-## プロジェクトの目的
+     ## 主なマイルストーン
 
-このプロジェクトは、新しい機能XYZを開発し、ユーザー体験を向上させることを目的としています。
+     - 要件定義の完了
+     - プロトタイプの作成
+     - ベータ版リリース
+     - 本番環境へのデプロイ
 
-## 主なマイルストーン
+     ## 技術スタック
 
-- 要件定義の完了
-- プロトタイプの作成
-- ベータ版リリース
-- 本番環境へのデプロイ
+     ### フロントエンド
 
-## 技術スタック
+     1. React 18
+     2. TypeScript
+     3. Tailwind CSS
 
-### フロントエンド
+     > 注意: すべての依存関係は最新版を使用してください。
+     ```
 
-1. React 18
-2. TypeScript
-3. Tailwind CSS
-
-> 注意: すべての依存関係は最新版を使用してください。
+  重要: ブロック内容をAIが要約するのではなく、取得したブロックをそのままMarkdown形式に変換して出力してください。
 ```
-
-</example>
 
 ### 4. 完了報告
 
