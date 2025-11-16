@@ -127,66 +127,91 @@ mcptools call API-get-block-children npx -y @notionhq/notion-mcp-server --params
 
 </important>
 
-**Taskツール呼び出し**:
+**Taskツール呼び出し方法**:
 
+メインエージェントは、実際のページIDを使って以下のようにTaskツールを呼び出します（{page_id}は実際のページIDに置き換える）:
+
+```python
+Task(
+  subagent_type="general-purpose",
+  description="NotionページをMarkdownに変換",
+  prompt=f"""
+NotionページのJSON形式データをMarkdownファイルに変換してください。
+
+## 入力ファイル
+
+1. プロパティファイル: `.claude/tmp/notion/{page_id}_properties.json`
+   - ページのメタデータ（タイトル、URL、最終更新日時、作成日時）が含まれています
+
+2. ブロックファイル: `.claude/tmp/notion/{page_id}_blocks.json`
+   - ページ本文のブロック構造が含まれています
+
+## 出力ファイル
+
+`.claude/tmp/notion/{page_id}.md`
+
+## タスク
+
+1. 出力ディレクトリを作成: `mkdir -p .claude/tmp/notion`
+
+2. プロパティファイルを読み込み、YAML front-matterを作成:
+   - title: タイトル
+   - url: URL
+   - last_edited: 最終更新日時
+   - created: 作成日時
+
+3. ブロックファイルを読み込み、以下のルールでMarkdown形式に変換:
+   - paragraph → 段落テキスト
+   - heading_1 → # 見出し1
+   - heading_2 → ## 見出し2
+   - heading_3 → ### 見出し3
+   - bulleted_list_item → - 箇条書き項目
+   - numbered_list_item → 1. 番号付きリスト項目
+   - code → ```言語名\\nコード\\n```
+   - quote → > 引用文
+
+4. YAML front-matterと本文を結合して`.claude/tmp/notion/{page_id}.md`に出力
+
+## 出力形式例
+
+```markdown
+---
+title: "プロジェクトXYZ概要"
+url: "https://www.notion.so/abc123def456ghi789jkl012mno34567"
+last_edited: "2025-11-15T10:30:00.000Z"
+created: "2025-11-01T09:00:00.000Z"
+---
+
+# プロジェクトXYZ概要
+
+## プロジェクトの目的
+
+このプロジェクトは、新しい機能XYZを開発し、ユーザー体験を向上させることを目的としています。
+
+## 主なマイルストーン
+
+- 要件定義の完了
+- プロトタイプの作成
+- ベータ版リリース
+- 本番環境へのデプロイ
+
+## 技術スタック
+
+### フロントエンド
+
+1. React 18
+2. TypeScript
+3. Tailwind CSS
+
+> 注意: すべての依存関係は最新版を使用してください。
 ```
-subagent_type: general-purpose
-description: "NotionページをMarkdownに変換"
-prompt: |
-  以下のタスクを実行してください：
 
-  1. 出力ディレクトリ作成: `mkdir -p .claude/tmp/notion`
+## 重要な注意事項
 
-  2. ステップ1で保存したJSONファイル (`.claude/tmp/notion/{page_id}_properties.json`) とステップ2で保存したJSONファイル (`.claude/tmp/notion/{page_id}_blocks.json`) を読み込み、`.claude/tmp/notion/{page_id}.md` ファイルを作成してください。
-
-  3. ファイル構成:
-     - YAML front-matter: propertiesからtitle, url, last_edited, createdを抽出
-     - 本文: blocksをMarkdown形式に変換
-
-  4. ブロックタイプの変換ルール:
-     - paragraph: 段落テキスト
-     - heading_1: # 見出し1
-     - heading_2: ## 見出し2
-     - heading_3: ### 見出し3
-     - bulleted_list_item: - 箇条書き項目
-     - numbered_list_item: 1. 番号付きリスト項目
-     - code: ```言語名\nコード\n```
-     - quote: > 引用文
-
-  5. 出力例:
-     ```markdown
-     ---
-     title: "プロジェクトXYZ概要"
-     url: "https://www.notion.so/abc123def456ghi789jkl012mno34567"
-     last_edited: "2025-11-15T10:30:00.000Z"
-     created: "2025-11-01T09:00:00.000Z"
-     ---
-
-     # プロジェクトXYZ概要
-
-     ## プロジェクトの目的
-
-     このプロジェクトは、新しい機能XYZを開発し、ユーザー体験を向上させることを目的としています。
-
-     ## 主なマイルストーン
-
-     - 要件定義の完了
-     - プロトタイプの作成
-     - ベータ版リリース
-     - 本番環境へのデプロイ
-
-     ## 技術スタック
-
-     ### フロントエンド
-
-     1. React 18
-     2. TypeScript
-     3. Tailwind CSS
-
-     > 注意: すべての依存関係は最新版を使用してください。
-     ```
-
-  重要: ブロック内容をAIが要約するのではなく、取得したブロックをそのままMarkdown形式に変換して出力してください。
+- ブロック内容を要約せず、取得したブロックをそのままMarkdown形式に変換してください
+- JSONデータの構造を理解し、適切にパースして変換してください
+"""
+)
 ```
 
 ### 4. 完了報告
