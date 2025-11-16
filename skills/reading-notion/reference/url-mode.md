@@ -131,28 +131,31 @@ mcptools call API-get-block-children npx -y @notionhq/notion-mcp-server --params
 
 メインエージェントは、実際のページIDを使って以下のようにTaskツールを呼び出します（{page_id}は実際のページIDに置き換える）:
 
-```python
-Task(
-  subagent_type="general-purpose",
-  description="NotionページをMarkdownに変換",
-  prompt=f"""
+Taskツールのパラメータ:
+- `subagent_type`: "general-purpose"
+- `description`: "NotionページをMarkdownに変換"
+- `prompt`: 以下の内容
+
+**プロンプト内容**:
+
+```
 NotionページのJSON形式データをMarkdownファイルに変換してください。
 
 ## 入力ファイル
 
-1. プロパティファイル: `.claude/tmp/notion/{page_id}_properties.json`
+1. プロパティファイル: .claude/tmp/notion/{page_id}_properties.json
    - ページのメタデータ（タイトル、URL、最終更新日時、作成日時）が含まれています
 
-2. ブロックファイル: `.claude/tmp/notion/{page_id}_blocks.json`
+2. ブロックファイル: .claude/tmp/notion/{page_id}_blocks.json
    - ページ本文のブロック構造が含まれています
 
 ## 出力ファイル
 
-`.claude/tmp/notion/{page_id}.md`
+.claude/tmp/notion/{page_id}.md
 
 ## タスク
 
-1. 出力ディレクトリを作成: `mkdir -p .claude/tmp/notion`
+1. 出力ディレクトリを作成: mkdir -p .claude/tmp/notion
 
 2. プロパティファイルを読み込み、YAML front-matterを作成:
    - title: タイトル
@@ -167,51 +170,22 @@ NotionページのJSON形式データをMarkdownファイルに変換してく�
    - heading_3 → ### 見出し3
    - bulleted_list_item → - 箇条書き項目
    - numbered_list_item → 1. 番号付きリスト項目
-   - code → ```言語名\\nコード\\n```
+   - code → コードブロック（言語指定あり）
    - quote → > 引用文
 
-4. YAML front-matterと本文を結合して`.claude/tmp/notion/{page_id}.md`に出力
+4. YAML front-matterと本文を結合して .claude/tmp/notion/{page_id}.md に出力
 
-## 出力形式例
+## 出力形式の要件
 
-```markdown
----
-title: "プロジェクトXYZ概要"
-url: "https://www.notion.so/abc123def456ghi789jkl012mno34567"
-last_edited: "2025-11-15T10:30:00.000Z"
-created: "2025-11-01T09:00:00.000Z"
----
-
-# プロジェクトXYZ概要
-
-## プロジェクトの目的
-
-このプロジェクトは、新しい機能XYZを開発し、ユーザー体験を向上させることを目的としています。
-
-## 主なマイルストーン
-
-- 要件定義の完了
-- プロトタイプの作成
-- ベータ版リリース
-- 本番環境へのデプロイ
-
-## 技術スタック
-
-### フロントエンド
-
-1. React 18
-2. TypeScript
-3. Tailwind CSS
-
-> 注意: すべての依存関係は最新版を使用してください。
-```
+- ファイル先頭にYAML front-matter（---で囲む）
+- front-matter内にtitle, url, last_edited, createdを含める
+- front-matterの後に空行を入れて本文を続ける
+- 本文はブロックの内容をそのままMarkdown形式に変換（要約しない）
 
 ## 重要な注意事項
 
 - ブロック内容を要約せず、取得したブロックをそのままMarkdown形式に変換してください
 - JSONデータの構造を理解し、適切にパースして変換してください
-"""
-)
 ```
 
 ### 4. 完了報告
