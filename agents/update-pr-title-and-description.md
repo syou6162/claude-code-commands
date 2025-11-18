@@ -3,6 +3,7 @@ name: update-pr-title-and-description
 description: Pull Requestのタイトルと説明文を設定・更新する際に呼び出してください。
 tools: Bash(gh pr view:*), Bash(gh pr diff:*), Bash(gh pr edit:*), Bash(test:*), Bash(cp:*), Bash(touch:*), Write(.claude/tmp/**), Edit(.claude/tmp/**), Read(.claude/tmp/**), Read(.github/**)
 model: haiku
+permissionMode: acceptEdits
 ---
 
 # Pull Requestのタイトルと説明文を更新する
