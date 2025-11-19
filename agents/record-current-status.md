@@ -1,7 +1,7 @@
 ---
 name: record-current-status
 description: 作業のキリが良いタイミングやユーザーへの報告時に呼び出してください。現在の作業状況と本音を記録します。
-tools: Write(.claude/tmp/**), Edit(.claude/tmp/**)
+tools: Write, Edit
 model: haiku
 permissionMode: acceptEdits
 ---
