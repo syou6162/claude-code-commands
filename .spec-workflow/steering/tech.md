@@ -35,7 +35,7 @@ Claude Code plugin - マークダウンベースの指示書集
 ### Data Storage
 
 - **Primary storage**: なし（ステートレス）
-- **一時データ**: `.claude/tmp/` ディレクトリ（作業状況記録など）。ライフサイクルはClaude Codeが管理し、セッション間で永続化される
+- **一時データ**: `.claude_work/` ディレクトリ（作業状況記録など）。ライフサイクルはClaude Codeが管理し、セッション間で永続化される
 - **Data formats**: Markdown、JSON（外部ツールとのインターフェース）
 
 ### External Integrations

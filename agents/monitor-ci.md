@@ -81,10 +81,10 @@ Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析
    ログが大量の場合は、エラーメッセージ周辺を抽出：
    ```bash
    # ログをファイルに保存
-   gh run view ${RUN_ID} --log | tee .claude/tmp/ci_log.txt > /dev/null
+   gh run view ${RUN_ID} --log | tee .claude_work/ci_log.txt > /dev/null
 
    # エラー関連行を抽出
-   grep -i -C 5 "error\|failed\|failure" .claude/tmp/ci_log.txt | tee .claude/tmp/ci_errors.txt > /dev/null
+   grep -i -C 5 "error\|failed\|failure" .claude_work/ci_log.txt | tee .claude_work/ci_errors.txt > /dev/null
    ```
 
 6. **失敗原因の分析**
@@ -145,6 +145,6 @@ URL: https://github.com/.../runs/...
 - 監視中はCIの進行状況が表示され、完了するまで待機する
 - ログが大量の場合は、エラー関連部分のみを抽出して分析
 - 複数のジョブが失敗している場合は全て報告
-- 分析結果は`.claude/tmp/`ディレクトリに保存
+- 分析結果は`.claude_work/`ディレクトリに保存
 - GitHub CLI (`gh`) コマンドのエラーハンドリングを適切に行う
 - PRが存在しない場合は適切なエラーメッセージを報告

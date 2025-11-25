@@ -60,7 +60,7 @@ permissionMode: acceptEdits
    差分を取得してください：
 
    ```bash
-   git diff HEAD | tee .claude/tmp/current_changes.patch
+   git diff HEAD | tee .claude_work/current_changes.patch
    ```
 
 3. **変更内容を分析**
@@ -104,13 +104,13 @@ permissionMode: acceptEdits
    分析が完了したら、コミット用のメッセージを作成してください：
 
    **コミットメッセージの作成方法：**
-   - **必ずWriteツールを使用**して `.claude/tmp/commit_message.txt` にコミットメッセージを書くこと
+   - **必ずWriteツールを使用**して `.claude_work/commit_message.txt` にコミットメッセージを書くこと
    - **禁止される方法：**
-     - `cat`とheredocを使ってファイルに書き込む（例：`cat <<EOF > .claude/tmp/commit_message.txt`）
+     - `cat`とheredocを使ってファイルに書き込む（例：`cat <<EOF > .claude_work/commit_message.txt`）
      - `git commit -m`で直接メッセージを指定する
 
    ```bash
-   # Writeツールで .claude/tmp/commit_message.txt にコミットメッセージを書く
+   # Writeツールで .claude_work/commit_message.txt にコミットメッセージを書く
    # 例：
    # fix: ゼロ除算エラーを修正
    #
@@ -139,17 +139,17 @@ permissionMode: acceptEdits
 
    ```bash
    # パターン1: 部分的な変更をステージング（hunk番号指定）
-   git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5"
+   git-sequential-stage stage -patch=".claude_work/current_changes.patch" -hunk="src/calculator.py:1,3,5"
 
    # パターン2: ファイル全体をステージング（意味的に一体の変更の場合）
-   git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="tests/test_calculator.py:*"
+   git-sequential-stage stage -patch=".claude_work/current_changes.patch" -hunk="tests/test_calculator.py:*"
 
    # パターン3: 複数ファイルの場合（混在使用）
-   git-sequential-stage stage -patch=".claude/tmp/current_changes.patch" -hunk="src/calculator.py:1,3,5" -hunk="src/utils.py:2" -hunk="docs/CHANGELOG.md:*"
+   git-sequential-stage stage -patch=".claude_work/current_changes.patch" -hunk="src/calculator.py:1,3,5" -hunk="src/utils.py:2" -hunk="docs/CHANGELOG.md:*"
 
    # コミット実行（手順3で作成したコミットメッセージを使用）
-   # 注意: ファイルパスは .claude/tmp/commit_message.txt であり、/tmp ではない
-   git commit -F .claude/tmp/commit_message.txt
+   # 注意: ファイルパスは .claude_work/commit_message.txt であり、/tmp ではない
+   git commit -F .claude_work/commit_message.txt
    ```
 
    </example>
@@ -170,7 +170,7 @@ permissionMode: acceptEdits
    パッチファイルの再生成：
 
    ```bash
-   git diff HEAD | tee .claude/tmp/current_changes.patch > /dev/null
+   git diff HEAD | tee .claude_work/current_changes.patch > /dev/null
    ```
 
 6. **最終確認**

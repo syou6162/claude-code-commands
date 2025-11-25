@@ -28,7 +28,7 @@ https://www.notion.so/abc123def456ghi789jkl012mno34567
 **実行コマンド**:
 
 ```bash
-mkdir -p .claude/tmp/notion && notion-to-md {notion_url} | tee .claude/tmp/notion/{page_id}.md > /dev/null
+mkdir -p .claude_work/notion && notion-to-md {notion_url} | tee .claude_work/notion/{page_id}.md > /dev/null
 ```
 
 **説明**:
@@ -42,14 +42,14 @@ mkdir -p .claude/tmp/notion && notion-to-md {notion_url} | tee .claude/tmp/notio
 
 **手順**:
 
-1. Readツールで `.claude/tmp/notion/{page_id}.md` を読み込む
+1. Readツールで `.claude_work/notion/{page_id}.md` を読み込む
 2. ページの主な内容を要約してユーザーに報告（箇条書き5行以内）
 
 **報告フォーマット**:
 
 ```
 Notionページを以下のファイルに出力しました：
-.claude/tmp/notion/{page_id}.md
+.claude_work/notion/{page_id}.md
 
 【ページの要約】
 - {要約ポイント1}
