@@ -1,6 +1,6 @@
 ---
 description: "複数の視点から客観的にレビューし、方針の妥当性を検証します。"
-allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/remotes/origin/HEAD --short), Bash(date:+%Y%m%d_%H%M%S), Bash(mkdir -p .claude/tmp/multi_perspective_review:*), Write(.claude/tmp/**), Read(.claude/tmp/**)
+allowed-tools: Bash(git diff:*), Bash(git log:*), Bash(git symbolic-ref refs/remotes/origin/HEAD --short), Bash(date:+%Y%m%d_%H%M%S), Bash(mkdir -p .claude_work/multi_perspective_review:*), Write(.claude_work/**), Read(.claude_work/**)
 ---
 
 # 複数視点レビューコマンド
@@ -81,8 +81,8 @@ date +%Y%m%d_%H%M%S
 次に、ディレクトリ構造を作成します：
 
 ```bash
-mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round1
-mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
+mkdir -p .claude_work/multi_perspective_review/<timestamp>/round1
+mkdir -p .claude_work/multi_perspective_review/<timestamp>/round2
 ```
 
 次に、コンテキストファイルのパスを定義します：
@@ -90,7 +90,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 <context-file>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/context.md
+.claude_work/multi_perspective_review/<timestamp>/context.md
 ```
 
 </context-file>
@@ -113,7 +113,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 <round1-filename>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/round1/architecture.md
+.claude_work/multi_perspective_review/<timestamp>/round1/architecture.md
 ```
 
 </round1-filename>
@@ -136,7 +136,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 <round1-filename>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/round1/performance.md
+.claude_work/multi_perspective_review/<timestamp>/round1/performance.md
 ```
 
 </round1-filename>
@@ -158,7 +158,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 <round1-filename>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/round1/maintainability.md
+.claude_work/multi_perspective_review/<timestamp>/round1/maintainability.md
 ```
 
 </round1-filename>
@@ -184,7 +184,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 <round1-filename>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/round1/testability.md
+.claude_work/multi_perspective_review/<timestamp>/round1/testability.md
 ```
 
 </round1-filename>
@@ -206,7 +206,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 <round1-filename>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/round1/user_experience.md
+.claude_work/multi_perspective_review/<timestamp>/round1/user_experience.md
 ```
 
 </round1-filename>
@@ -227,7 +227,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 <round1-filename>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/round1/project_phase.md
+.claude_work/multi_perspective_review/<timestamp>/round1/project_phase.md
 ```
 
 </round1-filename>
@@ -248,7 +248,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 <round1-filename>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/round1/consistency.md
+.claude_work/multi_perspective_review/<timestamp>/round1/consistency.md
 ```
 
 </round1-filename>
@@ -268,7 +268,7 @@ mkdir -p .claude/tmp/multi_perspective_review/<timestamp>/round2
 <round1-filename>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/round1/best_practices.md
+.claude_work/multi_perspective_review/<timestamp>/round1/best_practices.md
 ```
 
 </round1-filename>
@@ -356,7 +356,7 @@ Task(
 <round2-filename>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/round2/meta_reviewer_<meta-reviewer-number>.md
+.claude_work/multi_perspective_review/<timestamp>/round2/meta_reviewer_<meta-reviewer-number>.md
 ```
 
 </round2-filename>
@@ -415,7 +415,7 @@ Task(
 <final-report>
 
 ```
-.claude/tmp/multi_perspective_review/<timestamp>/final_report.md
+.claude_work/multi_perspective_review/<timestamp>/final_report.md
 ```
 
 </final-report>
@@ -423,8 +423,8 @@ Task(
 第2ラウンドの5つのsubagentから返ってきたログファイルパスを収集した後、メインエージェントが以下の処理を実行します：
 
 1. **全ログファイルを読み込む**
-   - `.claude/tmp/multi_perspective_review/<timestamp>/round1/` 配下の8ファイル
-   - `.claude/tmp/multi_perspective_review/<timestamp>/round2/` 配下の5ファイル
+   - `.claude_work/multi_perspective_review/<timestamp>/round1/` 配下の8ファイル
+   - `.claude_work/multi_perspective_review/<timestamp>/round2/` 配下の5ファイル
 
 2. **統合処理を実行**
    - 第1ラウンドの8つの視点から、共通指摘をマージ
