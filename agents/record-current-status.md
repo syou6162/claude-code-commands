@@ -8,12 +8,12 @@ permissionMode: acceptEdits
 
 # record-current-status
 
-現在の作業状況を `.claude/tmp/current_status` に記録してください。
+現在の作業状況を `.claude_work/current_status` に記録してください。
 
 ## 出力先
 
-**ファイルパス**: リポジトリルート以下の `.claude/tmp/current_status`
-- 注意: `~/.claude/tmp/current_status` ではありません
+**ファイルパス**: リポジトリルート以下の `.claude_work/current_status`
+- 注意: `~/.claude_work/current_status` ではありません
 
 **ファイル編集について**：
 - ファイルの作成・編集には必ず`Write`ツールまたは`Edit`ツールを使用すること

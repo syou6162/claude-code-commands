@@ -33,16 +33,16 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 
    `.github/PULL_REQUEST_TEMPLATE.md`が存在する場合はコピー：
    ```bash
-   cp .github/PULL_REQUEST_TEMPLATE.md .claude/tmp/pr_body_<PR番号>.md
+   cp .github/PULL_REQUEST_TEMPLATE.md .claude_work/pr_body_<PR番号>.md
    ```
 
    存在しない場合は新規ファイル作成：
    ```bash
-   touch .claude/tmp/pr_body_<PR番号>.md
+   touch .claude_work/pr_body_<PR番号>.md
    ```
 
 5. **Pull Requestの説明文を作成**
-   - 作業ファイル（`.claude/tmp/pr_body_<PR番号>.md`）を編集
+   - 作業ファイル（`.claude_work/pr_body_<PR番号>.md`）を編集
    - 上記で取得した情報とチャットの会話内容を考慮して説明文を作成
    - **説明文は必ず日本語で記載すること**
    - **重要**：ファイル編集には必ず`Write`ツールまたは`Edit`ツールを使用すること
@@ -51,7 +51,7 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 6. **Pull Requestの更新**
    ```bash
    # 修正内容を考慮したタイトルと説明文を更新
-   gh pr edit --title "修正内容を考慮したタイトル" --body-file .claude/tmp/pr_body_<PR番号>.md
+   gh pr edit --title "修正内容を考慮したタイトル" --body-file .claude_work/pr_body_<PR番号>.md
    ```
 
 7. **更新後の確認と文字化けチェック**
@@ -63,9 +63,9 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
    - タイトルと説明文が正しく更新されているか確認
    - **文字化けチェック**：日本語が文字化けしていないか確認
    - **文字化けが検出された場合**：
-     1. `.claude/tmp/pr_body_<PR番号>.md` を確認し、UTF-8エンコーディングで保存されているか確認
+     1. `.claude_work/pr_body_<PR番号>.md` を確認し、UTF-8エンコーディングで保存されているか確認
      2. ファイルを修正（必要に応じて文字エンコーディングを修正）
-     3. 再度 `gh pr edit --body-file .claude/tmp/pr_body_<PR番号>.md` で更新
+     3. 再度 `gh pr edit --body-file .claude_work/pr_body_<PR番号>.md` で更新
      4. もう一度 `gh pr view` で確認
 
 ## 説明文の生成ルール
@@ -83,7 +83,7 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 - チャットの会話内容も考慮してPull Requestの説明を作成する
 - **作業ファイルについて**：
   - 常に`--body-file`オプションを使用して安全に更新
-  - ファイル（`.claude/tmp/pr_body_<PR番号>.md`）は削除せず残しておく
+  - ファイル（`.claude_work/pr_body_<PR番号>.md`）は削除せず残しておく
   - 理由：説明文を何度か修正する場合があるため、編集可能な状態で保持
 - **ファイル編集について**：
   - ファイルの作成・編集には必ず`Write`ツールまたは`Edit`ツールを使用すること

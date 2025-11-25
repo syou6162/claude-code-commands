@@ -18,8 +18,7 @@ claude-code-commands/
 │   ├── approvals/                # 承認リクエスト（ランタイム）
 │   ├── archive/                  # アーカイブ済みspec
 │   └── config.example.toml       # spec workflow設定例
-├── .claude/                      # Claude Code作業ディレクトリ（ランタイム）
-│   └── tmp/                      # 一時ファイル（セッション間で永続化）
+├── .claude_work/                 # Claude Code作業ディレクトリ（ランタイム、一時ファイル）
 ├── README.md                     # プロジェクト概要とインストール
 └── CLAUDE.md                     # Claude Code向け開発ガイド
 ```
@@ -28,7 +27,7 @@ claude-code-commands/
 - **機能別グループ化**: コマンドとサブエージェントを明確に分離
 - **バージョン管理対象とランタイムの分離**:
   - バージョン管理: `agents/`, `commands/`, `.claude-plugin/`, ドキュメント、テンプレート
-  - ランタイム: `.claude/tmp/`, `.spec-workflow/approvals/`, `.spec-workflow/specs/`（一部）
+  - ランタイム: `.claude_work/`, `.spec-workflow/approvals/`, `.spec-workflow/specs/`（一部）
 - **agents/とcommands/はフラット**: 各ディレクトリ内は1階層のみ（ネストなし）
 - **spec-workflowは階層構造**: 機能ごとにサブディレクトリで整理
 - **自己完結性**: 各マークダウンファイルは独立して動作
@@ -112,7 +111,7 @@ model: モデル指定
 
 2. **独立性**: コマンド・サブエージェント間の相互依存を避ける
    - 各ファイルは独立して動作
-   - 状態の共有は`.claude/tmp/`経由のみ
+   - 状態の共有は`.claude_work/`経由のみ
 
 3. **テンプレート一貫性**: 同種のファイルは同じ構造を維持
    - サブエージェント同士で構造を統一
