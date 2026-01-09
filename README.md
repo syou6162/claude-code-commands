@@ -105,6 +105,9 @@ Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析
 ### reading-notion
 NotionページやドキュメントをキーワードまたはURLで検索・取得し、プロパティとブロック内容を読み込んで要約・説明するスキル。Notion MCP Serverは直接使用するとコンテキストを圧迫するため、[mcptools](https://github.com/f/mcptools)を利用してNotion APIをラップしています。Notion URLが会話に登場した時に自動的にページを取得して内容を説明し、キーワード検索時には検索結果から選択したページの内容を説明します。
 
+### requesting-gcloud-bq-auth
+gcloudやbqコマンド実行時に認証エラー（`Reauthentication required`や`Your browser has been opened to visit: ...accounts.google.com...`）を検出したときに自動的に発動するスキル。エージェントが勝手に認証コマンドを実行せず、ユーザーに認証を依頼します。ブラウザ操作が必要な認証フローのため、ユーザーによる手動認証を促し、認証完了後に作業を再開します。
+
 ## Available Commands
 
 ### load_spec_tasks
