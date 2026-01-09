@@ -14,27 +14,27 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 
 <procedure>
 
-1. **ベースブランチの特定**
+1. **デフォルトブランチの取得**
 
-   メインブランチ（main または master）を特定：
+   デフォルトブランチを取得：
    ```bash
-   git rev-parse --verify main >/dev/null 2>&1 && echo "main" || echo "master"
+   git symbolic-ref refs/remotes/origin/HEAD --short | cut -d/ -f2
    ```
 
 2. **修正内容の確認**
 
-   ベースブランチからの差分を確認：
+   デフォルトブランチからの差分を確認：
    ```bash
-   # main または master を <base-branch> に置き換える
-   git diff <base-branch>...HEAD
+   # <default-branch> には手順1で取得したブランチ名を使用
+   git diff <default-branch>...HEAD
    ```
 
 3. **コミットメッセージの確認**
 
-   ベースブランチからのコミット履歴を確認（本文も含む）：
+   デフォルトブランチからのコミット履歴を確認（本文も含む）：
    ```bash
-   # main または master を <base-branch> に置き換える
-   git log <base-branch>..HEAD
+   # <default-branch> には手順1で取得したブランチ名を使用
+   git log <default-branch>..HEAD
    ```
 
 4. **説明文ファイルの準備**
