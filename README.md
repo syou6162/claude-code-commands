@@ -48,7 +48,6 @@ claude-code-commands/
 │       ├── tech.md                          # 技術標準
 │       └── structure.md                     # プロジェクト構造
 ├── agents/
-│   ├── semantic-commit.md                   # サブエージェント
 │   ├── update-pr-title-and-description.md   # サブエージェント
 │   ├── monitor-ci.md                        # サブエージェント
 │   ├── detect-spec-workflow.md              # サブエージェント
@@ -60,7 +59,15 @@ claude-code-commands/
 │   ├── validate_bq_query.md
 │   └── codex_review.md
 ├── skills/
-│   └── ask-user-choice/
+│   ├── ask-user-choice/
+│   │   └── SKILL.md                         # スキル定義
+│   ├── gha-sha-reference/
+│   │   └── SKILL.md                         # スキル定義
+│   ├── reading-notion/
+│   │   └── SKILL.md                         # スキル定義
+│   ├── requesting-gcloud-bq-auth/
+│   │   └── SKILL.md                         # スキル定義
+│   └── semantic-committing/
 │       └── SKILL.md                         # スキル定義
 └── README.md
 ```
@@ -76,9 +83,6 @@ Claude Codeは`plugin.json`を読み込んでプラグインを認識し、`comm
 ## Available Sub-Agents
 
 各サブエージェントは独立したコンテキストで実行されるため、メイン会話を汚染せずに専門的なタスクを処理できます。
-
-### semantic-commit (サブエージェント)
-変更を意味のある最小単位に分割してコミットするエージェント。git diffを分析してhunk単位で論理的にグループ化し、git-sequential-stageで段階的にコミットします。大きな変更を複数の意味のあるコミットに分けたい時に、Claude Codeが自動的にこのサブエージェントに委譲します。
 
 ### update-pr-title-and-description (サブエージェント)
 Pull Requestのタイトルと説明文を自動生成・更新する専門エージェント。差分やコミットメッセージを分析し、適切な説明文を作成します。Pull Requestを作成または更新する際に、Claude Codeが自動的にこのサブエージェントに委譲します。
@@ -107,6 +111,9 @@ NotionページやドキュメントをキーワードまたはURLで検索・�
 
 ### requesting-gcloud-bq-auth
 gcloudやbqコマンド実行時に認証エラー（`Reauthentication required`や`Your browser has been opened to visit: ...accounts.google.com...`）を検出したときに自動的に発動するスキル。エージェントが勝手に認証コマンドを実行せず、ユーザーに認証を依頼します。ブラウザ操作が必要な認証フローのため、ユーザーによる手動認証を促し、認証完了後に作業を再開します。
+
+### semantic-committing
+コミット時、「commit」「git add」「変更を分割」の言及時に自動的に発動するスキル。git diffを分析して変更を論理的な意味単位に分割し、git-sequential-stageでhunk単位のステージングを行います。大きな変更を複数の意味のあるコミットに分けたい時に、Claude Codeが自動的にこのスキルを使用します。
 
 ## Available Commands
 
