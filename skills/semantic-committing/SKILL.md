@@ -1,9 +1,9 @@
 ---
-name: semantic-commit
-description: git addやgit commitを行う際に呼び出してください。変更を適切な粒度に分割してコミットします。
-tools: Bash, Write, Edit, Read
+name: semantic-committing
+description: コミット時、「commit」「git add」「変更を分割」の言及時に使用。git diffを分析し、変更を論理的な意味単位に分割してコミットする。git-sequential-stageでhunk単位のステージングを行う。
+allowed-tools: Bash, Write, Edit, Read
 model: sonnet
-permissionMode: acceptEdits
+context: fork
 ---
 
 # 意味のある最小単位でコミットする
