@@ -48,7 +48,6 @@ claude-code-commands/
 │       ├── tech.md                          # 技術標準
 │       └── structure.md                     # プロジェクト構造
 ├── agents/
-│   ├── update-pr-title-and-description.md   # サブエージェント
 │   ├── monitor-ci.md                        # サブエージェント
 │   ├── detect-spec-workflow.md              # サブエージェント
 │   └── record-current-status.md             # サブエージェント
@@ -67,7 +66,9 @@ claude-code-commands/
 │   │   └── SKILL.md                         # スキル定義
 │   ├── requesting-gcloud-bq-auth/
 │   │   └── SKILL.md                         # スキル定義
-│   └── semantic-committing/
+│   ├── semantic-committing/
+│   │   └── SKILL.md                         # スキル定義
+│   └── updating-pr-title-and-description/
 │       └── SKILL.md                         # スキル定義
 └── README.md
 ```
@@ -83,9 +84,6 @@ Claude Codeは`plugin.json`を読み込んでプラグインを認識し、`comm
 ## Available Sub-Agents
 
 各サブエージェントは独立したコンテキストで実行されるため、メイン会話を汚染せずに専門的なタスクを処理できます。
-
-### update-pr-title-and-description (サブエージェント)
-Pull Requestのタイトルと説明文を自動生成・更新する専門エージェント。差分やコミットメッセージを分析し、適切な説明文を作成します。Pull Requestを作成または更新する際に、Claude Codeが自動的にこのサブエージェントに委譲します。
 
 ### monitor-ci (サブエージェント)
 Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析して原因を特定するエージェント。失敗内容をメインエージェントに報告します。CI失敗時の原因調査と対応方針の提案を自動化します。
@@ -114,6 +112,9 @@ gcloudやbqコマンド実行時に認証エラー（`Reauthentication required`
 
 ### semantic-committing
 コミット時、「commit」「git add」「変更を分割」の言及時に自動的に発動するスキル。git diffを分析して変更を論理的な意味単位に分割し、git-sequential-stageでhunk単位のステージングを行います。大きな変更を複数の意味のあるコミットに分けたい時に、Claude Codeが自動的にこのスキルを使用します。
+
+### updating-pr-title-and-description
+PR作成・更新時に自動的に発動するスキル。Pull Requestのタイトルと説明文を自動生成・更新します。差分やコミットメッセージを分析し、適切な説明文を作成します。説明文は日本語で記載され、`.github/PULL_REQUEST_TEMPLATE.md`がある場合はテンプレートに沿った形で生成されます。
 
 ## Available Commands
 
