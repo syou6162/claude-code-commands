@@ -14,60 +14,74 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 
 <procedure>
 
-1. **PR番号の取得**
+1. **ベースブランチの特定**
 
-   PR番号を取得（現在のブランチから）：
+   メインブランチ（main または master）を特定：
    ```bash
-   gh pr view --json number --jq '.number'
+   git rev-parse --verify main >/dev/null 2>&1 && echo "main" || echo "master"
    ```
 
 2. **修正内容の確認**
+
+   ベースブランチからの差分を確認：
    ```bash
-   gh pr diff
+   # main または master を <base-branch> に置き換える
+   git diff <base-branch>...HEAD
    ```
 
 3. **コミットメッセージの確認**
+
+   ベースブランチからのコミット履歴を確認（本文も含む）：
    ```bash
-   gh pr view --json commits --jq '.commits[] | .messageHeadline'
+   # main または master を <base-branch> に置き換える
+   git log <base-branch>..HEAD
    ```
 
 4. **説明文ファイルの準備**
 
    `.github/PULL_REQUEST_TEMPLATE.md`が存在する場合はコピー：
    ```bash
-   cp .github/PULL_REQUEST_TEMPLATE.md .claude_work/pr_body_<PR番号>.md
+   cp .github/PULL_REQUEST_TEMPLATE.md .claude_work/pr_body_draft.md
    ```
 
    存在しない場合は新規ファイル作成：
    ```bash
-   touch .claude_work/pr_body_<PR番号>.md
+   touch .claude_work/pr_body_draft.md
    ```
 
 5. **Pull Requestの説明文を作成**
-   - 作業ファイル（`.claude_work/pr_body_<PR番号>.md`）を編集
+   - 作業ファイル（`.claude_work/pr_body_draft.md`）を編集
    - 上記で取得した情報とチャットの会話内容を考慮して説明文を作成
    - **説明文は必ず日本語で記載すること**
    - **重要**：ファイル編集には必ず`Write`ツールまたは`Edit`ツールを使用すること
    - bashコマンド（`cat <<EOF > file`、`echo "..." > file`など）でファイルを書き込んではいけません
 
-6. **Pull Requestの更新**
+6. **Pull Requestの作成または更新**
+
+   PRの存在確認と作成/更新：
    ```bash
-   # 修正内容を考慮したタイトルと説明文を更新
-   gh pr edit --title "修正内容を考慮したタイトル" --body-file .claude_work/pr_body_<PR番号>.md
+   # PRが存在するか確認
+   if gh pr view >/dev/null 2>&1; then
+     # PRが存在する場合：更新
+     gh pr edit --title "修正内容を考慮したタイトル" --body-file .claude_work/pr_body_draft.md
+   else
+     # PRが存在しない場合：ドラフトPRを作成
+     gh pr create --draft --title "修正内容を考慮したタイトル" --body-file .claude_work/pr_body_draft.md
+   fi
    ```
 
 7. **更新後の確認と文字化けチェック**
    ```bash
-   # 更新されたPRの内容を確認
+   # PRの内容を確認
    gh pr view
    ```
 
-   - タイトルと説明文が正しく更新されているか確認
+   - タイトルと説明文が正しく設定されているか確認
    - **文字化けチェック**：日本語が文字化けしていないか確認
    - **文字化けが検出された場合**：
-     1. `.claude_work/pr_body_<PR番号>.md` を確認し、UTF-8エンコーディングで保存されているか確認
+     1. `.claude_work/pr_body_draft.md` を確認し、UTF-8エンコーディングで保存されているか確認
      2. ファイルを修正（必要に応じて文字エンコーディングを修正）
-     3. 再度 `gh pr edit --body-file .claude_work/pr_body_<PR番号>.md` で更新
+     3. 再度 `gh pr edit --body-file .claude_work/pr_body_draft.md` で更新
      4. もう一度 `gh pr view` で確認
 
 </procedure>
@@ -87,9 +101,12 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 
 - 修正内容とコミットメッセージを把握した上でPull Requestの内容を決定する
 - チャットの会話内容も考慮してPull Requestの説明を作成する
+- **PRの作成と更新について**：
+  - PRが存在しない場合は、常に`--draft`オプションでドラフトPRを作成
+  - PRが存在する場合は、`gh pr edit`で内容を更新
 - **作業ファイルについて**：
-  - 常に`--body-file`オプションを使用して安全に更新
-  - ファイル（`.claude_work/pr_body_<PR番号>.md`）は削除せず残しておく
+  - 常に`--body-file`オプションを使用して安全に作成/更新
+  - ファイル（`.claude_work/pr_body_draft.md`）は削除せず残しておく
   - 理由：説明文を何度か修正する場合があるため、編集可能な状態で保持
 - **ファイル編集について**：
   - ファイルの作成・編集には必ず`Write`ツールまたは`Edit`ツールを使用すること
