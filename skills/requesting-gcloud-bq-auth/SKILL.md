@@ -98,6 +98,5 @@ Your browser has been opened to visit:
 ❌ **してはいけないこと**:
 - **絶対に認証コマンドを自動実行しない**（ブラウザ操作が必要なため）
 - 認証が完了していない状態でgcloud/bqコマンドを実行しない
-- URLに含まれる `client_id`、`redirect_uri`、`state`、`code_challenge` などの機密情報をログに残さない（例示する場合は `XXX` で伏せ字にする）
 
 </important>
