@@ -14,7 +14,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `.spec-workflow/steering/structure.md` - プロジェクト構造と組織化原則
 
 ### サブエージェント構成
-- `agents/semantic-commit.md` - 大きな変更を論理的単位に分割してコミット（サブエージェント）
 - `agents/update-pr-title-and-description.md` - Pull Requestのタイトル・説明文自動更新（サブエージェント）
 - `agents/monitor-ci.md` - CI/CDチェック監視と失敗原因分析（サブエージェント）
 - `agents/detect-spec-workflow.md` - spec workflowのspec-id判定（サブエージェント）
@@ -34,6 +33,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `skills/gha-sha-reference/SKILL.md` - GitHub ActionsのタグをSHA参照に変換するスキル（自動発動）
 - `skills/reading-notion/SKILL.md` - NotionページやドキュメントをキーワードまたはURLで検索・取得し、内容を要約・説明するスキル（自動発動）
 - `skills/requesting-gcloud-bq-auth/SKILL.md` - gcloud/bqコマンドの認証エラーを検出してユーザーに認証を依頼するスキル（自動発動）
+- `skills/semantic-committing/SKILL.md` - git diffを分析し、変更を論理的単位に分割してコミットするスキル（自動発動）
 
 ### プラグイン設定
 - `.claude-plugin/plugin.json` - プラグインマニフェスト（メタデータとコマンド定義）
@@ -110,7 +110,7 @@ claude plugin validate .
 ### XMLタグ構造化の実験（パイロット）
 
 **実験対象**:
-- `agents/semantic-commit.md` - サブエージェント
+- `skills/semantic-committing/SKILL.md` - スキル
 - `skills/ask-user-choice/SKILL.md` - スキル
 - `commands/multi_perspective_review.md` - コマンド
 
@@ -169,9 +169,9 @@ Claude AIのシステムプロンプトおよび公式ドキュメントでは�
 - **引数受け渡し**: Claude Codeから`$ARGUMENTS`変数で引数を受け取る
 
 ### 外部依存関係
-サブエージェント・コマンドごとに以下のツールを使用：
+サブエージェント・スキル・コマンドごとに以下のツールを使用：
 - **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, update-pr-title-and-description, monitor-ci）
-- **git-sequential-stage** - semantic-commit（サブエージェント）で使用する専用ツール
+- **git-sequential-stage** - semantic-committing（スキル）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 - **Codex MCP (`mcp__codex__codex`)** - コードレビュー（codex_review コマンド）
 - **spec-workflow MCP** - spec workflow連携（load_spec_tasks コマンド）
