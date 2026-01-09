@@ -14,7 +14,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `.spec-workflow/steering/structure.md` - プロジェクト構造と組織化原則
 
 ### サブエージェント構成
-- `agents/update-pr-title-and-description.md` - Pull Requestのタイトル・説明文自動更新（サブエージェント）
 - `agents/monitor-ci.md` - CI/CDチェック監視と失敗原因分析（サブエージェント）
 - `agents/detect-spec-workflow.md` - spec workflowのspec-id判定（サブエージェント）
 - `agents/record-current-status.md` - 現在の作業状況と本音を記録（サブエージェント）
@@ -34,6 +33,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `skills/reading-notion/SKILL.md` - NotionページやドキュメントをキーワードまたはURLで検索・取得し、内容を要約・説明するスキル（自動発動）
 - `skills/requesting-gcloud-bq-auth/SKILL.md` - gcloud/bqコマンドの認証エラーを検出してユーザーに認証を依頼するスキル（自動発動）
 - `skills/semantic-committing/SKILL.md` - git diffを分析し、変更を論理的単位に分割してコミットするスキル（自動発動）
+- `skills/updating-pr-title-and-description/SKILL.md` - PRタイトル・説明文の自動生成・更新スキル（自動発動）
 
 ### プラグイン設定
 - `.claude-plugin/plugin.json` - プラグインマニフェスト（メタデータとコマンド定義）
@@ -170,7 +170,7 @@ Claude AIのシステムプロンプトおよび公式ドキュメントでは�
 
 ### 外部依存関係
 サブエージェント・スキル・コマンドごとに以下のツールを使用：
-- **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, update-pr-title-and-description, monitor-ci）
+- **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, updating-pr-title-and-description, monitor-ci）
 - **git-sequential-stage** - semantic-committing（スキル）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 - **Codex MCP (`mcp__codex__codex`)** - コードレビュー（codex_review コマンド）
