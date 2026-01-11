@@ -90,12 +90,6 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 
 詳細は **reference/description-rules.md** を参照してください。
 
-主なポイント：
-- HTMLコメント（`<!-- ... -->`）を保持
-- CIチェック項目を実際に確認
-- planファイルやURLなどのコンテキスト情報を含める
-- リンクはフルURL形式（`https://github.com/owner/repo/pull/123/`）を使用
-
 ## 注意事項
 
 <important>
