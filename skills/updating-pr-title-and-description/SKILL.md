@@ -88,7 +88,11 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 
 ## 説明文の生成ルール
 
-詳細は **reference/description-rules.md** を参照してください。
+<important>
+
+**reference/description-rules.md** を必ず参照し、そのルールに従って説明文を作成してください。
+
+</important>
 
 ## 注意事項
 
