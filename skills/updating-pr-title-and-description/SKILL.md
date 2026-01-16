@@ -50,6 +50,7 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
    ```
 
 5. **Pull Requestの説明文を作成**
+   - **重要**: 説明文を書く前に、必ず **reference/description-rules.md** を読み、そのルールに従うこと
    - 作業ファイル（`.claude_work/pr_body_draft.md`）を編集
    - 上記で取得した情報とチャットの会話内容を考慮して説明文を作成
    - **説明文は必ず日本語で記載すること**
@@ -85,14 +86,6 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
      4. もう一度 `gh pr view` で確認
 
 </procedure>
-
-## 説明文の生成ルール
-
-<important>
-
-**reference/description-rules.md** を必ず参照し、そのルールに従って説明文を作成してください。
-
-</important>
 
 ## 注意事項
 
