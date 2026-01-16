@@ -2,7 +2,7 @@
 name: updating-pr-title-and-description
 description: Pull Request作成・更新時に使用。タイトルと説明文を自動生成・更新する。
 allowed-tools: Bash, Write, Edit, Read
-model: haiku
+model: opus
 context: fork
 ---
 
@@ -88,12 +88,7 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
 
 ## 説明文の生成ルール
 
-- `.github/PULL_REQUEST_TEMPLATE.md`が存在する場合：
-  - テンプレートに沿った形でPull Requestの説明文を生成
-
-- `.github/PULL_REQUEST_TEMPLATE.md`が存在しない場合：
-  - 「何をやったか」を記載
-  - 「修正が必要になった背景」を記載
+詳細は **reference/description-rules.md** を参照してください。
 
 ## 注意事項
 
@@ -112,8 +107,5 @@ Pull Requestのタイトルと説明文を以下の手順で更新してくだ�
   - ファイルの作成・編集には必ず`Write`ツールまたは`Edit`ツールを使用すること
   - bashコマンド（`cat <<EOF > file`、`cat << 'EOF' > file`、`echo "..." > file`など）でファイルを書き込まないこと
   - 理由：専用ツールの方が安全で確実、かつ文字エンコーディングの問題を回避できる
-- **git pushについて**：
-  - Pull Requestのコミットの状態と手元のコミットの状態で差分があるのであれば、ユーザーにgit pushのし忘れがないかを確認しましょう
-  - あなた自身がgit pushする必要はないし、そもそも権限的にできなくなっています
 
 </important>
