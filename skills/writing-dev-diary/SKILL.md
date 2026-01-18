@@ -99,7 +99,7 @@ esa-llm-scoped-guard -help
 
 **PRの場合**:
 ```bash
-gh pr view <URL> --json state,isDraft,merged,title,body
+gh pr view <URL> --json state,isDraft,title,body
 ```
 
 **Issueの場合**:
@@ -172,10 +172,10 @@ esa-llm-scoped-guard -json .claude_work/dev_diary.json
 
 | リソース | 条件 | 判定結果 |
 |----------|------|----------|
-| PR | merged=true | マージ済み |
+| PR | state=MERGED | マージ済み |
 | PR | state=OPEN, isDraft=true | ドラフト（WIP） |
 | PR | state=OPEN, isDraft=false | レビュー中 |
-| PR | state=CLOSED, merged=false | クローズ |
+| PR | state=CLOSED | クローズ |
 | Issue | state=OPEN | オープン |
 | Issue | state=CLOSED | クローズ済み |
 
