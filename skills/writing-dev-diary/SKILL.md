@@ -89,22 +89,22 @@ esa-llm-scoped-guard -help
 
 ### 手順3: 既存記事内のGitHub URL状態を確認（共通サブルーチン）
 
-既存記事を取得した後、記事内のタスクに含まれるGitHub URL（PR/Issue）の現在の状態を確認します。
+既存記事を取得した後、記事内のタスクに含まれるGitHub URL（PR/Issue）の現在の状態と内容を確認します。
 
 1. `body.tasks`から`github_urls`を抽出（URLがなければ**手順4へ**）
 
-2. 各URLの状態をgh CLIで確認
+2. 各URLの状態と内容をgh CLIで確認
 
 <example name="gh-cli-status-check">
 
 **PRの場合**:
 ```bash
-gh pr view <URL> --json state,isDraft,merged,title
+gh pr view <URL> --json state,isDraft,merged,title,body
 ```
 
 **Issueの場合**:
 ```bash
-gh issue view <URL> --json state,title
+gh issue view <URL> --json state,title,body
 ```
 
 </example>
@@ -112,6 +112,24 @@ gh issue view <URL> --json state,title
 3. <github-status-mapping>に従ってGitHub状態を判定
 
 4. <status-mapping>に従ってタスクstatusへのマッピングを記録
+
+5. タスクdescriptionの更新要否を判定し、必要なら更新内容を記録
+
+<decision-criteria name="description-update">
+
+以下のいずれかに該当する場合、タスクdescriptionを更新：
+
+| 判定条件 | 説明 |
+|---------|------|
+| タイトル差分 | GitHubタイトルがタスクdescriptionと実質的に異なる（スコープの追加・削除） |
+| 本文の追加スコープ | bodyに、タスクdescriptionにない追加機能・領域が記載されている |
+| 前提/実装変更 | bodyに前提や実装アプローチの変更が記載されている |
+
+</decision-criteria>
+
+更新内容の形式：
+- 基本: GitHubタイトルをそのまま使用
+- スコープ拡大がある場合: タイトル + "（+ 追加スコープ: ...）"のように本文の要点を短く追記
 
 ### 手順4: JSON生成
 
@@ -129,6 +147,11 @@ gh issue view <URL> --json state,title
    - 既存タスクの`github_urls`に含まれるPR/Issueの状態を確認した結果に基づいて、タスクの`status`を更新
    - <status-mapping>で定義したマッピングに従って、GitHub状態からタスクstatusへ変換
    - 例: PRがマージ済みの場合は`status: "completed"`に更新
+
+5. **タスクdescriptionの更新**（手順3のステップ5で更新が必要と判定された場合）：
+   - <description-update>の判定基準に基づいて、タスクの`description`を更新
+   - GitHubタイトルを軸に、本文の要点を短く統合して記述
+   - 例: "ログイン機能のバグ修正（+ 追加スコープ: セッション管理の改善）"
 
 ### 手順5: CLI実行
 
