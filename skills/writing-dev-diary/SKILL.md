@@ -48,7 +48,7 @@ esa-llm-scoped-guard -help
 
 #### パターンA: 「開発日誌を作って」の場合
 
-検索・取得をスキップして、**手順3（JSON生成）へ直行**してください。
+検索・取得をスキップして、**手順4（JSON生成）へ直行**してください。
 
 #### パターンB: 「開発日誌を更新」+ URLの場合
 
@@ -59,7 +59,7 @@ esa-llm-scoped-guard -help
    postNumber: 123
    ```
 
-3. 既存記事の内容を確認し、**手順2.5（GitHub URL状態確認）へ進む**
+3. 既存記事の内容を確認し、**手順3（GitHub URL状態確認）へ進む**
 
 #### パターンC: 「開発日誌を更新」（URLなし）の場合
 
@@ -73,17 +73,17 @@ esa-llm-scoped-guard -help
 
 2. 会話コンテキストから現在のタスクを特定し、検索結果から最も関連性の高い記事を判断
 
-3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順2.5へ**
+3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順3へ**
 
-4. **記事なし**: 新規作成モードで**手順3へ**
+4. **記事なし**: 新規作成モードで**手順4へ**
 
-### 手順2.5: 既存記事内のGitHub URL状態を確認（パターンB・C共通）
+### 手順3: 既存記事内のGitHub URL状態を確認（パターンB・C共通）
 
 既存記事を取得した後、記事内のタスクに含まれるGitHub URL（PR/Issue）の現在の状態を確認します。
 
 #### ステップ1: タスクからGitHub URLを抽出
 
-取得した記事の`body.tasks`配列から各タスクの`github_urls`を抽出してください。GitHub URLが存在しない場合は、このステップをスキップして**手順3へ**進んでください。
+取得した記事の`body.tasks`配列から各タスクの`github_urls`を抽出してください。GitHub URLが存在しない場合は、このステップをスキップして**手順4へ**進んでください。
 
 #### ステップ2: 各URLの状態を確認
 
@@ -129,9 +129,9 @@ gh issue view <URL> --json state,title
 
 </context>
 
-確認した状態を手順3のJSON生成時に反映できるよう記録してください。
+確認した状態を手順4のJSON生成時に反映できるよう記録してください。
 
-### 手順3: JSON生成
+### 手順4: JSON生成
 
 1. `Write`ツールで`.claude_work/dev_diary.json`を作成（**ファイル名固定、常に上書き**）
 
@@ -143,18 +143,18 @@ gh issue view <URL> --json state,title
 
 3. 会話コンテキストからタスク情報を抽出し、適切な内容を生成
 
-4. **タスクstatusの更新**（手順2.5を実行した場合）：
+4. **タスクstatusの更新**（手順3を実行した場合）：
    - 既存タスクの`github_urls`に含まれるPR/Issueの状態を確認した結果に基づいて、タスクの`status`を更新
    - <status-mapping>で定義したマッピングに従って、GitHub状態からタスクstatusへ変換
    - 例: PRがマージ済みの場合は`status: "completed"`に更新
 
-### 手順4: CLI実行
+### 手順5: CLI実行
 
 ```bash
 esa-llm-scoped-guard -json .claude_work/dev_diary.json
 ```
 
-### 手順5: 結果報告
+### 手順6: 結果報告
 
 - **成功時**: 記事URLをユーザーに報告
 - **失敗時**: エラー内容を確認し、JSONを修正して再実行
