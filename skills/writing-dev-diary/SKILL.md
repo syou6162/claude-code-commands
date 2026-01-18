@@ -84,11 +84,8 @@ esa-llm-scoped-guard -help
 2. JSONの構成内容：
    - **新規作成の場合**: `create_new: true`を指定、`post_number`は含めない
    - **更新の場合**: `post_number`を指定、`create_new`は含めない
-   - **category**: `Claude Code/開発日誌/yyyy/mm/dd`形式（今日の日付で終わる）
-   - **body**: 構造化形式で作成
-     - `background`: タスクの背景説明
-     - `related_links`: PR、Issue、Notion等のURL配列
-     - `tasks`: タスク配列（id, title, status, description, github_urls）
+   - **category**: `Claude Code/開発日誌/yyyy/mm/dd`形式（新規作成時は今日の日付、更新時は既存記事の日付を維持）
+   - **body**: `esa-llm-scoped-guard -help`で確認したスキーマに従って構造化形式で作成
 
 3. 会話コンテキストからタスク情報を抽出し、適切な内容を生成
 
@@ -101,6 +98,6 @@ esa-llm-scoped-guard -json .claude_work/dev_diary.json
 ### 手順5: 結果報告
 
 - **成功時**: 記事URLをユーザーに報告
-- **失敗時**: エラー内容をユーザーに報告し、必要に応じて修正
+- **失敗時**: エラー内容を確認し、JSONを修正して再実行
 
 </procedure>
