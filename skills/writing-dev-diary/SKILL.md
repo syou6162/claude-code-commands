@@ -15,7 +15,6 @@ esaに開発日誌を投稿・更新するスキルです。`esa-llm-scoped-guar
 <important>
 
 - [ ] JSONファイルは必ず`.claude_work/dev_diary.json`に作成すること（**ファイル名固定**）
-- [ ] `Write`ツール以外でJSONファイルを作成してはいけない（bashリダイレクト、heredoc禁止）
 - [ ] esa MCPの書き込み系ツール（`create_esa_post`, `update_esa_post`）は使用禁止。このスキルでは`esa-llm-scoped-guard` CLIのみ使用
 - [ ] JSONスキーマは必ず`esa-llm-scoped-guard -help`で確認してから生成すること
 
