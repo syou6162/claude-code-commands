@@ -46,9 +46,19 @@ esa-llm-scoped-guard -help
 
 ### 手順2: トリガーによる条件分岐
 
+<decision-criteria name="trigger-flow">
+
+| トリガー | 既存記事取得 | 次の手順 |
+|----------|-------------|---------|
+| 「開発日誌を作って」 | なし | 手順4 |
+| 「開発日誌を更新」+ URL | あり（URL指定） | 手順3（共通サブルーチン） |
+| 「開発日誌を更新」（URLなし） | あり（検索） | 手順3（記事あり）/ 手順4（記事なし） |
+
+</decision-criteria>
+
 #### パターンA: 「開発日誌を作って」の場合
 
-検索・取得をスキップして、**手順3（JSON生成）へ直行**してください。
+検索・取得をスキップして、**手順4（JSON生成）へ直行**してください。
 
 #### パターンB: 「開発日誌を更新」+ URLの場合
 
@@ -59,7 +69,7 @@ esa-llm-scoped-guard -help
    postNumber: 123
    ```
 
-3. 既存記事の内容を確認し、**手順3（JSON生成）へ進む**
+3. 既存記事の内容を確認し、**手順3（共通サブルーチン）へ進む**
 
 #### パターンC: 「開発日誌を更新」（URLなし）の場合
 
@@ -73,11 +83,55 @@ esa-llm-scoped-guard -help
 
 2. 会話コンテキストから現在のタスクを特定し、検索結果から最も関連性の高い記事を判断
 
-3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順3へ**
+3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順3（共通サブルーチン）へ**
 
-4. **記事なし**: 新規作成モードで**手順3へ**
+4. **記事なし**: 新規作成モードで**手順4へ**
 
-### 手順3: JSON生成
+### 手順3: 既存記事内のGitHub URL状態を確認（共通サブルーチン）
+
+既存記事を取得した後、記事内のタスクに含まれるGitHub URL（PR/Issue）の現在の状態と内容を確認します。
+
+1. `body.tasks`から`github_urls`を抽出（URLがなければ**手順4へ**）
+
+2. 各URLの状態と内容をgh CLIで確認
+
+<example name="gh-cli-status-check">
+
+**PRの場合**:
+```bash
+gh pr view <URL> --json state,isDraft,merged,title,body
+```
+
+**Issueの場合**:
+```bash
+gh issue view <URL> --json state,title,body
+```
+
+</example>
+
+3. <github-status-mapping>に従ってGitHub状態を判定
+
+4. <status-mapping>に従ってタスクstatusへのマッピングを記録
+
+5. タスクdescriptionの更新要否を判定し、必要なら更新内容を記録
+
+<decision-criteria name="description-update">
+
+以下のいずれかに該当する場合、タスクdescriptionを更新：
+
+| 判定条件 | 説明 |
+|---------|------|
+| タイトル差分 | GitHubタイトルがタスクdescriptionと実質的に異なる（スコープの追加・削除） |
+| 本文の追加スコープ | bodyに、タスクdescriptionにない追加機能・領域が記載されている |
+| 前提/実装変更 | bodyに前提や実装アプローチの変更が記載されている |
+
+</decision-criteria>
+
+更新内容の形式：
+- 基本: GitHubタイトルをそのまま使用
+- スコープ拡大がある場合: タイトル + "（+ 追加スコープ: ...）"のように本文の要点を短く追記
+
+### 手順4: JSON生成
 
 1. `Write`ツールで`.claude_work/dev_diary.json`を作成（**ファイル名固定、常に上書き**）
 
@@ -89,15 +143,53 @@ esa-llm-scoped-guard -help
 
 3. 会話コンテキストからタスク情報を抽出し、適切な内容を生成
 
-### 手順4: CLI実行
+4. **タスクstatusの更新**（手順3を実行した場合）：
+   - 既存タスクの`github_urls`に含まれるPR/Issueの状態を確認した結果に基づいて、タスクの`status`を更新
+   - <status-mapping>で定義したマッピングに従って、GitHub状態からタスクstatusへ変換
+   - 例: PRがマージ済みの場合は`status: "completed"`に更新
+
+5. **タスクdescriptionの更新**（手順3のステップ5で更新が必要と判定された場合）：
+   - <description-update>の判定基準に基づいて、タスクの`description`を更新
+   - GitHubタイトルを軸に、本文の要点を短く統合して記述
+   - 例: "ログイン機能のバグ修正（+ 追加スコープ: セッション管理の改善）"
+
+### 手順5: CLI実行
 
 ```bash
 esa-llm-scoped-guard -json .claude_work/dev_diary.json
 ```
 
-### 手順5: 結果報告
+### 手順6: 結果報告
 
 - **成功時**: 記事URLをユーザーに報告
 - **失敗時**: エラー内容を確認し、JSONを修正して再実行
 
 </procedure>
+
+## 参照データ
+
+<context name="github-status-mapping">
+
+| リソース | 条件 | 判定結果 |
+|----------|------|----------|
+| PR | merged=true | マージ済み |
+| PR | state=OPEN, isDraft=true | ドラフト（WIP） |
+| PR | state=OPEN, isDraft=false | レビュー中 |
+| PR | state=CLOSED, merged=false | クローズ |
+| Issue | state=OPEN | オープン |
+| Issue | state=CLOSED | クローズ済み |
+
+</context>
+
+<context name="status-mapping">
+
+| GitHub状態 | タスクstatus |
+|------------|--------------|
+| PRがマージ済み | `completed` |
+| PRがドラフト（WIP） | `in_progress` |
+| PRがレビュー中 | `in_review` |
+| PRがクローズ（マージなし） | （変更なし） |
+| Issueがクローズ | `completed` |
+| Issueがオープン | （変更なし） |
+
+</context>
