@@ -116,6 +116,9 @@ gcloudやbqコマンド実行時に認証エラー（`Reauthentication required`
 ### updating-pr-title-and-description
 PR作成・更新時に自動的に発動するスキル。Pull Requestのタイトルと説明文を自動生成・更新します。差分やコミットメッセージを分析し、適切な説明文を作成します。説明文は日本語で記載され、`.github/PULL_REQUEST_TEMPLATE.md`がある場合はテンプレートに沿った形で生成されます。
 
+### writing-dev-diary
+「開発日誌更新」「開発日誌作って」の言及時に自動的に発動するスキル。esa-llm-scoped-guardを使って開発日誌を新規作成・更新します。トリガーによって動作を分岐し、「作って」の場合は直接新規作成、「更新」+URLの場合は指定記事を更新、「更新」のみの場合は検索して関連記事を更新（なければ新規作成）します。
+
 ## Available Commands
 
 ### load_spec_tasks

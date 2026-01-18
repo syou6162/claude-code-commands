@@ -34,6 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `skills/requesting-gcloud-bq-auth/SKILL.md` - gcloud/bqコマンドの認証エラーを検出してユーザーに認証を依頼するスキル（自動発動）
 - `skills/semantic-committing/SKILL.md` - git diffを分析し、変更を論理的単位に分割してコミットするスキル（自動発動）
 - `skills/updating-pr-title-and-description/SKILL.md` - PRタイトル・説明文の自動生成・更新スキル（自動発動）
+- `skills/writing-dev-diary/SKILL.md` - esa-llm-scoped-guardで開発日誌を新規作成・更新するスキル（自動発動）
 
 ### プラグイン設定
 - `.claude-plugin/plugin.json` - プラグインマニフェスト（メタデータとコマンド定義）
