@@ -59,7 +59,7 @@ esa-llm-scoped-guard -help
    postNumber: 123
    ```
 
-3. 既存記事の内容を確認し、**手順3（JSON生成）へ進む**
+3. 既存記事の内容を確認し、**手順2.5（GitHub URL状態確認）へ進む**
 
 #### パターンC: 「開発日誌を更新」（URLなし）の場合
 
@@ -73,9 +73,63 @@ esa-llm-scoped-guard -help
 
 2. 会話コンテキストから現在のタスクを特定し、検索結果から最も関連性の高い記事を判断
 
-3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順3へ**
+3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順2.5へ**
 
 4. **記事なし**: 新規作成モードで**手順3へ**
+
+### 手順2.5: 既存記事内のGitHub URL状態を確認（パターンB・C共通）
+
+既存記事を取得した後、記事内のタスクに含まれるGitHub URL（PR/Issue）の現在の状態を確認します。
+
+#### ステップ1: タスクからGitHub URLを抽出
+
+取得した記事の`body.tasks`配列から各タスクの`github_urls`を抽出してください。GitHub URLが存在しない場合は、このステップをスキップして**手順3へ**進んでください。
+
+#### ステップ2: 各URLの状態を確認
+
+抽出された各URLについて、gh CLIで現在の状態を確認：
+
+**PRの場合**:
+```bash
+gh pr view <URL> --json state,isDraft,merged,title
+```
+
+**Issueの場合**:
+```bash
+gh issue view <URL> --json state,title
+```
+
+#### ステップ3: 状態の判定
+
+<context name="github-status-mapping">
+
+| リソース | 条件 | 判定結果 |
+|----------|------|----------|
+| PR | merged=true | マージ済み |
+| PR | state=OPEN, isDraft=true | ドラフト（WIP） |
+| PR | state=OPEN, isDraft=false | レビュー中 |
+| PR | state=CLOSED, merged=false | クローズ |
+| Issue | state=OPEN | オープン |
+| Issue | state=CLOSED | クローズ済み |
+
+</context>
+
+#### ステップ4: タスクstatusへのマッピング
+
+<context name="status-mapping">
+
+| GitHub状態 | タスクstatus |
+|------------|--------------|
+| PRがマージ済み | `completed` |
+| PRがドラフト（WIP） | `in_progress` |
+| PRがレビュー中 | `in_review` |
+| PRがクローズ（マージなし） | （変更なし） |
+| Issueがクローズ | `completed` |
+| Issueがオープン | （変更なし） |
+
+</context>
+
+確認した状態を手順3のJSON生成時に反映できるよう記録してください。
 
 ### 手順3: JSON生成
 
@@ -88,6 +142,11 @@ esa-llm-scoped-guard -help
    - **body**: `esa-llm-scoped-guard -help`で確認したスキーマに従って構造化形式で作成
 
 3. 会話コンテキストからタスク情報を抽出し、適切な内容を生成
+
+4. **タスクstatusの更新**（手順2.5を実行した場合）：
+   - 既存タスクの`github_urls`に含まれるPR/Issueの状態を確認した結果に基づいて、タスクの`status`を更新
+   - <status-mapping>で定義したマッピングに従って、GitHub状態からタスクstatusへ変換
+   - 例: PRがマージ済みの場合は`status: "completed"`に更新
 
 ### 手順4: CLI実行
 
