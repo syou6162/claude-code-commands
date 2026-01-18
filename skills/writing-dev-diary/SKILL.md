@@ -46,6 +46,16 @@ esa-llm-scoped-guard -help
 
 ### 手順2: トリガーによる条件分岐
 
+<decision-criteria name="trigger-flow">
+
+| トリガー | 既存記事取得 | 次の手順 |
+|----------|-------------|---------|
+| 「開発日誌を作って」 | なし | 手順4 |
+| 「開発日誌を更新」+ URL | あり（URL指定） | 手順3（共通サブルーチン） |
+| 「開発日誌を更新」（URLなし） | あり（検索） | 手順3（記事あり）/ 手順4（記事なし） |
+
+</decision-criteria>
+
 #### パターンA: 「開発日誌を作って」の場合
 
 検索・取得をスキップして、**手順4（JSON生成）へ直行**してください。
@@ -59,7 +69,7 @@ esa-llm-scoped-guard -help
    postNumber: 123
    ```
 
-3. 既存記事の内容を確認し、**手順3（GitHub URL状態確認）へ進む**
+3. 既存記事の内容を確認し、**手順3（共通サブルーチン）へ進む**
 
 #### パターンC: 「開発日誌を更新」（URLなし）の場合
 
@@ -73,21 +83,19 @@ esa-llm-scoped-guard -help
 
 2. 会話コンテキストから現在のタスクを特定し、検索結果から最も関連性の高い記事を判断
 
-3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順3へ**
+3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順3（共通サブルーチン）へ**
 
 4. **記事なし**: 新規作成モードで**手順4へ**
 
-### 手順3: 既存記事内のGitHub URL状態を確認（パターンB・C共通）
+### 手順3: 既存記事内のGitHub URL状態を確認（共通サブルーチン）
 
 既存記事を取得した後、記事内のタスクに含まれるGitHub URL（PR/Issue）の現在の状態を確認します。
 
-#### ステップ1: タスクからGitHub URLを抽出
+1. `body.tasks`から`github_urls`を抽出（URLがなければ**手順4へ**）
 
-取得した記事の`body.tasks`配列から各タスクの`github_urls`を抽出してください。GitHub URLが存在しない場合は、このステップをスキップして**手順4へ**進んでください。
+2. 各URLの状態をgh CLIで確認
 
-#### ステップ2: 各URLの状態を確認
-
-抽出された各URLについて、gh CLIで現在の状態を確認：
+<example name="gh-cli-status-check">
 
 **PRの場合**:
 ```bash
@@ -99,37 +107,11 @@ gh pr view <URL> --json state,isDraft,merged,title
 gh issue view <URL> --json state,title
 ```
 
-#### ステップ3: 状態の判定
+</example>
 
-<context name="github-status-mapping">
+3. <github-status-mapping>に従ってGitHub状態を判定
 
-| リソース | 条件 | 判定結果 |
-|----------|------|----------|
-| PR | merged=true | マージ済み |
-| PR | state=OPEN, isDraft=true | ドラフト（WIP） |
-| PR | state=OPEN, isDraft=false | レビュー中 |
-| PR | state=CLOSED, merged=false | クローズ |
-| Issue | state=OPEN | オープン |
-| Issue | state=CLOSED | クローズ済み |
-
-</context>
-
-#### ステップ4: タスクstatusへのマッピング
-
-<context name="status-mapping">
-
-| GitHub状態 | タスクstatus |
-|------------|--------------|
-| PRがマージ済み | `completed` |
-| PRがドラフト（WIP） | `in_progress` |
-| PRがレビュー中 | `in_review` |
-| PRがクローズ（マージなし） | （変更なし） |
-| Issueがクローズ | `completed` |
-| Issueがオープン | （変更なし） |
-
-</context>
-
-確認した状態を手順4のJSON生成時に反映できるよう記録してください。
+4. <status-mapping>に従ってタスクstatusへのマッピングを記録
 
 ### 手順4: JSON生成
 
@@ -160,3 +142,31 @@ esa-llm-scoped-guard -json .claude_work/dev_diary.json
 - **失敗時**: エラー内容を確認し、JSONを修正して再実行
 
 </procedure>
+
+## 参照データ
+
+<context name="github-status-mapping">
+
+| リソース | 条件 | 判定結果 |
+|----------|------|----------|
+| PR | merged=true | マージ済み |
+| PR | state=OPEN, isDraft=true | ドラフト（WIP） |
+| PR | state=OPEN, isDraft=false | レビュー中 |
+| PR | state=CLOSED, merged=false | クローズ |
+| Issue | state=OPEN | オープン |
+| Issue | state=CLOSED | クローズ済み |
+
+</context>
+
+<context name="status-mapping">
+
+| GitHub状態 | タスクstatus |
+|------------|--------------|
+| PRがマージ済み | `completed` |
+| PRがドラフト（WIP） | `in_progress` |
+| PRがレビュー中 | `in_review` |
+| PRがクローズ（マージなし） | （変更なし） |
+| Issueがクローズ | `completed` |
+| Issueがオープン | （変更なし） |
+
+</context>
