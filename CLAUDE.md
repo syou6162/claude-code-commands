@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `commands/estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
 - `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
 - `commands/validate_bq_query.md` - BigQueryクエリの構文と実行可能性の検証
-- `commands/codex_review.md` - Codex MCPを使った客観的コードレビュー
+- `commands/codex_review.md` - Codex MCPを使った客観的コードレビュー（planファイルと開発日誌を参照）
 - `commands/multi_perspective_review.md` - 複数視点からの客観的レビューと妥当性検証
 
 ### スキル構成
@@ -175,6 +175,7 @@ Claude AIのシステムプロンプトおよび公式ドキュメントでは�
 - **git-sequential-stage** - semantic-committing（スキル）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 - **Codex MCP (`mcp__codex__codex`)** - コードレビュー（codex_review コマンド）
+- **esa MCP (`mcp__esa-mcp-server__read_esa_post`)** - 開発日誌取得（codex_review コマンド）
 - **spec-workflow MCP** - spec workflow連携（load_spec_tasks コマンド）
 - **detect-spec-workflow サブエージェント** - spec-id判定（load_spec_tasks コマンド）
 
