@@ -130,7 +130,7 @@ spec workflowのtasks.mdから次にやるべきタスクを読み込み、Claud
 ```
 
 ### codex_review
-Codex MCPを使ってコードの変更を客観的にレビューします。現在作業中のspec workflowがある場合は仕様に沿ったレビューを実施します。
+Codex MCPを使ってコードの変更を客観的にレビューします。planファイルと開発日誌（コンテキストにある場合）を参照し、計画に沿った実装になっているかを確認します。
 
 ```bash
 # 使用方法 (Claude Code内で)
