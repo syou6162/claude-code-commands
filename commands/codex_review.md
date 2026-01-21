@@ -44,7 +44,7 @@ git worktree運用のため、単一のplanファイルが存在する前提で�
 
 会話のコンテキスト内にesa URLの開発日誌が言及されている場合、以下の手順で取得・保存してください：
 
-1. esa URLからpost番号を抽出（例：`https://yasuhisa.esa.io/posts/3215` → `3215`）
+1. esa URLからpost番号を抽出（例：`https://xxx.esa.io/posts/1234` → `1234`）
 2. `mcp__esa-mcp-server__read_esa_post` ツールでpost内容を取得
 3. 取得した内容を以下のパスに保存（Writeツール使用）
 
