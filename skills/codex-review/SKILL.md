@@ -1,6 +1,6 @@
 ---
 name: codex-review
-description: Review code changes objectively using Codex CLI. Use when reviewing diffs, checking implementation against plans, or when the user says "レビューして" or "diffを確認して".
+description: Review code changes against plans and development diaries. Use when user requests "codex review".
 allowed-tools: Bash, Write, Edit, Read
 model: sonnet
 context: fork
