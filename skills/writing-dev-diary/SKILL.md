@@ -14,9 +14,9 @@ esaに開発日誌を投稿・更新するスキルです。`esa-llm-scoped-guar
 
 <important>
 
-- [ ] JSONファイルは必ず`.claude_work/dev_diary.json`に作成すること（**ファイル名固定**）
-- [ ] esa MCPの書き込み系ツール（`create_esa_post`, `update_esa_post`）は使用禁止。このスキルでは`esa-llm-scoped-guard` CLIのみ使用
-- [ ] JSONスキーマは必ず`esa-llm-scoped-guard -help`で確認してから生成すること
+- JSONファイルは必ず`.claude_work/dev_diary.json`に作成すること（**ファイル名固定**）
+- esa MCPの書き込み系ツール（`create_esa_post`, `update_esa_post`）は使用禁止。このスキルでは`esa-llm-scoped-guard` CLIのみ使用
+- JSONスキーマは必ず`esa-llm-scoped-guard -help`で確認してから生成すること
 
 </important>
 
@@ -51,7 +51,7 @@ esa-llm-scoped-guard -help
 | トリガー | 既存記事取得 | 次の手順 |
 |----------|-------------|---------|
 | 「開発日誌を作って」 | なし | 手順4 |
-| 「開発日誌を更新」+ URL | あり（URL指定） | 手順3（共通サブルーチン） |
+| 「開発日誌を更新」+ URL | あり（URL指定） | 手順3 |
 | 「開発日誌を更新」（URLなし） | あり（検索） | 手順3（記事あり）/ 手順4（記事なし） |
 
 </decision-criteria>
@@ -69,7 +69,7 @@ esa-llm-scoped-guard -help
    postNumber: 123
    ```
 
-3. 既存記事の内容を確認し、**手順3（共通サブルーチン）へ進む**
+3. 既存記事の内容を確認し、**手順3（同期フェーズ）へ進む**
 
 #### パターンC: 「開発日誌を更新」（URLなし）の場合
 
@@ -83,17 +83,63 @@ esa-llm-scoped-guard -help
 
 2. 会話コンテキストから現在のタスクを特定し、検索結果から最も関連性の高い記事を判断
 
-3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順3（共通サブルーチン）へ**
+3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順3へ**
 
 4. **記事なし**: 新規作成モードで**手順4へ**
 
-### 手順3: 既存記事内のGitHub URL状態を確認（共通サブルーチン）
+### 手順3: 既存記事との同期（更新時のみ）
 
-既存記事を取得した後、記事内のタスクに含まれるGitHub URL（PR/Issue）の現在の状態と内容を確認します。
+**目的**: 既存記事をJSONで完全に再現し、差分ゼロの状態を作る
 
-1. `body.tasks`から`github_urls`を抽出（URLがなければ**手順4へ**）
+#### 3.1 現状再現JSONの作成
 
-2. 各URLの状態と内容をgh CLIで確認
+1. 既存記事の内容から、現状を再現するJSONを`.claude_work/dev_diary.json`に作成
+   - `post_number`: 既存記事の番号を指定
+   - `category`: 既存記事のカテゴリをそのまま維持
+   - `name`: 既存記事のタイトル
+   - `body`: 既存記事の本文を構造化形式で完全に再現
+
+#### 3.2 差分ゼロの確認（最大5回リトライ）
+
+2. `validate`で形式確認：
+   ```bash
+   esa-llm-scoped-guard validate -json .claude_work/dev_diary.json
+   ```
+
+3. `diff`で既存記事との差分確認：
+   ```bash
+   esa-llm-scoped-guard diff -json .claude_work/dev_diary.json
+   ```
+
+4. **差分がある場合**: JSONを修正して手順3.2を繰り返す（最大5回まで）
+
+5. **5回試しても差分が残る場合**: ユーザーに報告して判断を仰ぐ
+
+6. **差分ゼロになった場合**: 手順4へ進む
+
+### 手順4: JSON更新
+
+#### 新規作成の場合
+
+1. `Write`ツールで`.claude_work/dev_diary.json`を作成（**ファイル名固定、常に上書き**）
+
+2. JSONの構成内容：
+   - `create_new: true`を指定、`post_number`は含めない
+   - `category`: `Claude Code/開発日誌/yyyy/mm/dd`形式（今日の日付）
+   - `name`: 日付ベースのタイトル
+   - `body`: 会話コンテキストから抽出したタスク情報を構造化形式で作成
+
+#### 更新の場合
+
+1. 手順3で同期したJSONに変更を加える（`Edit`ツール使用）
+   - タスクの追加・更新
+   - GitHub URL状態の反映（下記参照）
+
+2. **GitHub URL状態の確認と反映**:
+
+   a. `body.tasks`から`github_urls`を抽出（URLがなければスキップ）
+
+   b. 各URLの状態と内容をgh CLIで確認
 
 <example name="gh-cli-status-check">
 
@@ -109,11 +155,11 @@ gh issue view <URL> --json state,title,body
 
 </example>
 
-3. <github-status-mapping>に従ってGitHub状態を判定
+   c. <github-status-mapping>に従ってGitHub状態を判定
 
-4. <status-mapping>に従ってタスクstatusへのマッピングを記録
+   d. <status-mapping>に従ってタスクstatusを更新
 
-5. タスクdescriptionの更新要否を判定し、必要なら更新内容を記録
+   e. タスクdescriptionの更新要否を判定（<description-update>参照）
 
 <decision-criteria name="description-update">
 
@@ -127,42 +173,47 @@ gh issue view <URL> --json state,title,body
 
 </decision-criteria>
 
-更新内容の形式：
-- 基本: GitHubタイトルをそのまま使用
-- スコープ拡大がある場合: タイトル + "（+ 追加スコープ: ...）"のように本文の要点を短く追記
+   更新内容の形式：
+   - 基本: GitHubタイトルをそのまま使用
+   - スコープ拡大がある場合: タイトル + "（+ 追加スコープ: ...）"のように本文の要点を短く追記
 
-### 手順4: JSON生成
+### 手順5: 投稿前確認
 
-1. `Write`ツールで`.claude_work/dev_diary.json`を作成（**ファイル名固定、常に上書き**）
+1. `validate`で形式確認：
+   ```bash
+   esa-llm-scoped-guard validate -json .claude_work/dev_diary.json
+   ```
 
-2. JSONの構成内容：
-   - **新規作成の場合**: `create_new: true`を指定、`post_number`は含めない
-   - **更新の場合**: `post_number`を指定、`create_new`は含めない
-   - **category**: `Claude Code/開発日誌/yyyy/mm/dd`形式（新規作成時は今日の日付、更新時は既存記事の日付を維持）
-   - **body**: `esa-llm-scoped-guard -help`で確認したスキーマに従って構造化形式で作成
+2. `diff`で差分が意図通りか確認：
+   ```bash
+   esa-llm-scoped-guard diff -json .claude_work/dev_diary.json
+   ```
 
-3. 会話コンテキストからタスク情報を抽出し、適切な内容を生成
+   - 新規作成: 全行が`+`で表示される（全体の最終確認）
+   - 更新: 意図した変更のみか確認（消しすぎていないか、意図しない変更がないか）
+   - **問題がある場合のみ**ユーザーにdiff結果を表示して確認を求める
 
-4. **タスクstatusの更新**（手順3を実行した場合）：
-   - 既存タスクの`github_urls`に含まれるPR/Issueの状態を確認した結果に基づいて、タスクの`status`を更新
-   - <status-mapping>で定義したマッピングに従って、GitHub状態からタスクstatusへ変換
-   - 例: PRがマージ済みの場合は`status: "completed"`に更新
+3. `preview`で最終的なMarkdownを確認：
+   ```bash
+   esa-llm-scoped-guard preview -json .claude_work/dev_diary.json
+   ```
 
-5. **タスクdescriptionの更新**（手順3のステップ5で更新が必要と判定された場合）：
-   - <description-update>の判定基準に基づいて、タスクの`description`を更新
-   - GitHubタイトルを軸に、本文の要点を短く統合して記述
-   - 例: "ログイン機能のバグ修正（+ 追加スコープ: セッション管理の改善）"
+   - 意図しないHTMLタグ（`<details>`や`<summary>`など）が含まれていないか確認
+   - Markdown構造が正しいか確認
+   - preview結果をユーザーに表示して最終確認を求める
 
-### 手順5: CLI実行
+### 手順6: 投稿
+
+ユーザーの承認後、投稿を実行：
 
 ```bash
-esa-llm-scoped-guard -json .claude_work/dev_diary.json
+esa-llm-scoped-guard post -json .claude_work/dev_diary.json
 ```
 
-### 手順6: 結果報告
+### 手順7: 結果報告
 
 - **成功時**: 記事URLをユーザーに報告
-- **失敗時**: エラー内容を確認し、JSONを修正して再実行
+- **失敗時**: エラー内容を確認し、JSONを修正して手順5から再実行
 
 </procedure>
 
