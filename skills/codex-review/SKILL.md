@@ -71,9 +71,11 @@ Codexレビュー前に、planファイルを読んで現在の実装（diff）�
 3. planの内容と実装にずれがないか確認
 4. ずれがある場合はユーザーに報告
 
-### 5. Codex CLIでのレビュー実行
+### 5. Codex CLIでのレビュー実行とファイル保存
 
-Bash経由で`codex exec --sandbox read-only`を使ってレビューを実行してください。
+Bash経由で`codex exec --sandbox read-only`を使ってレビューを実行し、`tee`で出力をファイルに保存してください。
+
+**出力先**: `.claude_work/codex_review.md`（固定パス、既存ファイルは上書き）
 
 <example>
 
@@ -88,7 +90,7 @@ echo "<デフォルトブランチ名>ブランチとの差分を日本語でレ
 レビューの観点：
 - planに記載された変更内容との整合性
 - コードの品質（可読性、保守性）
-- 潜在的な問題やバグ" | codex exec --sandbox read-only
+- 潜在的な問題やバグ" | codex exec --sandbox read-only | tee .claude_work/codex_review.md
 ```
 
 **開発日誌がある場合のコマンド例：**
@@ -104,17 +106,32 @@ echo "<デフォルトブランチ名>ブランチとの差分を日本語でレ
 - planに記載された変更内容との整合性
 - コードの品質（可読性、保守性）
 - 潜在的な問題やバグ
-- 開発日誌に記載された開発指針との整合性" | codex exec --sandbox read-only
+- 開発日誌に記載された開発指針との整合性" | codex exec --sandbox read-only | tee .claude_work/codex_review.md
+```
+
+**連続会話の場合：**
+
+```bash
+echo "追加の質問" | codex exec --sandbox read-only resume <thread-id> | tee .claude_work/codex_review.md
 ```
 
 </example>
 
-**重要：** ファイルの内容ではなく、ファイルパスを渡すことで、Codexが直接ファイルを読み取ります。これにより、意図の歪みを防ぎます。
-
-**連続会話：** codex CLIがターミナルに出力するthread-idを確認し、追加の質問がある場合は `echo "追加の質問" | codex exec --sandbox read-only resume <thread-id>` で継続できます。
+**重要：**
+- ファイルの内容ではなく、ファイルパスを渡すことで、Codexが直接ファイルを読み取ります
+- `tee`を使うことで、リアルタイムで出力を確認しつつファイルにも保存されます
+- codex CLIの出力からthread-id（セッションID）を確認してください
 
 ### 6. レビュー結果の報告
 
-Codex CLIからのレビュー結果をユーザーに報告してください。
+**以下の2つの情報のみ**をユーザーに報告してください：
+
+1. **レビューファイルのパス**: `.claude_work/codex_review.md`
+2. **セッションID**: codex CLIが出力したthread-id
+
+**禁止事項**:
+- レビュー内容を要約しないこと
+- レビュー内容の詳細を報告しないこと
+- ファイルを読んで内容を説明しないこと
 
 </procedure>
