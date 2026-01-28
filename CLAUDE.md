@@ -24,11 +24,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `commands/estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
 - `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
 - `commands/validate_bq_query.md` - BigQueryクエリの構文と実行可能性の検証
-- `commands/codex_review.md` - Codex MCPを使った客観的コードレビュー（planファイルと開発日誌を参照）
 - `commands/multi_perspective_review.md` - 複数視点からの客観的レビューと妥当性検証
 
 ### スキル構成
 - `skills/ask-user-choice/SKILL.md` - ユーザーに質問する際に選択式で答えやすくするスキル（自動発動）
+- `skills/codex-review/SKILL.md` - Codex CLIを使った客観的コードレビュー（planファイルと開発日誌を参照、自動発動）
 - `skills/gha-sha-reference/SKILL.md` - GitHub ActionsのタグをSHA参照に変換するスキル（自動発動）
 - `skills/reading-notion/SKILL.md` - NotionページやドキュメントをキーワードまたはURLで検索・取得し、内容を要約・説明するスキル（自動発動）
 - `skills/requesting-gcloud-bq-auth/SKILL.md` - gcloud/bqコマンドの認証エラーを検出してユーザーに認証を依頼するスキル（自動発動）
@@ -174,8 +174,8 @@ Claude AIのシステムプロンプトおよび公式ドキュメントでは�
 - **GitHub CLI (`gh`)** - Pull Request操作（triage_pr_comments, updating-pr-title-and-description, monitor-ci）
 - **git-sequential-stage** - semantic-committing（スキル）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
-- **Codex MCP (`mcp__codex__codex`)** - コードレビュー（codex_review コマンド）
-- **esa MCP (`mcp__esa-mcp-server__read_esa_post`)** - 開発日誌取得（codex_review コマンド）
+- **Codex CLI (`codex exec`)** - コードレビュー（codex-review スキル）
+- **esa MCP (`mcp__esa-mcp-server__read_esa_post`)** - 開発日誌取得（codex-review スキル）
 - **spec-workflow MCP** - spec workflow連携（load_spec_tasks コマンド）
 - **detect-spec-workflow サブエージェント** - spec-id判定（load_spec_tasks コマンド）
 

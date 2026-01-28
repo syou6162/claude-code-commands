@@ -55,10 +55,11 @@ claude-code-commands/
 │   ├── triage_pr_comments.md
 │   ├── estimate_pr_size.md
 │   ├── optimize_bq_query.md
-│   ├── validate_bq_query.md
-│   └── codex_review.md
+│   └── validate_bq_query.md
 ├── skills/
 │   ├── ask-user-choice/
+│   │   └── SKILL.md                         # スキル定義
+│   ├── codex-review/
 │   │   └── SKILL.md                         # スキル定義
 │   ├── gha-sha-reference/
 │   │   └── SKILL.md                         # スキル定義
@@ -101,6 +102,9 @@ Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析
 ### ask-user-choice
 ユーザーに質問や相談をする際に自動的に発動するスキル。テキスト入力ではなく、明確な選択肢（2-4個）を提示することで、ユーザーの入力負担を軽減し、より迅速な意思決定を支援します。multiSelectオプションを活用することで、複数選択が適切な場面にも対応します。
 
+### codex-review
+Codex CLIを使ってコードの変更を客観的にレビューするスキル。planファイルと開発日誌（コンテキストにある場合）を参照し、計画に沿った実装になっているかを確認します。「レビューして」「diffを確認して」などのトリガーで自動発動し、Bash経由でcodex execを実行することで、レビューの進捗がリアルタイムで確認できます。
+
 ### gha-sha-reference
 ユーザーがGitHub Actionsのタグ参照をSHA参照に変換するよう要求したときに自動的に発動するスキル。セキュリティのベストプラクティスに従い、`uses:`フィールドのタグ参照（例: `@v4`）を不変なSHA参照（例: `@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2`）に変換します。GitHub APIを使用してコミットSHAを自動取得し、サプライチェーン攻撃のリスクを軽減します。
 
@@ -127,14 +131,6 @@ spec workflowのtasks.mdから次にやるべきタスクを読み込み、Claud
 ```bash
 # 使用方法 (Claude Code内で)
 /syou6162-plugin:load_spec_tasks
-```
-
-### codex_review
-Codex MCPを使ってコードの変更を客観的にレビューします。planファイルと開発日誌（コンテキストにある場合）を参照し、計画に沿った実装になっているかを確認します。
-
-```bash
-# 使用方法 (Claude Code内で)
-/syou6162-plugin:codex_review
 ```
 
 ### triage_pr_comments

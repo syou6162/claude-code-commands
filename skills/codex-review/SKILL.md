@@ -1,10 +1,14 @@
 ---
-description: Codex MCPを使ってコードの変更を客観的にレビューします。planファイルと開発日誌（コンテキストにある場合）を参照し、計画に沿った実装になっているかを確認します。
+name: codex-review
+description: Review code changes objectively using Codex CLI. Use when reviewing diffs, checking implementation against plans, or when the user says "レビューして" or "diffを確認して".
+allowed-tools: Bash, Write, Edit, Read
+model: sonnet
+context: fork
 ---
 
-# Codex MCPを使ったコードレビュー
+# Codex CLIを使ったコードレビュー
 
-コードの変更内容に対してcodex mcpを使って客観的なレビューを実施します。
+コードの変更内容に対してcodex CLIを使って客観的なレビューを実施します。
 
 ## 実行手順
 
@@ -67,16 +71,16 @@ Codexレビュー前に、planファイルを読んで現在の実装（diff）�
 3. planの内容と実装にずれがないか確認
 4. ずれがある場合はユーザーに報告
 
-### 5. Codex MCPでのレビュー実行
+### 5. Codex CLIでのレビュー実行
 
-`mcp__codex__codex` ツールを使ってレビューを実行してください。
+Bash経由で`codex exec --sandbox read-only`を使ってレビューを実行してください。
 
 <example>
 
-**開発日誌がない場合のプロンプト例：**
+**開発日誌がない場合のコマンド例：**
 
-```
-<デフォルトブランチ名>ブランチとの差分を日本語でレビューしてください。
+```bash
+echo "<デフォルトブランチ名>ブランチとの差分を日本語でレビューしてください。
 
 以下のファイルを参照して、計画に沿った実装になっているか確認してください：
 - planファイル: <plan-fileタグで定義されたパス>
@@ -84,13 +88,13 @@ Codexレビュー前に、planファイルを読んで現在の実装（diff）�
 レビューの観点：
 - planに記載された変更内容との整合性
 - コードの品質（可読性、保守性）
-- 潜在的な問題やバグ
+- 潜在的な問題やバグ" | codex exec --sandbox read-only
 ```
 
-**開発日誌がある場合のプロンプト例：**
+**開発日誌がある場合のコマンド例：**
 
-```
-<デフォルトブランチ名>ブランチとの差分を日本語でレビューしてください。
+```bash
+echo "<デフォルトブランチ名>ブランチとの差分を日本語でレビューしてください。
 
 以下のファイルを参照して、計画に沿った実装になっているか確認してください：
 - planファイル: <plan-fileタグで定義されたパス>
@@ -100,15 +104,17 @@ Codexレビュー前に、planファイルを読んで現在の実装（diff）�
 - planに記載された変更内容との整合性
 - コードの品質（可読性、保守性）
 - 潜在的な問題やバグ
-- 開発日誌に記載された開発指針との整合性
+- 開発日誌に記載された開発指針との整合性" | codex exec --sandbox read-only
 ```
 
 </example>
 
 **重要：** ファイルの内容ではなく、ファイルパスを渡すことで、Codexが直接ファイルを読み取ります。これにより、意図の歪みを防ぎます。
 
+**連続会話：** codex CLIがターミナルに出力するthread-idを確認し、追加の質問がある場合は `echo "追加の質問" | codex exec --sandbox read-only resume <thread-id>` で継続できます。
+
 ### 6. レビュー結果の報告
 
-Codex MCPからのレビュー結果をユーザーに報告してください。
+Codex CLIからのレビュー結果をユーザーに報告してください。
 
 </procedure>
