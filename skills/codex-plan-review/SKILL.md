@@ -57,7 +57,8 @@ esa URLからpost番号を抽出（例：`https://yasuhisa.esa.io/posts/1234` �
 `esa-llm-scoped-guard fetch` コマンドでYAMLを直接取得：
 
 ```bash
-esa-llm-scoped-guard fetch -post <post_number> | tee .claude_work/dev_diary.yaml```
+esa-llm-scoped-guard fetch -post <post_number> | tee .claude_work/dev_diary.yaml
+```
 
 **成功の場合**: YAMLが `.claude_work/dev_diary.yaml` に保存されるので、次のステップへ進む
 
@@ -155,7 +156,8 @@ echo "以下のplanファイルを日本語でレビューしてください。
 - 開発日誌に記載された開発方針・過去の決定事項と矛盾していないか
 - 開発日誌で言及されている懸念事項がplanで対処されているか
 
-出力は日本語で、具体的な指摘と改善提案を含めてください。" | codex exec --sandbox read-only | tee .claude_work/codex_plan_review.md```
+出力は日本語で、具体的な指摘と改善提案を含めてください。" | codex exec --sandbox read-only | tee .claude_work/codex_plan_review.md
+```
 
 </example>
 
