@@ -64,12 +64,7 @@ esa-llm-scoped-guard -help
 
 1. ユーザーが提示したesaのURLから`post_number`を抽出（例: `https://yasuhisa.esa.io/posts/123` → `123`）
 
-2. `mcp__esa-mcp-server__read_esa_post`で既存記事を取得：
-   ```
-   postNumber: 123
-   ```
-
-3. 既存記事の内容を確認し、**手順3（同期フェーズ）へ進む**
+2. **手順3（YAML取得）へ進む**
 
 #### パターンC: 「開発日誌を更新」（URLなし）の場合
 
@@ -83,7 +78,7 @@ esa-llm-scoped-guard -help
 
 2. 会話コンテキストから現在のタスクを特定し、検索結果から最も関連性の高い記事を判断
 
-3. **記事あり**: `mcp__esa-mcp-server__read_esa_post`で取得 → 更新モードで**手順3へ**
+3. **記事あり**: `post_number`を取得 → 更新モードで**手順3へ**
 
 4. **記事なし**: 新規作成モードで**手順4へ**
 
