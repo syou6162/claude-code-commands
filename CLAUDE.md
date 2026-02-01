@@ -29,7 +29,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### スキル構成
 - `skills/ask-user-choice/SKILL.md` - ユーザーに質問する際に選択式で答えやすくするスキル（自動発動）
 - `skills/codex-review/SKILL.md` - Codex CLIを使った客観的コードレビュー（planファイルと開発日誌を参照、自動発動）
-- `skills/codex-plan-review/SKILL.md` - Codex CLIを使ったplanファイルレビュー（実現可能性・妥当性を評価、自動発動）
+- `skills/codex-plan-review/SKILL.md` - Codex CLIを使ったplanファイルレビュー（実現可能性・妥当性を評価し、レビュー結果をタスクリスト化、指摘が収束するまで繰り返す、自動発動）
 - `skills/gha-sha-reference/SKILL.md` - GitHub ActionsのタグをSHA参照に変換するスキル（自動発動）
 - `skills/reading-notion/SKILL.md` - NotionページやドキュメントをキーワードまたはURLで検索・取得し、内容を要約・説明するスキル（自動発動）
 - `skills/requesting-gcloud-bq-auth/SKILL.md` - gcloud/bqコマンドの認証エラーを検出してユーザーに認証を依頼するスキル（自動発動）
