@@ -14,9 +14,9 @@ esaに開発日誌を投稿・更新するスキルです。`esa-llm-scoped-guar
 
 <important>
 
-- JSONファイルは必ず`.claude_work/dev_diary.json`に作成すること（**ファイル名固定**）
+- YAMLファイルは必ず`.claude_work/dev_diary.yaml`に作成すること（**ファイル名固定**）
 - esa MCPの書き込み系ツール（`create_esa_post`, `update_esa_post`）は使用禁止。このスキルでは`esa-llm-scoped-guard` CLIのみ使用
-- JSONスキーマは必ず`esa-llm-scoped-guard -help`で確認してから生成すること
+- YAMLスキーマは必ず`esa-llm-scoped-guard -help`で確認してから生成すること
 
 </important>
 
@@ -36,9 +36,9 @@ esaに開発日誌を投稿・更新するスキルです。`esa-llm-scoped-guar
 
 <procedure>
 
-### 手順1: JSONスキーマを確認
+### 手順1: YAMLスキーマを確認
 
-最初に必ず最新のJSONスキーマを確認してください：
+最初に必ず最新のYAMLスキーマを確認してください：
 
 ```bash
 esa-llm-scoped-guard -help
@@ -58,7 +58,7 @@ esa-llm-scoped-guard -help
 
 #### パターンA: 「開発日誌を作って」の場合
 
-検索・取得をスキップして、**手順4（JSON更新）へ直行**してください。
+検索・取得をスキップして、**手順4（YAML更新）へ直行**してください。
 
 #### パターンB: 「開発日誌を更新」+ URLの場合
 
@@ -87,43 +87,52 @@ esa-llm-scoped-guard -help
 
 4. **記事なし**: 新規作成モードで**手順4へ**
 
-### 手順3: 既存記事との同期（更新時のみ）
+### 手順3: 既存記事のYAML取得（更新時のみ）
 
-**目的**: 既存記事をJSONで完全に再現し、差分ゼロの状態を作る
+**目的**: 既存記事からYAMLを取得し、差分ゼロの状態を作る
 
-#### 3.1 現状再現JSONの作成
+#### 3.1 fetchコマンドで埋め込みYAMLを取得
 
-1. 既存記事の内容から、現状を再現するJSONを`.claude_work/dev_diary.json`に作成
+1. `fetch`コマンドで既存記事からYAMLを直接取得：
+   ```bash
+   esa-llm-scoped-guard fetch -post <post_number> | tee .claude_work/dev_diary.yaml > /dev/null
+   ```
+
+2. **fetch成功の場合**: YAMLが取得できたので、そのまま**手順4へ進む**（差分ゼロ確認は不要）
+
+3. **fetch失敗の場合**: 古い形式（YAML埋め込みなし）なので、以下のフォールバックフローへ進む
+
+#### 3.2 フォールバック: MCP経由でYAMLを構築（最大5回リトライ）
+
+1. 既存記事の内容から、現状を再現するYAMLを`.claude_work/dev_diary.yaml`に作成
    - `post_number`: 既存記事の番号を指定
    - `category`: 既存記事のカテゴリをそのまま維持
    - `name`: 既存記事のタイトル
    - `body`: 既存記事の本文を構造化形式で完全に再現
 
-#### 3.2 差分ゼロの確認（最大5回リトライ）
-
 2. `validate`で形式確認：
    ```bash
-   esa-llm-scoped-guard validate -json .claude_work/dev_diary.json
+   esa-llm-scoped-guard validate -yaml .claude_work/dev_diary.yaml
    ```
 
 3. `diff`で既存記事との差分確認：
    ```bash
-   esa-llm-scoped-guard diff -json .claude_work/dev_diary.json
+   esa-llm-scoped-guard diff -yaml .claude_work/dev_diary.yaml
    ```
 
-4. **差分がある場合**: JSONを修正して手順3.2を繰り返す（最大5回まで）
+4. **差分がある場合**: YAMLを修正して手順3.2を繰り返す（最大5回まで）
 
 5. **5回試しても差分が残る場合**: ユーザーに報告して判断を仰ぐ
 
 6. **差分ゼロになった場合**: 手順4へ進む
 
-### 手順4: JSON更新
+### 手順4: YAML更新
 
 #### 新規作成の場合
 
-1. `Write`ツールで`.claude_work/dev_diary.json`を作成（**ファイル名固定、常に上書き**）
+1. `Write`ツールで`.claude_work/dev_diary.yaml`を作成（**ファイル名固定、常に上書き**）
 
-2. JSONの構成内容：
+2. YAMLの構成内容：
    - `create_new: true`を指定、`post_number`は含めない
    - `category`: `Claude Code/開発日誌/yyyy/mm/dd`形式（今日の日付）
    - `name`: 日付ベースのタイトル
@@ -131,7 +140,7 @@ esa-llm-scoped-guard -help
 
 #### 更新の場合
 
-1. 手順3で同期したJSONに変更を加える（`Edit`ツール使用）
+1. 手順3で取得したYAMLに変更を加える（`Edit`ツール使用）
    - **重要**: 既存の`category`、`name`、`post_number`は維持すること（`create_new`は含めない）
    - タスクの追加・更新
    - GitHub URL状態の反映（下記参照）
@@ -182,39 +191,30 @@ gh issue view <URL> --json state,title,body
 
 1. `validate`で形式確認：
    ```bash
-   esa-llm-scoped-guard validate -json .claude_work/dev_diary.json
+   esa-llm-scoped-guard validate -yaml .claude_work/dev_diary.yaml
    ```
 
 2. `diff`で差分が意図通りか確認：
    ```bash
-   esa-llm-scoped-guard diff -json .claude_work/dev_diary.json
+   esa-llm-scoped-guard diff -yaml .claude_work/dev_diary.yaml
    ```
 
    - 新規作成: 全行が`+`で表示される（全体の最終確認）
    - 更新: 意図した変更のみか確認（消しすぎていないか、意図しない変更がないか）
    - **問題がある場合のみ**ユーザーにdiff結果を表示して確認を求める
 
-3. `preview`で最終的なMarkdownを確認：
-   ```bash
-   esa-llm-scoped-guard preview -json .claude_work/dev_diary.json
-   ```
-
-   - 意図しないHTMLタグ（`<details>`や`<summary>`など）が含まれていないか確認
-   - Markdown構造が正しいか確認
-   - preview結果をユーザーに表示して最終確認を求める
-
 ### 手順6: 投稿
 
 ユーザーの承認後、投稿を実行：
 
 ```bash
-esa-llm-scoped-guard post -json .claude_work/dev_diary.json
+esa-llm-scoped-guard post -yaml .claude_work/dev_diary.yaml
 ```
 
 ### 手順7: 結果報告
 
 - **成功時**: 記事URLをユーザーに報告
-- **失敗時**: エラー内容を確認し、JSONを修正して手順5から再実行
+- **失敗時**: エラー内容を確認し、YAMLを修正して手順5から再実行
 
 </procedure>
 
