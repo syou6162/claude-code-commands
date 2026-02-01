@@ -1,7 +1,7 @@
 ---
 name: codex-plan-review
 description: planファイルのレビューを依頼された際に使用。Codex CLIを使ってplanファイル自体の実現可能性・技術的妥当性・抜け漏れをレビューし、指摘をタスクリスト化して収束するまで繰り返します。
-allowed-tools: Bash, Write, Read, Edit, TaskCreate, TaskUpdate
+allowed-tools: Bash, Write, Read, Edit, TaskCreate, TaskUpdate, ExitPlanMode, EnterPlanMode
 model: sonnet
 context: fork
 ---
@@ -13,6 +13,17 @@ planファイルの実現可能性、技術的妥当性、抜け漏れやリス�
 ## 実行手順
 
 <procedure>
+
+### 0. planモードの終了（planモード中の場合）
+
+planモード中はファイル編集やTaskCreate/TaskUpdateが使用できないため、まずplanモードを終了する必要があります。
+
+**planモード中の場合**:
+1. ExitPlanModeツールを呼び出す
+2. ユーザーの承認を待つ
+3. 承認後、手順1へ進む
+
+**planモードでない場合**: このステップをスキップして手順1へ進む
 
 ### 1. planファイルの特定と最新化
 
@@ -216,6 +227,21 @@ echo "以下のplanファイルを日本語でレビューしてください。
 - 指摘が収束するまで基本的にループを続けること（最大3回まで）
 - 同一の指摘が繰り返される場合は停止し、「以下の指摘が繰り返されたため停止しました」とユーザーに報告（繰り返された指摘内容を明記）
 - 収束確認のためのレビュー再実行もToDoリストに入れること
+
+</important>
+
+### 5. planモードへの再入
+
+すべてのタスクが完了し、planファイルの修正が収束したら、再度planモードに入ります。
+
+1. EnterPlanModeツールを呼び出す
+2. ユーザーに「planファイルのレビュー・修正が完了しました。planの内容を確認してください。」と報告
+
+<important>
+
+- planファイルのレビューが目的であり、実装を始めてはいけない
+- 必ずEnterPlanModeで再度planモードに入ること
+- ユーザーがplanを確認し、ExitPlanModeで承認してから実装フェーズに移行する
 
 </important>
 

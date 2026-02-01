@@ -124,7 +124,8 @@ echo "<デフォルトブランチ名>ブランチとの差分を日本語でレ
 - planに記載された変更内容との整合性
 - コードの品質（可読性、保守性）
 - 潜在的な問題やバグ
-- 開発日誌に記載された開発指針との整合性" | codex exec --sandbox read-only | tee .claude_work/codex_review.md```
+- 開発日誌に記載された開発指針との整合性" | codex exec --sandbox read-only | tee .claude_work/codex_review.md
+```
 
 </example>
 
