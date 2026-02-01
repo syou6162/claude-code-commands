@@ -79,6 +79,8 @@ Codexレビュー前に、planファイルを読んで現在の実装（diff）�
 
 Bash経由で`codex exec --sandbox read-only`を使ってレビューを実行し、`tee`で出力をファイルに保存してください。
 
+**重要**: `codex exec`はリポジトリルートで実行すること（相対パスが前提）
+
 **出力先**: `.claude_work/codex_review.md`（固定パス、既存ファイルは上書き）
 
 <example>
