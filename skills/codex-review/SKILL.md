@@ -1,7 +1,7 @@
 ---
 name: codex-review
-description: Review code changes against plans and development diaries. Use when user requests "codex review".
-allowed-tools: Bash, Write, Edit, Read
+description: コードレビューを依頼された際に使用。Codex CLIを使ってplanファイルと開発日誌（コンテキストにある場合）を参照し、実装が計画に沿っているかをレビューし、指摘をタスクリスト化して収束するまで繰り返します。
+allowed-tools: Bash, Write, Edit, Read, TaskCreate, TaskUpdate
 model: sonnet
 context: fork
 ---
@@ -44,23 +44,27 @@ git worktree運用のため、単一のplanファイルが存在する前提で�
 
 </plan-file>
 
-### 3. 開発日誌の取得・保存（コンテキストにある場合）
+### 3. 開発日誌の取得（コンテキストにある場合）
 
-会話のコンテキスト内にesa URLの開発日誌が言及されている場合、以下の手順で取得・保存してください：
+会話のコンテキスト内にesa URLの開発日誌が言及されている場合、以下の手順で取得してください：
 
-1. esa URLからpost番号を抽出（例：`https://xxx.esa.io/posts/1234` → `1234`）
-2. `mcp__esa-mcp-server__read_esa_post` ツールでpost内容を取得
-3. 取得した内容を以下のパスに保存（Writeツール使用）
+#### 3.1 post番号の抽出
 
-<dev-diary-file>
+esa URLからpost番号を抽出（例：`https://yasuhisa.esa.io/posts/1234` → `1234`）
 
+#### 3.2 YAMLの直接取得
+
+`esa-llm-scoped-guard fetch` コマンドでYAMLを直接取得：
+
+```bash
+esa-llm-scoped-guard fetch -post <post_number> | tee .claude_work/dev_diary.yaml > /dev/null
 ```
-.claude_work/dev_diary.md
-```
 
-</dev-diary-file>
+**成功の場合**: YAMLが `.claude_work/dev_diary.yaml` に保存されるので、次のステップへ進む
 
-開発日誌がコンテキストにない場合は、このステップをスキップしてください。
+**失敗の場合**: エラーメッセージをユーザーに報告し、このステップをスキップ
+
+開発日誌がコンテキストにない場合は、このステップ全体をスキップしてください。
 
 ### 4. planファイルとの整合性確認
 
@@ -87,10 +91,17 @@ echo "<デフォルトブランチ名>ブランチとの差分を日本語でレ
 以下のファイルを参照して、計画に沿った実装になっているか確認してください：
 - planファイル: <plan-fileタグで定義されたパス>
 
+## レビュー方針
+- **時間をかけてコードベースを徹底的に読むこと**
+- 差分で変更されたファイルや関連ファイルはすべて確認すること
+- 網羅的にレビューし、指摘漏れがないようにすること
+- 各観点について具体的なコード箇所を参照しながらレビューすること
+- **レビュー結果が網羅的で一度に多くなっても構わない**（指摘は詳細かつ具体的に）
+
 レビューの観点：
 - planに記載された変更内容との整合性
 - コードの品質（可読性、保守性）
-- 潜在的な問題やバグ" | codex exec --sandbox read-only | tee .claude_work/codex_review.md
+- 潜在的な問題やバグ" | codex exec --sandbox read-only | tee .claude_work/codex_review.md > /dev/null
 ```
 
 **開発日誌がある場合のコマンド例：**
@@ -100,19 +111,20 @@ echo "<デフォルトブランチ名>ブランチとの差分を日本語でレ
 
 以下のファイルを参照して、計画に沿った実装になっているか確認してください：
 - planファイル: <plan-fileタグで定義されたパス>
-- 開発日誌: <dev-diary-fileタグで定義されたパス>
+- 開発日誌: .claude_work/dev_diary.yaml
+
+## レビュー方針
+- **時間をかけてコードベースを徹底的に読むこと**
+- 差分で変更されたファイルや関連ファイルはすべて確認すること
+- 網羅的にレビューし、指摘漏れがないようにすること
+- 各観点について具体的なコード箇所を参照しながらレビューすること
+- **レビュー結果が網羅的で一度に多くなっても構わない**（指摘は詳細かつ具体的に）
 
 レビューの観点：
 - planに記載された変更内容との整合性
 - コードの品質（可読性、保守性）
 - 潜在的な問題やバグ
-- 開発日誌に記載された開発指針との整合性" | codex exec --sandbox read-only | tee .claude_work/codex_review.md
-```
-
-**連続会話の場合：**
-
-```bash
-echo "追加の質問" | codex exec --sandbox read-only resume <thread-id> | tee .claude_work/codex_review.md
+- 開発日誌に記載された開発指針との整合性" | codex exec --sandbox read-only | tee .claude_work/codex_review.md > /dev/null
 ```
 
 </example>
@@ -120,18 +132,57 @@ echo "追加の質問" | codex exec --sandbox read-only resume <thread-id> | tee
 **重要：**
 - ファイルの内容ではなく、ファイルパスを渡すことで、Codexが直接ファイルを読み取ります
 - `tee`を使うことで、リアルタイムで出力を確認しつつファイルにも保存されます
-- codex CLIの出力からthread-id（セッションID）を確認してください
+- **毎回新規セッションでレビューすること**（`resume`は使用禁止）
+- **Codexは**過去のレビュー結果や前回の指摘には一切言及しないこと
+- **Codexは**プロンプトに記載された観点のみでレビューすること（「前回の指摘は直りましたか？」などの余計な質問をしない）
 
-### 6. レビュー結果の報告
+### 6. レビュー結果の処理
 
-**以下の2つの情報のみ**をユーザーに報告してください：
+#### 6.1 レビューファイルの読み取り
 
-1. **レビューファイルのパス**: `.claude_work/codex_review.md`
-2. **セッションID**: codex CLIが出力したthread-id
+`.claude_work/codex_review.md` を読み取り、指摘内容を把握する。
 
-**禁止事項**:
-- レビュー内容を要約しないこと
-- レビュー内容の詳細を報告しないこと
-- ファイルを読んで内容を説明しないこと
+#### 6.2 指摘の分類とタスクリスト化
+
+指摘を以下のように分類し、**必ずClaude CodeのTaskCreate/TaskUpdateツールを使ってタスクリストに追加する**：
+
+| 分類 | 対応 |
+|------|------|
+| 優先度高・すぐ直せる | TaskCreateでタスクリストに追加して対応 |
+| 実装上の改善提案 | TaskCreateでタスクリストに追加 |
+| 仕様に関する質問 | TaskCreateでタスクリストの最後に追加（ユーザーに確認） |
+
+<important>
+
+- すべての指摘はClaude CodeのTaskCreateツールでタスクリストに入れること（忘れ防止）
+- **同じ指摘が既にタスクリストにある場合は、新規作成せずTaskUpdateで更新する**（重複防止）
+- 仕様に関する質問は、他のタスクを処理した後でユーザーに確認する
+- タスクの更新にはTaskUpdateツールを使用
+
+</important>
+
+#### 6.3 タスクの実行
+
+1. タスクリストの順番に従って対応
+2. 仕様に関する質問はタスクの最後でユーザーに確認
+
+#### 6.4 収束確認とループ
+
+**指摘が収束していない場合**（新たな修正を行った場合）：
+- 「Codexレビューを再実行する」タスクをリストに追加
+- 手順5に戻ってCodexレビューを再実行
+
+**収束条件**:
+- Codexからの指摘がなくなった
+- または、残りの指摘がすべて「対応不要」と判断された
+- または、最大レビュー回数（10回）に達した
+
+<important>
+
+- 指摘が収束するまで基本的にループを続けること（最大10回まで）
+- 同一の指摘が繰り返される場合は停止し、「以下の指摘が繰り返されたため停止しました」とユーザーに報告（繰り返された指摘内容を明記）
+- 収束確認のためのレビュー再実行もToDoリストに入れること
+
+</important>
 
 </procedure>
