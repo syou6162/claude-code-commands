@@ -176,7 +176,7 @@ Claude AIのシステムプロンプトおよび公式ドキュメントでは�
 - **git-sequential-stage** - semantic-committing（スキル）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 - **Codex CLI (`codex exec`)** - コードレビュー（codex-review スキル）
-- **esa MCP (`mcp__esa-mcp-server__read_esa_post`)** - 開発日誌取得（codex-review スキル）
+- **esa-llm-scoped-guard (`esa-llm-scoped-guard fetch`)** - 開発日誌取得（codex-review, codex-plan-review スキル）
 - **spec-workflow MCP** - spec workflow連携（load_spec_tasks コマンド）
 - **detect-spec-workflow サブエージェント** - spec-id判定（load_spec_tasks コマンド）
 
