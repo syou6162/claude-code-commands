@@ -28,8 +28,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### スキル構成
 - `skills/ask-user-choice/SKILL.md` - ユーザーに質問する際に選択式で答えやすくするスキル（自動発動）
-- `skills/codex-review/SKILL.md` - Codex CLIを使った客観的コードレビュー（planファイルと開発日誌を参照、自動発動）
-- `skills/codex-plan-review/SKILL.md` - Codex CLIを使ったplanファイルレビュー（実現可能性・妥当性を評価、自動発動）
+- `skills/codex-review/SKILL.md` - Codex CLIを使った客観的コードレビュー（planファイルと開発日誌を参照、レビュー結果をタスクリスト化、指摘が収束するまで繰り返す、自動発動）
+- `skills/codex-plan-review/SKILL.md` - Codex CLIを使ったplanファイルレビュー（実現可能性・妥当性を評価し、レビュー結果をタスクリスト化、指摘が収束するまで繰り返す、自動発動）
 - `skills/gha-sha-reference/SKILL.md` - GitHub ActionsのタグをSHA参照に変換するスキル（自動発動）
 - `skills/reading-notion/SKILL.md` - NotionページやドキュメントをキーワードまたはURLで検索・取得し、内容を要約・説明するスキル（自動発動）
 - `skills/requesting-gcloud-bq-auth/SKILL.md` - gcloud/bqコマンドの認証エラーを検出してユーザーに認証を依頼するスキル（自動発動）
@@ -176,7 +176,7 @@ Claude AIのシステムプロンプトおよび公式ドキュメントでは�
 - **git-sequential-stage** - semantic-committing（スキル）で使用する専用ツール
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 - **Codex CLI (`codex exec`)** - コードレビュー（codex-review スキル）
-- **esa MCP (`mcp__esa-mcp-server__read_esa_post`)** - 開発日誌取得（codex-review スキル）
+- **esa-llm-scoped-guard (`esa-llm-scoped-guard fetch`)** - 開発日誌取得（codex-review, codex-plan-review スキル）
 - **spec-workflow MCP** - spec workflow連携（load_spec_tasks コマンド）
 - **detect-spec-workflow サブエージェント** - spec-id判定（load_spec_tasks コマンド）
 
