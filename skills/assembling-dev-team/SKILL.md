@@ -232,7 +232,7 @@ committer にPR作成を依頼する（CI監視を含む後続対応はcommitter
 | 指摘の種類 | 対応先 | アクション |
 |-----------|--------|-----------|
 | 計画変更が必要 | plan-updater | プランファイル更新を依頼 → 完了後にbroadcastで全メンバーに再読み込みを通知 → 必要に応じてタスクリスト更新（TaskCreate / TaskUpdate） |
-| 実装の修正が必要 | implementer + reviewer | implementerに修正依頼 → reviewerにレビュー依頼（3.2の修正サイクルへ） |
+| 実装の修正が必要 | implementer + reviewer | 修正サイクル（3.2）を実行 |
 | CI/品質/リリースへの影響 | committer | committerに対応依頼（必要に応じて他メンバーにも同報） |
 
 複数カテゴリにまたがる場合は、リーダーが優先順位をつけて順次対応する。
