@@ -25,6 +25,7 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 - ユーザーに判断を仰ぐのは、メンバー間で意見が食い違うときや判断に迷うときのみ
 - それ以外はリーダーが自律的に最後までタスクを進める
 - プランファイルが見つからない場合はユーザーに報告して終了する
+- メンバー間の通信はコミュニケーションパスのマトリクスに従う。許可されていない経路での直接通信は行わない
 
 </important>
 
@@ -52,6 +53,24 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 - コミット担当: [references/committer.md](references/committer.md)
 - レビュー担当: [references/reviewer.md](references/reviewer.md)
 - プラン更新担当: [references/plan-updater.md](references/plan-updater.md)
+
+## コミュニケーションパス
+
+リーダーをハブとした双方向通信構造。責任境界を明確にし、情報の流れを整理する。
+
+|  | リーダー | implementer | reviewer | committer | plan-updater |
+|---|:---:|:---:|:---:|:---:|:---:|
+| リーダー | - | ○ | ○ | ○ | ○ |
+| implementer | ○ | - | ○ | ○ | - |
+| reviewer | ○ | ○ | - | - | - |
+| committer | ○ | - | - | - | - |
+| plan-updater | ○ | - | - | - | - |
+
+**通信ルール**:
+- リーダーは全員と通信可能（ハブ）
+- implementer → reviewer/committer は直送可（実装完了の迅速報告のため）
+- reviewer → implementer は指摘対応のため許可
+- committer と plan-updater はリーダー経由のみ（責任線の明確化）
 
 ## 実行手順
 
@@ -201,16 +220,17 @@ committer にPR作成を依頼する（CI監視を含む後続対応はcommitter
 - **処理**: plan-updaterにプラン更新依頼 → 修正サイクル（フェーズ2の指示フォーマットを再利用）
 - **出力**: 指摘対応完了報告
 
-### 3.1 指摘の受け取りとプラン更新
+### 3.1 指摘の受け取りと振り分け
 
-1. ユーザー/外部からの指摘を受け取る
-2. plan-updater にプランファイルの更新を依頼（SendMessage type: message）
-   - ユーザーの指摘内容とプランファイルのパスを渡す
-3. plan-updaterからの更新完了報告を受けたら、SendMessage type: broadcast で全メンバーに通知:
-   ```
-   プランファイルが更新されました。<plan-fileタグのパス>を再読み込みしてください。
-   ```
-4. 必要に応じてタスクリストも更新（TaskCreate / TaskUpdate）
+ユーザー/外部からの指摘を受け取り、リーダーが以下の振り分けルールに従って対応先を判定する:
+
+| 指摘の種類 | 対応先 | アクション |
+|-----------|--------|-----------|
+| 計画変更が必要 | plan-updater | プランファイル更新を依頼 → 完了後にbroadcastで全メンバーに再読み込みを通知 → 必要に応じてタスクリスト更新（TaskCreate / TaskUpdate） |
+| 実装の修正が必要 | implementer + reviewer | implementerに修正依頼 → reviewerにレビュー依頼（3.2の修正サイクルへ） |
+| CI/品質/リリースへの影響 | committer | committerに対応依頼（必要に応じて他メンバーにも同報） |
+
+複数カテゴリにまたがる場合は、リーダーが優先順位をつけて順次対応する。
 
 ### 3.2 修正サイクル
 
