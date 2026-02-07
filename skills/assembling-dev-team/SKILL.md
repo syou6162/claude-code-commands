@@ -158,10 +158,10 @@ ls .claude_work/plans/*.md
 
 ### 手順5: PR作成とCI監視
 
-committer にPR作成を依頼する。PR作成後のCI監視・結果報告はcommitterが一連のフローとして実行する（詳細は [references/committer.md](references/committer.md) に記載）。
+committer にPR作成を依頼する。PR作成後のCI監視・CI失敗時の対応（implementerへの修正依頼、最大3回リトライ）・結果報告はcommitterが自律的に実行する（詳細は [references/committer.md](references/committer.md) に記載）。
 
-- CI成功時: ユーザーに完了報告（PR URLを含む）
-- CI失敗時: committerからのエラー報告を受け、implementerに修正を依頼。修正後、committerに再コミットを依頼（最大3回）
+- CI成功時: committerから成功報告を受け、ユーザーに完了報告（PR URLを含む）
+- CI失敗時（最大3回リトライ後も失敗）: committerから最終失敗報告を受け、ユーザーに状況を報告
 
 ### 手順6: プラン変更時の対応
 
@@ -241,5 +241,5 @@ committer へ:
 {implementerの完了報告から概要を転記}
 
 semantic-committing スキルを使用してコミットしてください。
-コミット後のCI監視も含めて完了したら報告してください。
+コミット結果を報告してください。
 ```
