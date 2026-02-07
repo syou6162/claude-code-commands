@@ -68,7 +68,8 @@ git log --oneline -5
 
 ### 4. レビュー結果の報告
 
-リーダーにSendMessageで報告してください。
+- **指摘がある場合**: implementerに直接SendMessageで指摘を送付し、リーダーにも同じ内容を共有してください（2通送信）
+- **LGTM（指摘なし）の場合**: リーダーにSendMessageで報告してください
 
 </procedure>
 
