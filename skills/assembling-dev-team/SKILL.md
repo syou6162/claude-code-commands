@@ -164,11 +164,11 @@ ls .claude_work/plans/*.md
 
 ### 2.2 PR作成とCI監視
 
-committer にPR作成を依頼する。PR作成後のCI監視・CI失敗時の対応（implementerへの修正依頼、最大3回リトライ）・結果報告はcommitterが自律的に実行する（詳細は [references/committer.md](references/committer.md) に記載）。
+committer にPR作成を依頼する（CI監視を含む後続対応はcommitterに一任。詳細は [references/committer.md](references/committer.md) に記載）。
 
-- committerから最終結果（成功 or 最大3回失敗）の報告を待つ
+- committerからの最終報告を待ち、ユーザーに結果を報告
 - CI成功時: ユーザーに「フェーズ2完了。レビューをお願いします」と報告（PR URLを含む）
-- CI失敗時（最大3回リトライ後も失敗）: ユーザーに状況を報告
+- CI失敗時: ユーザーに状況を報告
 
 ## フェーズ3: 外部レビュー対応（指摘がなくなるまで）
 
@@ -190,8 +190,7 @@ committer にPR作成を依頼する。PR作成後のCI監視・CI失敗時の�
 指摘内容に基づき、フェーズ2と同様のサイクルで修正を実施:
 
 1. implementer に修正を依頼 → 完了報告を待つ
-2. reviewer にレビュー依頼 + committer にコミット依頼（並列実行）
-3. committer がCI監視 → 結果をリーダーに報告
+2. reviewer にレビュー依頼 + committer にコミット依頼（後続対応はcommitterに一任）（並列実行）
 
 ### 3.3 収束判定
 
