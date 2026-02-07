@@ -39,11 +39,13 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 | 実装担当 | implementer | プランの1ステップを実装 |
 | コミット担当 | committer | 実装内容のセマンティックコミット、PR作成、CI監視 |
 | レビュー担当 | reviewer | プランファイルに基づく簡易レビュー |
+| プラン更新担当 | plan-updater | ユーザーの指摘をプランファイルに反映 |
 
 各担当の詳細指示は references/ ディレクトリを参照:
 - 実装担当: [references/implementer.md](references/implementer.md)
 - コミット担当: [references/committer.md](references/committer.md)
 - レビュー担当: [references/reviewer.md](references/reviewer.md)
+- プラン更新担当: [references/plan-updater.md](references/plan-updater.md)
 
 ## 実行手順
 
@@ -76,7 +78,7 @@ ls .claude_work/plans/*.md
 
 1. TeamCreate でチームを作成（team_name: "dev-team-{セッションID短縮}"）
 
-2. 以下の3名のチームメンバーをスポーン:
+2. 以下の4名のチームメンバーをスポーン:
 
 #### implementer のスポーンプロンプト
 
@@ -115,6 +117,19 @@ ls .claude_work/plans/*.md
 そこに記載された手順に従って作業してください。
 リーダーからレビュー指示が来るまで待機してください。
 レビュー結果は必ずリーダーにメッセージで報告してください。
+```
+
+#### plan-updater のスポーンプロンプト
+
+```
+あなたは開発チームのプラン更新担当です。
+
+プランファイル: <plan-fileタグで定義されたパス>
+詳細指示: まず skills/assembling-dev-team/references/plan-updater.md を Read ツールで読んでください。
+
+そこに記載された手順に従って作業してください。
+リーダーからプラン更新指示が来るまで待機してください。
+作業完了後は必ずリーダーにメッセージで報告してください。
 ```
 
 ### 手順4: ステップごとの実装サイクル
