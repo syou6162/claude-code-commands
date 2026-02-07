@@ -1,6 +1,6 @@
 ---
 name: assembling-dev-team
-description: 「開発チーム集合」「チームで実装」「チーム編成して」の言及時に使用。プランファイルに基づいて実装・コミット・レビューの3担当をスポーンし、ステップごとに実装→レビュー→コミットのサイクルを回す。
+description: 「開発チーム集合」「チームで実装」「チーム編成して」の言及時に使用。プランファイルに基づいて実装・コミット・レビュー・プラン更新の4担当をスポーンし、ステップごとに実装→レビュー→コミットのサイクルを回す。
 ---
 
 # 開発チーム集合
@@ -159,25 +159,20 @@ ls .claude_work/plans/*.md
 
 ### 手順5: PR作成とCI監視
 
-1. committer に PR作成を依頼
-2. committer にCI監視を依頼
-3. CI失敗時:
-   - committer からエラー報告を受け取る
-   - implementer に修正を依頼
-   - 修正後、committer にコミット→CI再監視を依頼
-   - CI成功まで繰り返す（最大3回）
-4. CI成功時: ユーザーに完了報告（PR URLを含む）
+committer にPR作成を依頼する。PR作成後のCI監視・結果報告はcommitterが一連のフローとして実行する（詳細は [references/committer.md](references/committer.md) に記載）。
+
+- CI成功時: ユーザーに完了報告（PR URLを含む）
+- CI失敗時: committerからのエラー報告を受け、implementerに修正を依頼。修正後、committerに再コミットを依頼（最大3回）
 
 ### 手順6: プラン変更時の対応
 
-実装中に仕様が変わった場合:
+plan-updaterからプランファイルの更新完了報告を受けた場合:
 
-1. リーダー（あなた）がプランファイルを修正
-2. SendMessage type: broadcast で全メンバーに通知:
+1. SendMessage type: broadcast で全メンバーに通知:
    ```
    プランファイルが更新されました。<plan-fileタグのパス>を再読み込みしてください。
    ```
-3. 必要に応じてタスクリストも更新（TaskCreate / TaskUpdate）
+2. 必要に応じてタスクリストも更新（TaskCreate / TaskUpdate）
 
 ### 手順7: チーム解散（ユーザー指示時のみ）
 
