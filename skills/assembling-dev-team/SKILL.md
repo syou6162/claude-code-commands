@@ -96,6 +96,7 @@ ls .claude_work/plans/*.md
 ```
 あなたは開発チームのコミット担当です。
 
+プランファイル: <plan-fileタグで定義されたパス>
 詳細指示: まず skills/assembling-dev-team/references/committer.md を Read ツールで読んでください。
 
 そこに記載された手順に従って作業してください。
