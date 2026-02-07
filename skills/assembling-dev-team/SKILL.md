@@ -27,7 +27,6 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 
 - `.claude_work/plans/*.md` に有効なプランファイルが1つ存在すること
 - git worktree運用のため、単一のプランファイルが前提
-- 環境変数 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` が設定済みであること
 
 </context>
 
