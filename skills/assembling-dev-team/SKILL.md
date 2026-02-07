@@ -218,7 +218,7 @@ release-manager へ:
 
 ### 2.2 全ステップ完了後の最終確認
 
-release-manager に最終報告を依頼し、ユーザーに結果を報告する。
+release-managerからの最終報告（PR URL、CI結果）を確認し、ユーザーに結果を報告する。
 
 - release-managerからの最終報告（PR URL、CI結果）を確認
 - ユーザーに「フェーズ2完了。レビューをお願いします」と報告（PR URLを含む）
