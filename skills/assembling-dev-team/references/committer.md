@@ -53,13 +53,14 @@ gh run view <run-id> --log-failed
 
 ### ステップ4: CI失敗時の自律的対応
 
-CI失敗時は、リーダーを介さずcommitterが主導して対応してください。
+CI失敗時は、committerが主導して対応してください。ただし、リーダーへの状況報告は各段階で必須です。
 
-1. CI失敗ログを分析し、implementerに直接修正を依頼（SendMessage type: message）
-2. implementerからの修正完了報告を受け取る
-3. 再コミット（semantic-committingスキル）→ ステップ3に戻りCI監視
-4. CI成功まで繰り返す（最大3回）
-5. 最終結果をリーダーに報告
+1. CI失敗ログを分析し、リーダーにCI失敗の状況を報告（SendMessage type: message。失敗内容と対応方針を含める）
+2. implementerに直接修正を依頼（SendMessage type: message）
+3. implementerからの修正完了報告を受け取る
+4. 再コミット（semantic-committingスキル）→ ステップ3に戻りCI監視
+5. CI成功まで繰り返す（最大3回）
+6. 最終結果をリーダーに報告
 
 </procedure>
 
