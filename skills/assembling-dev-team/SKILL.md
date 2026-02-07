@@ -146,6 +146,7 @@ ls .claude_work/plans/*.md
 - reviewer にステップNの実装レビューを依頼（SendMessage type: message）
   - プランファイルのパス + ステップ番号を含める
 - committer にステップNのコミットを依頼（SendMessage type: message）
+  - implementerの完了報告に含まれる変更ファイル一覧・概要を渡す
 - 両方からの報告を待つ
 
 #### 4.3 指摘への対応
@@ -238,6 +239,13 @@ committer へ:
 プランファイル: <plan-fileタグのパス>
 ステップ番号: {N}
 
+**implementerの報告内容**:
+変更ファイル一覧:
+{implementerの完了報告から変更ファイル一覧を転記}
+
+概要:
+{implementerの完了報告から概要を転記}
+
 semantic-committing スキルを使用してコミットしてください。
-完了したら報告してください。
+コミット後のCI監視も含めて完了したら報告してください。
 ```
