@@ -28,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### スキル構成
 - `skills/ask-user-choice/SKILL.md` - ユーザーに質問する際に選択式で答えやすくするスキル（自動発動）
-- `skills/assembling-dev-team/SKILL.md` - 「開発チーム集合」「チームで実装」等の言及時に使用。プランファイルに基づいて実装・コミット・レビューの3担当をスポーンし、ステップごとにサイクルを回すスキル（自動発動）
+- `skills/assembling-dev-team/SKILL.md` - 「開発チーム集合」「チームで実装」等の言及時に使用。プランファイルに基づいて実装・コミット・レビュー・プラン更新の4担当をスポーンし、ステップごとにサイクルを回すスキル（自動発動）
 - `skills/codex-review/SKILL.md` - Codex CLIを使った客観的コードレビュー（planファイルと開発日誌を参照、レビュー結果をタスクリスト化、指摘が収束するまで繰り返す、自動発動）
 - `skills/codex-plan-review/SKILL.md` - Codex CLIを使ったplanファイルレビュー（実現可能性・妥当性を評価し、レビュー結果をタスクリスト化、指摘が収束するまで繰り返す、自動発動）
 - `skills/gha-sha-reference/SKILL.md` - GitHub ActionsのタグをSHA参照に変換するスキル（自動発動）
