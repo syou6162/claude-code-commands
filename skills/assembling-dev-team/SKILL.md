@@ -202,7 +202,7 @@ semantic-committing スキルを使用してコミットしてください。
 ```
 
 #### 2.1.3 指摘への対応
-- reviewer から指摘がある場合: implementer に修正を依頼 → 修正完了後に再レビュー
+- reviewer から指摘がある場合: reviewer が implementer に直接指摘を送付し、リーダーにも共有する。リーダーは指摘内容を確認し、修正完了を追跡する → 修正完了後に再レビュー
 - 指摘がない場合: TaskUpdate でタスクを completed に更新
 
 #### 2.1.4 次ステップへ
