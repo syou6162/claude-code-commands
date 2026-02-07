@@ -68,8 +68,8 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 
 **通信ルール**:
 - リーダーは全員と通信可能（ハブ）
-- implementer → reviewer/committer は直送可（実装完了の迅速報告のため）
-- reviewer → implementer は指摘対応のため許可
+- implementer → reviewer/committer は直送可（実装完了の迅速報告のため）。ただし、直送時はリーダーにも同報すること（進捗把握のため）
+- reviewer → implementer は指摘対応のため許可。重要な指摘はリーダーにも共有すること
 - committer と plan-updater はリーダー経由のみ（責任線の明確化）
 
 ## 実行手順
