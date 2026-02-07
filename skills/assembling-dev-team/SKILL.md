@@ -1,6 +1,6 @@
 ---
 name: assembling-dev-team
-description: 「開発チーム集合」「チームで実装」「チーム編成して」の言及時に使用。プランファイルに基づいて実装・コミット・レビュー・プラン更新の4担当をスポーンし、ステップごとに実装→レビュー→コミットのサイクルを回す。
+description: 「開発チーム集合」「チームで実装」「チーム編成して」の言及時に使用。プランファイルに基づいて実装・リリース・レビュー・プラン更新の4担当をスポーンし、ステップごとに実装→レビュー→リリースのサイクルを回す。
 ---
 
 # 開発チーム集合
@@ -9,7 +9,7 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 
 **概要フロー**: フェーズ1（セットアップ）→ フェーズ2（プラン実装）→ フェーズ3（外部レビュー対応）
 
-**最短サイクル**: 実装（implementer）→ レビュー（reviewer）+ コミット（committer）並列 → 次ステップ
+**最短サイクル**: 実装（implementer）→ レビュー（reviewer）+ リリース（release-manager）並列 → 次ステップ
 
 **反復前提**: フェーズ2/3はチーム解散までユーザーの指摘に応じて繰り返し実行します。
 
@@ -44,13 +44,13 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 |------|------|------|
 | リーダー（あなた） | - | タスク管理・全体調整・ステップ分解 |
 | 実装担当 | implementer | プランの1ステップを実装 |
-| コミット担当 | committer | セマンティックコミット、PR作成、CI監視。CI失敗時はimplementerと連携して自律的に対応 |
+| リリース担当 | release-manager | semantic-committingでコミット作成 → updating-pr-title-and-descriptionでPR更新 → monitor-ciでCIチェック。CI失敗時はimplementerと連携して自律的に対応 |
 | レビュー担当 | reviewer | プランファイルに基づく簡易レビュー |
 | プラン更新担当 | plan-updater | ユーザーの指摘をプランファイルに反映 |
 
 各担当の詳細指示は references/ ディレクトリを参照:
 - 実装担当: [references/implementer.md](references/implementer.md)
-- コミット担当: [references/committer.md](references/committer.md)
+- リリース担当: [references/release-manager.md](references/release-manager.md)
 - レビュー担当: [references/reviewer.md](references/reviewer.md)
 - プラン更新担当: [references/plan-updater.md](references/plan-updater.md)
 
@@ -58,22 +58,22 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 
 リーダーをハブとした双方向通信構造。責任境界を明確にし、情報の流れを整理する。
 
-|  | リーダー | implementer | reviewer | committer | plan-updater |
+|  | リーダー | implementer | reviewer | release-manager | plan-updater |
 |---|:---:|:---:|:---:|:---:|:---:|
 | リーダー | - | ○ | ○ | ○ | ○ |
 | implementer | ○ | - | ○ | ○ | - |
 | reviewer | ○ | ○ | - | - | - |
-| committer | ○ | △ | - | - | - |
+| release-manager | ○ | △ | - | - | - |
 | plan-updater | ○ | - | - | - | - |
 
 **通信ルール**:
 - リーダーは全員と通信可能（ハブ）
-- implementer → reviewer/committer は直送可（実装完了の迅速報告のため）。ただし、直送時はリーダーにも同報すること（進捗把握のため）
+- implementer → reviewer/release-manager は直送可（実装完了の迅速報告のため）。ただし、直送時はリーダーにも同報すること（進捗把握のため）
 - reviewer → implementer は指摘対応のため許可。指摘時はリーダーにも共有すること
-- committer と plan-updater は原則リーダー経由のみ（責任線の明確化）
+- release-manager と plan-updater は原則リーダー経由のみ（責任線の明確化）
 
 **例外パス**（△マーク）:
-- CI失敗時: committer → implementer への直送を許可（迅速な修正対応のため）。ただし、リーダーへの状況報告は必須
+- CI失敗時: release-manager → implementer への直送を許可（迅速な修正対応のため）。ただし、リーダーへの状況報告は必須
 
 ## 実行手順
 
@@ -131,7 +131,7 @@ ls .claude_work/plans/*.md
 | メンバー | 役割名 | referencesファイル | 待機内容 |
 |----------|--------|-------------------|----------|
 | implementer | 実装担当 | skills/assembling-dev-team/references/implementer.md | 各ステップの実装指示 |
-| committer | コミット担当 | skills/assembling-dev-team/references/committer.md | コミット指示 |
+| release-manager | リリース担当 | skills/assembling-dev-team/references/release-manager.md | リリース指示 |
 | reviewer | レビュー担当 | skills/assembling-dev-team/references/reviewer.md | レビュー指示 |
 | plan-updater | プラン更新担当 | skills/assembling-dev-team/references/plan-updater.md | プラン更新指示 |
 
@@ -163,9 +163,9 @@ implementer へ:
 完了したら報告してください。
 ```
 
-#### 2.1.2 レビューとコミット（並列実行）
+#### 2.1.2 レビューとリリース（並列実行）
 - reviewer にステップNの実装レビューを依頼（SendMessage type: message）
-- committer にステップNのコミットを依頼（SendMessage type: message）
+- release-manager にステップNのコミットを依頼（SendMessage type: message）
 - 両方からの報告を待つ
 
 レビュー依頼フォーマット:
@@ -187,7 +187,7 @@ reviewer へ:
 
 コミット依頼フォーマット:
 ```
-committer へ:
+release-manager へ:
 
 ステップ{N}の実装をコミットしてください。
 
@@ -213,18 +213,18 @@ semantic-committing スキルを使用してコミットしてください。
 - 次のステップがあれば 2.1.1 に戻る
 - 全ステップ完了なら 2.2 へ
 
-### 2.2 PR作成とCI監視
+### 2.2 PR作成・更新とCI監視
 
-committer にPR作成を依頼する（CI監視を含む後続対応はcommitterに一任。詳細は [references/committer.md](references/committer.md) に記載）。
+release-manager にPR作成・更新を依頼する（CI監視を含む後続対応はrelease-managerに一任。詳細は [references/release-manager.md](references/release-manager.md) に記載）。
 
-- committerからの最終報告を待ち、ユーザーに結果を報告
+- release-managerからの最終報告を待ち、ユーザーに結果を報告
 - CI成功時: ユーザーに「フェーズ2完了。レビューをお願いします」と報告（PR URLを含む）
 - CI失敗時: ユーザーに状況を報告
 
 ## フェーズ3: 外部レビュー対応（指摘がなくなるまで）
 
 - **入力**: ユーザーやCodex等のチームメンバー以外からのレビュー指摘
-- **処理**: 指摘を振り分け（計画変更 → plan-updaterがプラン更新 / 実装修正 → 3-Aレビュー（3.1.1）→ 修正サイクル（3.2） / CI影響 → committer対応）
+- **処理**: 指摘を振り分け（計画変更 → plan-updaterがプラン更新 / 実装修正 → 3-Aレビュー（3.1.1）→ 修正サイクル（3.2） / CI影響 → release-manager対応）
 - **出力**: 指摘対応完了報告
 
 ### 3.1 指摘の受け取りと振り分け
@@ -237,7 +237,7 @@ committer にPR作成を依頼する（CI監視を含む後続対応はcommitter
 |-----------|--------|-----------|
 | 計画変更が必要 | plan-updater | プランファイル更新を依頼 → 完了後にbroadcastで全メンバーに再読み込みを通知 → 必要に応じてタスクリスト更新（TaskCreate / TaskUpdate） |
 | 実装の修正が必要 | reviewer → implementer | まずフェーズ3-Aレビュー（3.1.1）→ 修正サイクル（3.2）を実行 |
-| CI/品質/リリースへの影響 | committer | committerに対応依頼（必要に応じて他メンバーにも同報） |
+| CI/品質/リリースへの影響 | release-manager | release-managerに対応依頼（必要に応じて他メンバーにも同報） |
 
 複数カテゴリにまたがる場合は、リーダーが優先順位をつけて順次対応する。
 
@@ -268,7 +268,7 @@ reviewer へ:
 フェーズ3-Aレビューの評価を踏まえ、フェーズ2と同様のサイクルで修正を実施:
 
 1. reviewer の3-A評価に基づき、implementer に修正を依頼（リーダーからSendMessage）→ implementer の修正完了報告を待つ
-2. reviewer に**フェーズ3-B（修正完了後）**のレビューを依頼 + committer にコミット依頼（後続対応はcommitterに一任）（並列実行）
+2. reviewer に**フェーズ3-B（修正完了後）**のレビューを依頼 + release-manager にコミット依頼（後続対応はrelease-managerに一任）（並列実行）
 
 フェーズ3-Bレビュー依頼フォーマット:
 ```
