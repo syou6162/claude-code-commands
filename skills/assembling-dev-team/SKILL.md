@@ -63,14 +63,17 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 | リーダー | - | ○ | ○ | ○ | ○ |
 | implementer | ○ | - | ○ | ○ | - |
 | reviewer | ○ | ○ | - | - | - |
-| committer | ○ | - | - | - | - |
+| committer | ○ | △ | - | - | - |
 | plan-updater | ○ | - | - | - | - |
 
 **通信ルール**:
 - リーダーは全員と通信可能（ハブ）
 - implementer → reviewer/committer は直送可（実装完了の迅速報告のため）。ただし、直送時はリーダーにも同報すること（進捗把握のため）
 - reviewer → implementer は指摘対応のため許可。指摘時はリーダーにも共有すること
-- committer と plan-updater はリーダー経由のみ（責任線の明確化）
+- committer と plan-updater は原則リーダー経由のみ（責任線の明確化）
+
+**例外パス**（△マーク）:
+- CI失敗時: committer → implementer への直送を許可（迅速な修正対応のため）。ただし、リーダーへの状況報告は必須
 
 ## 実行手順
 
