@@ -26,24 +26,11 @@
 
 コミット完了後、自律的にPR作成・更新を実行してください。
 
-PRが未作成の場合:
-```bash
-gh pr create --draft
-```
-
-PR作成後、Skillツールで `updating-pr-title-and-description` スキルを呼び出し、PRタイトルと説明文を自動生成・更新してください。
-
-PRが既に存在する場合（フェーズ3等）:
-Skillツールで `updating-pr-title-and-description` スキルを呼び出し、PRタイトルと説明文を最新の変更に合わせて更新してください。
+Skillツールで `updating-pr-title-and-description` スキルを呼び出し、PRの作成または更新を行ってください。
 
 PR更新後、ステップ3に進んでください。
 
 ### ステップ3: CI監視
-
-PRが存在する場合のみ実行してください。
-
-- **フェーズ2**: PR作成（ステップ2）直後に実行
-- **フェーズ3**: コミット後に毎回実行（PRは既に存在するため）
 
 `monitor-ci` サブエージェントを起動してCI結果を確認してください。
 
