@@ -132,6 +132,9 @@ gcloudやbqコマンド実行時に認証エラー（`Reauthentication required`
 ### semantic-committing
 コミット時、「commit」「git add」「変更を分割」の言及時に自動的に発動するスキル。git diffを分析して変更を論理的な意味単位に分割し、git-sequential-stageでhunk単位のステージングを行います。大きな変更を複数の意味のあるコミットに分けたい時に、Claude Codeが自動的にこのスキルを使用します。
 
+### planning-guardrails
+Plan modeや計画作成・プラン作成の依頼時に自動的に発動するスキル。参考情報（URL/過去PR/ファイルパス）とユーザー発言（要約＋生ログ）を必須化し、テストがある場合はTDD前提と正常系/異常系テストケース記載を強制します。
+
 ### updating-pr-title-and-description
 PR作成・更新時に自動的に発動するスキル。Pull Requestのタイトルと説明文を自動生成・更新します。差分やコミットメッセージを分析し、適切な説明文を作成します。説明文は日本語で記載され、`.github/PULL_REQUEST_TEMPLATE.md`がある場合はテンプレートに沿った形で生成されます。
 
