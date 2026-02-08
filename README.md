@@ -42,14 +42,8 @@ Claude Code内で以下のコマンドを実行してプラグインをインス
 claude-code-commands/
 ├── .claude-plugin/
 │   └── plugin.json                          # プラグインマニフェスト（メタデータとコマンド定義）
-├── .spec-workflow/
-│   └── steering/
-│       ├── product.md                       # プロダクト方針
-│       ├── tech.md                          # 技術標準
-│       └── structure.md                     # プロジェクト構造
 ├── agents/
 │   ├── monitor-ci.md                        # サブエージェント
-│   ├── detect-spec-workflow.md              # サブエージェント
 │   └── record-current-status.md             # サブエージェント
 ├── commands/
 │   ├── triage_pr_comments.md
@@ -84,7 +78,6 @@ claude-code-commands/
 ```
 
 - **`.claude-plugin/plugin.json`**: プラグインのメタデータ（名前、バージョン、作者など）とコマンドリストを定義
-- **`.spec-workflow/steering/`**: プロジェクト全体の方向性を定義するステアリングドキュメント（spec workflow統合）
 - **`agents/`**: サブエージェント定義（専門的なタスクを独立したコンテキストで実行）
 - **`commands/`**: 各カスタムスラッシュコマンドのマークダウンファイルを格納
 - **`skills/`**: スキル定義（Claudeが自動的に判断して発動する拡張機能）
@@ -97,9 +90,6 @@ Claude Codeは`plugin.json`を読み込んでプラグインを認識し、`comm
 
 ### monitor-ci (サブエージェント)
 Pull RequestのCI/CDチェックを監視し、失敗したjobのログを分析して原因を特定するエージェント。失敗内容をメインエージェントに報告します。CI失敗時の原因調査と対応方針の提案を自動化します。
-
-### detect-spec-workflow (サブエージェント)
-現在のタスクや仕様の概要から、該当するspec workflowのspec-idを判定するエージェント。spec-workflow/specs/配下のspecを分析し、最も関連性の高いspec-idを返します。
 
 ### record-current-status (サブエージェント)
 作業のキリが良いタイミングやユーザーへの報告時に、現在の作業状況と本音を`.claude_work/current_status`に記録するエージェント。状況（簡単/普通/やや難/難しい/情報不足/無理）と詳細を140字以内で記録し、作業の進捗や困難を可視化します。
@@ -139,14 +129,6 @@ PR作成・更新時に自動的に発動するスキル。Pull Requestのタイ
 「開発日誌更新」「開発日誌作って」の言及時に自動的に発動するスキル。esa-llm-scoped-guardを使って開発日誌を新規作成・更新します。トリガーによって動作を分岐し、「作って」の場合は直接新規作成、「更新」+URLの場合は指定記事を更新、「更新」のみの場合は検索して関連記事を更新（なければ新規作成）します。
 
 ## Available Commands
-
-### load_spec_tasks
-spec workflowのtasks.mdから次にやるべきタスクを読み込み、Claude CodeのToDoリストに自己再生産的なタスクサイクルを設定します。最初に1回実行するだけで、以降は自動的にタスクサイクルが回り続けます。tasks.mdをシングルソースオブトゥルースとして扱い、Claudeがタスクの状態更新を忘れないようにします。
-
-```bash
-# 使用方法 (Claude Code内で)
-/syou6162-plugin:load_spec_tasks
-```
 
 ### triage_pr_comments
 Pull Requestのコメントに対する対応要否をコードベース分析に基づいて判断します。
