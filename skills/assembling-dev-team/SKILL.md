@@ -82,8 +82,8 @@ description: 「開発チーム集合」「チームで実装」「チーム編�
 ## フェーズ1: 初期セットアップ
 
 - **入力**: ユーザーの「開発チーム集合」発言
-- **処理**: プラン特定 → 分析 → チーム作成 → タスク登録
-- **出力**: チーム稼働状態（4名スポーン完了）
+- **処理**: プラン特定 → チーム作成 → 分析 → タスク登録
+- **出力**: チーム稼働状態（4名スポーン完了 + タスクリスト作成済み）
 
 ### 1.1 プランファイルの特定
 
@@ -103,12 +103,7 @@ ls .claude_work/plans/*.md
 
 </plan-file>
 
-### 1.2 プランファイルの分析
-
-プランファイルを読み取り、実装ステップを分解する。
-各ステップを TaskCreate でタスクリストに追加する。
-
-### 1.3 チーム作成とメンバースポーン
+### 1.2 チーム作成とメンバースポーン
 
 1. TeamCreate でチームを作成（team_name: "dev-team-{セッションID短縮}"）
 
@@ -134,6 +129,11 @@ ls .claude_work/plans/*.md
 | release-manager | リリース担当 | skills/assembling-dev-team/references/release-manager.md | リリース指示 |
 | reviewer | レビュー担当 | skills/assembling-dev-team/references/reviewer.md | レビュー指示 |
 | plan-updater | プラン更新担当 | skills/assembling-dev-team/references/plan-updater.md | プラン更新指示 |
+
+### 1.3 プランファイルの分析
+
+プランファイルを読み取り、実装ステップを分解する。
+各ステップを TaskCreate でタスクリストに追加する。
 
 ## フェーズ2: プラン実装（全ステップ完了まで）
 
