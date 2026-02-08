@@ -37,3 +37,4 @@ Plan modeで計画を作る時は**必ず**このスキルを使用する。
 
 - 詳細テンプレートと詳細例: `references/plan-template.md`
 - 最小例: `references/plan-examples-min.md`
+- 詳細例: `references/plan-examples-detailed.md`
