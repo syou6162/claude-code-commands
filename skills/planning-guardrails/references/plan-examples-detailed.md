@@ -9,11 +9,6 @@
 - `app/validators/user_input.ts`
   - 注釈: 既存バリデーションの実装位置
 
-### 自己完結メモ
-
-- 備考欄のバリデーションは`user_input.ts`内の`validateNote`に集約されている
-- 過去PRでは文字数制限のテストが`note_validation.spec.ts`にある
-
 ### ユーザー発言（要約）
 
 - 既存の処理を壊さずに新しいバリデーションを追加したい
@@ -80,11 +75,6 @@
   - 注釈: 既存アーキテクチャ制約の確認が必要
 - `app/services/order_service.ts`
   - 注釈: ログ追加対象のサービス
-
-### 自己完結メモ
-
-- `order_service`のログは`logger.info`に統一されている
-- アーキテクチャ制約ではPIIログ禁止が明記されている
 
 ### ユーザー発言（要約）
 
@@ -153,11 +143,6 @@
   - 注釈: レスポンス生成ロジックの実装位置
 - `app/contracts/user.json`
   - 注釈: スキーマ定義の参照元
-
-### 自己完結メモ
-
-- `user.json`は`nickname`をoptional追加しても後方互換
-- `user_controller`はレスポンス生成でスキーマを参照している
 
 ### ユーザー発言（要約）
 
