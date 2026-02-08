@@ -8,18 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## アーキテクチャ
 
-### ステアリングドキュメント構成
-- `.spec-workflow/steering/product.md` - プロダクト方針と目的
-- `.spec-workflow/steering/tech.md` - 技術標準とツールチェーン
-- `.spec-workflow/steering/structure.md` - プロジェクト構造と組織化原則
-
 ### サブエージェント構成
 - `agents/monitor-ci.md` - CI/CDチェック監視と失敗原因分析（サブエージェント）
-- `agents/detect-spec-workflow.md` - spec workflowのspec-id判定（サブエージェント）
 - `agents/record-current-status.md` - 現在の作業状況と本音を記録（サブエージェント）
 
 ### コマンド構成
-- `commands/load_spec_tasks.md` - spec workflowのtasks.mdとToDoリストの同期
 - `commands/triage_pr_comments.md` - Pull Requestコメントの対応要否判断
 - `commands/estimate_pr_size.md` - Pull Requestサイズ見積もりと分割提案
 - `commands/optimize_bq_query.md` - BigQueryクエリの性能分析と2倍以上の最適化提案
@@ -179,8 +172,6 @@ Claude AIのシステムプロンプトおよび公式ドキュメントでは�
 - **BigQuery CLI (`bq`)** - BigQuery操作（optimize_bq_query）
 - **Codex CLI (`codex exec`)** - コードレビュー（codex-review スキル）
 - **esa-llm-scoped-guard (`esa-llm-scoped-guard fetch`)** - 開発日誌取得（codex-review, codex-plan-review スキル）
-- **spec-workflow MCP** - spec workflow連携（load_spec_tasks コマンド）
-- **detect-spec-workflow サブエージェント** - spec-id判定（load_spec_tasks コマンド）
 
 ### ファイル更新時の注意
 - `.claude-plugin/plugin.json`とREADMEの整合性を保つ
