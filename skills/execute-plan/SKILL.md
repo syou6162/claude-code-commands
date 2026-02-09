@@ -2,7 +2,7 @@
 name: execute-plan
 description: planモードの計画に基づいて実装を開始する。planファイルからTODOリスト作成→タスク順次実行→各タスク完了時にコミット→最後にcodex-reviewを実行する。
 disable-model-invocation: true
-allowed-tools: Read, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet
+allowed-tools: Bash, Read, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet
 model: sonnet
 context: fork
 ---
