@@ -1,6 +1,6 @@
 ---
 name: execute-plan
-description: planモードの計画に基づいて実装を開始する。planファイルからTODOリスト作成→タスク順次実行→各タスク完了時にコミット→最後にcodex-reviewを実行する。
+description: planモードの計画に基づいて実装を開始する。planファイルからタスクリスト作成→タスク順次実行→各タスク完了時にコミット→最後にcodex-reviewを実行する。
 disable-model-invocation: true
 allowed-tools: Bash, Read, Skill, TaskCreate, TaskUpdate, TaskList, TaskGet
 model: sonnet
@@ -9,7 +9,7 @@ context: fork
 
 # planモードから実装開始
 
-planモードで作成した計画に基づいて実装を開始します。planファイルの内容を読み取り、TODOリストを作成し、各タスクを順次実行していきます。
+planモードで作成した計画に基づいて実装を開始します。planファイルの内容を読み取り、タスクリストを作成し、各タスクを順次実行していきます。
 
 ## 禁止事項
 
@@ -34,9 +34,9 @@ ls -t .claude_work/plans/*.md | head -n 1
 
 特定したplanファイルをReadツールで読み取ります。
 
-### 3. TODOリストの作成
+### 3. タスクリストの作成
 
-planファイルの「実行計画」セクションから各ステップを抽出し、TaskCreateでTODOリストを作成します。
+planファイルの「実行計画」セクションから各ステップを抽出し、TaskCreateでタスクリストを作成します。
 
 各タスクは以下の形式で作成してください：
 
@@ -48,7 +48,7 @@ planファイルの「実行計画」セクションから各ステップを抽�
 
 ### 4. タスクの順次実行
 
-TODOリストの順番に従って、各タスクを実行します。
+タスクリストの順番に従って、各タスクを実行します。
 
 各タスクについて：
 
