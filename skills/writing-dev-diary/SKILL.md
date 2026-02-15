@@ -16,6 +16,7 @@ esaに開発日誌を投稿・更新するスキルです。`esa-llm-scoped-guar
 
 - YAMLファイルは必ず`.claude_work/dev_diary.yaml`に作成すること（**ファイル名固定**）
 - esa MCPのツール（`create_esa_post`, `update_esa_post`, `read_esa_post`, `read_esa_multiple_posts`）は使用禁止。既存記事の取得には必ず `esa-llm-scoped-guard fetch` コマンドを使用すること
+- **サブエージェントへの指示**: Plan modeで一般目的サブエージェントやExploreエージェントを起動して開発日誌を確認させる場合、必ず `esa-llm-scoped-guard fetch` で取得した `.claude_work/dev_diary.yaml` を参照するよう指示すること。esa MCPツールで直接取得させてはいけない
 - YAMLスキーマは必ず`esa-llm-scoped-guard -help`で確認してから生成すること
 - **Planモードでも投稿可能**: `.claude_work/` は `.gitignore` の対象であり、リポジトリの変更にならないため、Planモードでも書き込みが許可されている。`esa-llm-scoped-guard` コマンドの実行も同様。「Planモードだからできない」と拒否してはいけない
 
