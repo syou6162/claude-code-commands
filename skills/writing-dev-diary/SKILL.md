@@ -15,7 +15,7 @@ esaに開発日誌を投稿・更新するスキルです。`esa-llm-scoped-guar
 <important>
 
 - YAMLファイルは必ず`.claude_work/dev_diary.yaml`に作成すること（**ファイル名固定**）
-- esa MCPのツール（`create_esa_post`, `update_esa_post`, `read_esa_post`, `read_esa_multiple_posts`）は使用禁止。既存記事の取得には必ず `esa-llm-scoped-guard fetch` コマンドを使用すること
+- esa MCPのツール（`create_esa_post`, `update_esa_post`, `read_esa_post`, `read_esa_multiple_posts`, `search_esa_posts`）は使用禁止。既存記事の取得には必ず `esa-llm-scoped-guard fetch` コマンドを使用すること
 - **サブエージェントへの指示**: Plan modeで一般目的サブエージェントやExploreエージェントを起動して開発日誌を確認させる場合、必ず `esa-llm-scoped-guard fetch` で取得した `.claude_work/dev_diary.yaml` を参照するよう指示すること。esa MCPツールで直接取得させてはいけない
 - YAMLスキーマは必ず`esa-llm-scoped-guard -help`で確認してから生成すること
 - **Planモードでも投稿可能**: `.claude_work/` は `.gitignore` の対象であり、リポジトリの変更にならないため、Planモードでも書き込みが許可されている。`esa-llm-scoped-guard` コマンドの実行も同様。「Planモードだからできない」と拒否してはいけない
@@ -64,9 +64,9 @@ BigQueryクエリを最適化した。パーティションプルーニングの
 
 以下のトリガーワードで発動します：
 
-- **「開発日誌を作って」**: 検索なしで直接新規作成
+- **「開発日誌を作って」**: 新規作成
 - **「開発日誌を更新」+ esaのURL**: 指定されたURLの記事を更新
-- **「開発日誌を更新」**（URLなし）: 検索して関連記事を更新、なければ新規作成
+- **「開発日誌を更新」**（URLなし）: ユーザーに開発日誌のURLを確認
 
 </trigger>
 
@@ -86,17 +86,17 @@ esa-llm-scoped-guard -help
 
 <decision-criteria name="trigger-flow">
 
-| トリガー | 既存記事取得 | 次の手順 |
-|----------|-------------|---------|
-| 「開発日誌を作って」 | なし | 手順4 |
-| 「開発日誌を更新」+ URL | あり（URL指定） | 手順3 |
-| 「開発日誌を更新」（URLなし） | あり（検索） | 手順3（記事あり）/ 手順4（記事なし） |
+| トリガー | URL確認 | 次の手順 |
+|----------|---------|---------|
+| 「開発日誌を作って」 | 不要 | 手順4（新規作成） |
+| 「開発日誌を更新」+ URL | URLあり | 手順3（更新） |
+| 「開発日誌を更新」（URLなし） | ユーザーに確認 | URL取得後、手順3または手順4 |
 
 </decision-criteria>
 
 #### パターンA: 「開発日誌を作って」の場合
 
-検索・取得をスキップして、**手順4（YAML更新）へ直行**してください。
+新規作成モードで、**手順4（YAML更新）へ直行**してください。
 
 #### パターンB: 「開発日誌を更新」+ URLの場合
 
@@ -106,19 +106,18 @@ esa-llm-scoped-guard -help
 
 #### パターンC: 「開発日誌を更新」（URLなし）の場合
 
-1. `mcp__esa-mcp-server__search_esa_posts`で関連記事を検索：
-   ```
-   query: "in:Claude Code/開発日誌"
-   sort: "updated"
-   order: "desc"
-   perPage: 10
-   ```
+1. **AskUserQuestionツール**を使用して、ユーザーに開発日誌のURLを確認：
+   - 質問: 「更新する開発日誌のURLを教えてください」
+   - 選択肢:
+     - 「URLを提供する」→ ユーザーからURL入力を受け取る
+     - 「新規作成する」→ 新規作成モード（手順4へ）
 
-2. 会話コンテキストから現在のタスクを特定し、検索結果から最も関連性の高い記事を判断
+2. URLが提供された場合:
+   - URLから`post_number`を抽出
+   - 更新モードで**手順3へ**
 
-3. **記事あり**: `post_number`を取得 → 更新モードで**手順3へ**
-
-4. **記事なし**: 新規作成モードで**手順4へ**
+3. 新規作成を選択した場合:
+   - 新規作成モードで**手順4へ**
 
 ### 手順3: 既存記事のYAML取得（更新時のみ）
 
