@@ -10,6 +10,14 @@ context: fork
 
 Pull Requestのタイトルと説明文を以下の手順で更新してください。
 
+## 禁止事項
+
+<important>
+
+- **開発日誌（esa.io）のURLをPR descriptionに記載しない**: 開発日誌はチーム内の作業記録であり、PRの説明文に含めるべきではない。`yasuhisa.esa.io` や esa.io ドメインのURLは関連情報セクションにも記載禁止
+
+</important>
+
 ## 実行手順
 
 <procedure>
