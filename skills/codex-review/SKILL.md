@@ -133,6 +133,14 @@ echo "<デフォルトブランチ名>ブランチとの差分を日本語でレ
 
 </example>
 
+**Codex CLIが失敗した場合のフォールバック：**
+
+`codex review -` の終了コードが0以外（weekly limitやその他のエラー）の場合、同じプロンプトをcopilot CLIで実行してください：
+
+```bash
+echo "<同じレビュープロンプト>" | copilot --model gpt-5.3-codex
+```
+
 <important>
 
 - ファイルの内容ではなく、ファイルパスを渡すことで、Codexが直接ファイルを読み取ります
