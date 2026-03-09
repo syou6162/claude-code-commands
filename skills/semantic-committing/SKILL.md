@@ -183,4 +183,15 @@ context: fork
    git status
    ```
 
+7. **リモートへのプッシュ**
+
+   現在のブランチ名を確認してプッシュ：
+
+   ```bash
+   # ブランチ名を確認
+   git rev-parse --abbrev-ref HEAD
+   # ブランチ名を指定してプッシュ（例: git push origin feature/new-feature）
+   git push origin <branch-name>
+   ```
+
 </procedure>
